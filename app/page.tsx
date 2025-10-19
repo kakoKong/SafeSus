@@ -62,22 +62,6 @@ export default function Home() {
                   </Button>
                 </Link>
               </div>
-              
-              {/* Quick Stats */}
-              <div className="flex gap-6 pt-4">
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-primary">4</div>
-                  <div className="text-xs text-muted-foreground">Cities</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-blue-500">1000+</div>
-                  <div className="text-xs text-muted-foreground">Travelers</div>
-                </div>
-                <div className="text-center">
-                  <div className="text-3xl font-bold text-purple-500">Free</div>
-                  <div className="text-xs text-muted-foreground">Forever</div>
-                </div>
-              </div>
             </div>
             
             {/* Right Visual Elements */}
@@ -529,18 +513,12 @@ export default function Home() {
           </div>
           
           <div className="flex flex-wrap items-center justify-center gap-6 text-slate-500 text-sm">
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-green-500" />
-              <span>100% Free Forever</span>
-            </div>
+
             <div className="flex items-center gap-2">
               <div className="w-1.5 h-1.5 rounded-full bg-blue-500" />
               <span>No Sign-up Required</span>
             </div>
-            <div className="flex items-center gap-2">
-              <div className="w-1.5 h-1.5 rounded-full bg-purple-500" />
-              <span>1,247 Active Users</span>
-            </div>
+
           </div>
         </div>
       </section>
