@@ -37,7 +37,7 @@ export default function Home() {
                 <span className="block text-foreground">Safety</span>
                 <span className="block relative inline-block mt-2">
                   <span className="relative z-10 bg-gradient-to-r from-primary via-blue-500 to-purple-500 bg-clip-text text-transparent">
-                    Superpower
+                    Companions
                   </span>
                   <div className="absolute bottom-2 left-0 right-0 h-4 bg-primary/20 -rotate-1 -z-10" />
                 </span>
@@ -205,7 +205,7 @@ export default function Home() {
               <div className="bg-white dark:bg-slate-900 border-4 border-green-500 rounded-full px-8 py-4 transform rotate-6">
                 <div className="text-center">
                   <div className="text-xs font-bold text-green-500 uppercase tracking-wider">Your New</div>
-                  <div className="text-2xl font-black text-green-500">Superpower</div>
+                  <div className="text-2xl font-black text-green-500">Companions</div>
                 </div>
               </div>
             </div>
@@ -355,7 +355,7 @@ export default function Home() {
       </section>
       
       {/* Social Proof - Polaroid Wall */}
-      <section className="relative py-20 bg-slate-100 dark:bg-slate-900">
+      {/* <section className="relative py-20 bg-slate-100 dark:bg-slate-900">
         <div className="container px-4 max-w-6xl mx-auto">
           <div className="max-w-2xl mb-16">
             <div className="text-sm font-mono text-primary mb-4">{`// TESTIMONIALS`}</div>
@@ -367,7 +367,6 @@ export default function Home() {
             </p>
           </div>
           
-          {/* Polaroid-style cards */}
           <div className="grid md:grid-cols-3 gap-8">
             {[
               {
@@ -391,7 +390,6 @@ export default function Home() {
             ].map((testimonial, i) => (
               <div key={i} className="group">
                 <div className="bg-white dark:bg-slate-800 rounded-lg p-4 shadow-lg hover:shadow-xl transition-all transform hover:-translate-y-1" style={{ transform: `rotate(${i % 2 === 0 ? '-2deg' : '2deg'})` }}>
-                  {/* Photo placeholder */}
                   <div className="relative bg-slate-200 dark:bg-slate-700 rounded-md mb-4 h-48 flex items-center justify-center overflow-hidden">
                     <div className="absolute inset-0 bg-gradient-to-br from-primary/20 to-blue-500/20" />
                     <div className="relative">
@@ -401,14 +399,12 @@ export default function Home() {
                     </div>
                   </div>
                   
-                  {/* Quote */}
                   <div className="mb-3">
                     <p className="text-sm leading-relaxed text-foreground font-medium">
                       "{testimonial.quote}"
                     </p>
                   </div>
                   
-                  {/* Author info */}
                   <div className="flex items-center justify-between text-xs text-muted-foreground">
                     <span className="font-semibold">{testimonial.author}</span>
                     <span>{testimonial.location}</span>
@@ -418,7 +414,6 @@ export default function Home() {
             ))}
           </div>
           
-          {/* Stats bar */}
           <div className="mt-16 grid grid-cols-3 gap-8 max-w-3xl mx-auto">
             {[
               { value: '1,247', label: 'Active Users' },
@@ -432,7 +427,7 @@ export default function Home() {
             ))}
           </div>
         </div>
-      </section>
+      </section> */}
 
       {/* FAQ - Minimal Style */}
       <section className="py-20 bg-white dark:bg-slate-950">

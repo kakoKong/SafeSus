@@ -60,14 +60,20 @@ export default function MapView({
       setMapLoaded(true);
       // Emit initial bounds
       if (onViewportChangeRef.current && map.current) {
-        onViewportChangeRef.current(map.current.getBounds());
+        const bounds = map.current.getBounds();
+        if (bounds) {
+          onViewportChangeRef.current(bounds);
+        }
       }
     });
 
     // Track viewport changes
     const handleViewportChange = () => {
       if (map.current && onViewportChangeRef.current) {
-        onViewportChangeRef.current(map.current.getBounds());
+        const bounds = map.current.getBounds();
+        if (bounds) {
+          onViewportChangeRef.current(bounds);
+        }
       }
     };
 
@@ -89,6 +95,25 @@ export default function MapView({
     if (!map.current || !mapLoaded || zones.length === 0) return;
 
     const mapInstance = map.current;
+    
+    // Define handlers at effect level so they can be cleaned up
+    const handleZoneClick = (e: mapboxgl.MapLayerMouseEvent) => {
+      if (e.features && e.features[0] && onZoneClickRef.current) {
+        const feature = e.features[0];
+        const zoneData = zones.find((z) => z.id === feature.properties?.id);
+        if (zoneData) {
+          onZoneClickRef.current(zoneData);
+        }
+      }
+    };
+
+    const handleMouseEnter = () => {
+      if (mapInstance) mapInstance.getCanvas().style.cursor = 'pointer';
+    };
+
+    const handleMouseLeave = () => {
+      if (mapInstance) mapInstance.getCanvas().style.cursor = '';
+    };
 
     const addZonesLayer = () => {
       // Create GeoJSON FeatureCollection
@@ -162,25 +187,6 @@ export default function MapView({
       },
     });
 
-      // Add click handler
-      const handleZoneClick = (e: mapboxgl.MapLayerMouseEvent) => {
-        if (e.features && e.features[0] && onZoneClickRef.current) {
-          const feature = e.features[0];
-          const zoneData = zones.find((z) => z.id === feature.properties?.id);
-          if (zoneData) {
-            onZoneClickRef.current(zoneData);
-          }
-        }
-      };
-
-      const handleMouseEnter = () => {
-        if (mapInstance) mapInstance.getCanvas().style.cursor = 'pointer';
-      };
-
-      const handleMouseLeave = () => {
-        if (mapInstance) mapInstance.getCanvas().style.cursor = '';
-      };
-
       mapInstance.on('click', 'zones-layer', handleZoneClick);
       mapInstance.on('mouseenter', 'zones-layer', handleMouseEnter);
       mapInstance.on('mouseleave', 'zones-layer', handleMouseLeave);
@@ -204,9 +210,9 @@ export default function MapView({
       if (!mapInstance || !mapInstance.getStyle()) return;
       
       try {
-        mapInstance.off('click', 'zones-layer');
-        mapInstance.off('mouseenter', 'zones-layer');
-        mapInstance.off('mouseleave', 'zones-layer');
+        mapInstance.off('click', 'zones-layer', handleZoneClick);
+        mapInstance.off('mouseenter', 'zones-layer', handleMouseEnter);
+        mapInstance.off('mouseleave', 'zones-layer', handleMouseLeave);
         
         if (mapInstance.getLayer('zones-outline')) {
           mapInstance.removeLayer('zones-outline');
