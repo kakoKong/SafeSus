@@ -1,7 +1,8 @@
 'use client';
 
-import { useState, useEffect, useCallback } from 'react';
+import { useState, useEffect, useCallback, useMemo } from 'react';
 import MapView from '@/components/map/MapView';
+import MapFilters from '@/components/map/MapFilters';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import EmptyState from '@/components/shared/EmptyState';
@@ -28,6 +29,10 @@ export default function LiveModePage() {
   // Collapsible state
   const [warningsOpen, setWarningsOpen] = useState(true);
   const [showAllWarnings, setShowAllWarnings] = useState(false);
+  
+  // Map filters state
+  const [showZones, setShowZones] = useState(true);
+  const [showTips, setShowTips] = useState(true);
   
   const INITIAL_SHOW_COUNT = 3;
 
@@ -114,6 +119,15 @@ export default function LiveModePage() {
     trackEvent(Events.NEARBY_WARNING_OPEN, { warning: warning.title, distance: warning.distance });
   }, []);
 
+  // Filter zones and pins based on layer toggles
+  const filteredZones = useMemo(() => {
+    return showZones ? zones : [];
+  }, [zones, showZones]);
+
+  const filteredPins = useMemo(() => {
+    return showTips ? nearbyWarnings : [];
+  }, [nearbyWarnings, showTips]);
+
   if (showExplainer) {
     return (
       <div className="container px-4 py-12 max-w-2xl mx-auto">
@@ -184,14 +198,26 @@ export default function LiveModePage() {
         {/* Map Section - 60% on left */}
         <div className="w-full lg:w-[60%] h-[50vh] lg:h-screen lg:sticky lg:top-0 relative">
           <MapView
-            zones={zones}
-            pins={nearbyWarnings}
+            zones={filteredZones}
+            pins={filteredPins}
             userLocation={userLocation}
           />
           
+          {/* Map Filters Overlay */}
+          <div className="absolute top-4 left-4 z-10">
+            <MapFilters
+              showZones={showZones}
+              showTips={showTips}
+              onToggleZones={() => setShowZones(!showZones)}
+              onToggleTips={() => setShowTips(!showTips)}
+              zoneCount={zones.length}
+              tipCount={nearbyWarnings.length}
+            />
+          </div>
+          
           {/* Current Zone Status Overlay */}
           {currentZone && (
-            <div className="absolute top-4 left-4 right-4 z-10">
+            <div className="absolute bottom-4 left-4 right-4 z-10">
               <Card className="shadow-lg">
                 <CardContent className="p-4">
                   <div className="flex items-center gap-3">
@@ -282,7 +308,7 @@ export default function LiveModePage() {
                   </CollapsibleTrigger>
                 </div>
                 <CollapsibleContent className="space-y-3">
-                  {nearbyWarnings.slice(0, showAllWarnings ? nearbyWarnings.length : INITIAL_SHOW_COUNT).map((warning) => (
+                  {filteredPins.slice(0, showAllWarnings ? filteredPins.length : INITIAL_SHOW_COUNT).map((warning) => (
                     <div
                       key={warning.id}
                       className="group p-4 bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-200 dark:border-orange-900 rounded-xl hover:border-orange-400 dark:hover:border-orange-700 transition-all cursor-pointer"
@@ -295,14 +321,14 @@ export default function LiveModePage() {
                       <p className="text-sm text-orange-700 dark:text-orange-300">{warning.summary}</p>
                     </div>
                   ))}
-                  {nearbyWarnings.length > INITIAL_SHOW_COUNT && (
+                  {filteredPins.length > INITIAL_SHOW_COUNT && (
                     <Button 
                       variant="ghost" 
                       size="sm" 
                       className="w-full"
                       onClick={() => setShowAllWarnings(!showAllWarnings)}
                     >
-                      {showAllWarnings ? 'Show Less' : `Show ${nearbyWarnings.length - INITIAL_SHOW_COUNT} More`}
+                      {showAllWarnings ? 'Show Less' : `Show ${filteredPins.length - INITIAL_SHOW_COUNT} More`}
                     </Button>
                   )}
                 </CollapsibleContent>

@@ -46,9 +46,8 @@ export default function CityDetailPage() {
   const [mapBounds, setMapBounds] = useState<mapboxgl.LngLatBounds | null>(null);
   
   // Map filters state
-  const [showSafeZones, setShowSafeZones] = useState(true);
-  const [showAvoidZones, setShowAvoidZones] = useState(true);
-  const [showScams, setShowScams] = useState(true);
+  const [showZones, setShowZones] = useState(true);
+  const [showTips, setShowTips] = useState(true);
   
   const { toast } = useToast();
   const supabase = createClient();
@@ -147,27 +146,21 @@ export default function CityDetailPage() {
   // Memoize and filter zones and pins based on layer toggles
   const allZones = useMemo(() => {
     if (!cityData) return [];
-    return cityData.zones.filter(zone => {
-      if (zone.level === 'recommended') return showSafeZones;
-      if (zone.level === 'avoid') return showAvoidZones;
-      return true; // Show neutral zones always
-    });
-  }, [cityData, showSafeZones, showAvoidZones]);
+    return showZones ? cityData.zones : [];
+  }, [cityData, showZones]);
 
   const allPins = useMemo(() => {
     if (!cityData) return [];
-    return cityData.pins.filter(pin => {
-      if (pin.type === 'scam') return showScams;
-      return true; // Show other pin types always
-    });
-  }, [cityData, showScams]);
+    return showTips ? cityData.pins : [];
+  }, [cityData, showTips]);
 
   // Filter zones and pins based on map viewport - always active
+  // This works on top of the layer filters
   const { filteredZones, filteredPins } = useMemo(() => {
-    if (!cityData || !mapBounds) {
+    if (!mapBounds) {
       return {
-        filteredZones: cityData?.zones || [],
-        filteredPins: cityData?.pins || []
+        filteredZones: allZones,
+        filteredPins: allPins
       };
     }
 
@@ -179,7 +172,7 @@ export default function CityDetailPage() {
     ]);
 
     // Filter zones that intersect with the viewport
-    const zonesInView = cityData.zones.filter(zone => {
+    const zonesInView = allZones.filter(zone => {
       try {
         const zoneFeature = turf.feature(zone.geom);
         return turf.booleanIntersects(boundsPolygon, zoneFeature);
@@ -189,7 +182,7 @@ export default function CityDetailPage() {
     });
 
     // Filter pins that are within the viewport
-    const pinsInView = cityData.pins.filter(pin => {
+    const pinsInView = allPins.filter(pin => {
       try {
         const [lng, lat] = pin.location.coordinates;
         const point = turf.point([lng, lat]);
@@ -203,7 +196,7 @@ export default function CityDetailPage() {
       filteredZones: zonesInView,
       filteredPins: pinsInView
     };
-  }, [cityData, mapBounds]);
+  }, [allZones, allPins, mapBounds]);
 
   if (loading) {
     return (
@@ -251,6 +244,18 @@ export default function CityDetailPage() {
             onPinClick={handlePinClick}
             onViewportChange={handleViewportChange}
           />
+          
+          {/* Map Filters Overlay */}
+          <div className="absolute top-4 left-4 z-10">
+            <MapFilters
+              showZones={showZones}
+              showTips={showTips}
+              onToggleZones={() => setShowZones(!showZones)}
+              onToggleTips={() => setShowTips(!showTips)}
+              zoneCount={cityData.zones.length}
+              tipCount={cityData.pins.length}
+            />
+          </div>
         </div>
 
         {/* Content Sections - 40% on right */}
