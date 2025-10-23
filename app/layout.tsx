@@ -4,6 +4,7 @@ import './globals.css';
 import Header from '@/components/shared/Header';
 import { Toaster } from '@/components/ui/toaster';
 import { Analytics } from '@/components/shared/Analytics';
+import { AuthProvider } from '@/lib/auth-context';
 
 const inter = Inter({ subsets: ['latin'] });
 
@@ -33,10 +34,12 @@ export default function RootLayout({
   return (
     <html lang="en">
       <body className={inter.className}>
-        <Header />
-        <main className="min-h-screen">{children}</main>
-        <Toaster />
-        <Analytics />
+        <AuthProvider>
+          <Header />
+          <main className="min-h-screen">{children}</main>
+          <Toaster />
+          <Analytics />
+        </AuthProvider>
       </body>
     </html>
   );

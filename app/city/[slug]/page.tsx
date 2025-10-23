@@ -10,6 +10,7 @@ import { Badge } from '@/components/ui/badge';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LoginModal from '@/components/shared/LoginModal';
+import ReportButton from '@/components/shared/ReportButton';
 import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, Info, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
 import type { CityDetail, Zone, Pin } from '@/types';
 import { trackEvent, Events } from '@/lib/analytics';
@@ -575,6 +576,9 @@ export default function CityDetailPage() {
                     <p className="text-sm text-muted-foreground">{selectedZone.reason_long}</p>
                   </div>
                 )}
+                <div className="pt-4 border-t">
+                  <ReportButton targetType="zone" targetId={selectedZone.id} compact />
+                </div>
               </div>
             </>
           )}
@@ -603,6 +607,9 @@ export default function CityDetailPage() {
                     <p className="text-sm text-muted-foreground">{selectedPin.details}</p>
                   </div>
                 )}
+                <div className="pt-4 border-t">
+                  <ReportButton targetType="pin" targetId={selectedPin.id} compact />
+                </div>
               </div>
             </>
           )}

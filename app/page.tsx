@@ -215,8 +215,8 @@ export default function Home() {
                     Green zones = chill. Red zones = be alert. Simple as that.
                   </p>
                   <div className="flex gap-2">
-                    <span className="px-3 py-1 bg-green-500/10 text-green-700 dark:text-green-400 rounded-full text-sm font-medium">Safe</span>
-                    <span className="px-3 py-1 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 rounded-full text-sm font-medium">Careful</span>
+                    <span className="px-3 py-1 bg-blue-500/10 text-blue-700 dark:text-blue-400 rounded-full text-sm font-medium">Recommended</span>
+                    <span className="px-3 py-1 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 rounded-full text-sm font-medium">Caution</span>
                     <span className="px-3 py-1 bg-red-500/10 text-red-700 dark:text-red-400 rounded-full text-sm font-medium">Avoid</span>
                   </div>
                 </div>
@@ -225,9 +225,9 @@ export default function Home() {
                   <div className="inline-block p-3 bg-purple-500/10 rounded-2xl mb-4">
                     <Users className="h-10 w-10 text-purple-500" />
                   </div>
-                  <h3 className="text-2xl font-bold mb-3">Traveler Tips, Verified</h3>
+                  <h3 className="text-2xl font-bold mb-3">Community Verified Tips</h3>
                   <p className="text-muted-foreground text-lg">
-                    Real experiences from backpackers who've been there. Not sponsored BS.
+                    Every tip reviewed by local guardians. Real experiences, zero BS.
                   </p>
                 </div>
               </div>
@@ -429,8 +429,8 @@ export default function Home() {
           <div className="space-y-1">
             {[
               {
-                q: "Does this actually work?",
-                a: "Yep! We've helped 1000+ travelers avoid scams and sketchy situations. It's real data from real people."
+                q: "How is information verified?",
+                a: "Every submission is reviewed by community guardians - trusted locals and experienced travelers who verify accuracy before anything goes live."
               },
               {
                 q: "How much does it cost?",
@@ -446,7 +446,11 @@ export default function Home() {
               },
               {
                 q: "Do I need to create an account?",
-                a: "Nope! Browse everything without signing up. Only need an account if you want to save cities or submit tips."
+                a: "Nope! Browse everything without signing up. Only need an account if you want to save cities, submit tips, or become a guardian."
+              },
+              {
+                q: "Can I contribute?",
+                a: "Absolutely! Share safety tips, report scams, or become a guardian to verify community submissions. Every contribution earns you points and badges."
               }
             ].map((faq, i) => (
               <details key={i} className="group border-b border-slate-200 dark:border-slate-800">

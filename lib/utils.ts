@@ -12,12 +12,14 @@ export function formatDistance(meters: number): string {
   return `${(meters / 1000).toFixed(1)}km`;
 }
 
-export function getZoneColor(level: 'recommended' | 'neutral' | 'avoid'): string {
+export function getZoneColor(level: 'recommended' | 'neutral' | 'caution' | 'avoid'): string {
   switch (level) {
     case 'recommended':
       return '#4A90E2'; // Calm blue
     case 'neutral':
       return '#9CA3AF'; // Gray
+    case 'caution':
+      return '#F59E0B'; // Amber/Yellow
     case 'avoid':
       return '#E57373'; // Muted red
   }

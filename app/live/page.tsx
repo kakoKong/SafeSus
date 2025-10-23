@@ -14,6 +14,7 @@ import { trackEvent, Events } from '@/lib/analytics';
 import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import { Badge } from '@/components/ui/badge';
+import ReportButton from '@/components/shared/ReportButton';
 
 export default function LiveModePage() {
   const [permissionGranted, setPermissionGranted] = useState(false);
@@ -363,6 +364,9 @@ export default function LiveModePage() {
                     <p className="text-sm text-muted-foreground">{selectedWarning.details}</p>
                   </div>
                 )}
+                <div className="pt-4 border-t">
+                  <ReportButton targetType="pin" targetId={selectedWarning.id} compact />
+                </div>
               </div>
             </>
           )}
