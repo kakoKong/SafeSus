@@ -74,15 +74,18 @@ export async function GET(request: Request) {
     if (pinsError) throw pinsError;
 
     // Transform pins data with intelligent categorization
-    const tipArticles = (pins || []).map(pin => ({
-      id: pin.id,
-      title: pin.title,
-      summary: pin.summary,
-      tip_category: assignCategory(pin.title, pin.summary, pin.type),
-      city_name: pin.city?.name,
-      city_slug: pin.city?.slug,
-      created_at: pin.created_at,
-    }));
+    const tipArticles = (pins || []).map(pin => {
+      const city = Array.isArray(pin.city) ? pin.city[0] : pin.city;
+      return {
+        id: pin.id,
+        title: pin.title,
+        summary: pin.summary,
+        tip_category: assignCategory(pin.title, pin.summary, pin.type),
+        city_name: city?.name,
+        city_slug: city?.slug,
+        created_at: pin.created_at,
+      };
+    });
 
     // Get some rules as tips
     const { data: rules, error: rulesError } = await supabase
@@ -99,15 +102,18 @@ export async function GET(request: Request) {
       .limit(Math.ceil(limit * 0.4));
 
     if (!rulesError && rules) {
-      const ruleTips = rules.map(rule => ({
-        id: rule.id + 10000, // Offset to avoid collision with pin IDs
-        title: rule.title,
-        summary: rule.reason,
-        tip_category: assignCategory(rule.title, rule.reason),
-        city_name: rule.city?.name,
-        city_slug: rule.city?.slug,
-        created_at: rule.created_at,
-      }));
+      const ruleTips = rules.map(rule => {
+        const city = Array.isArray(rule.city) ? rule.city[0] : rule.city;
+        return {
+          id: rule.id + 10000, // Offset to avoid collision with pin IDs
+          title: rule.title,
+          summary: rule.reason,
+          tip_category: assignCategory(rule.title, rule.reason),
+          city_name: city?.name,
+          city_slug: city?.slug,
+          created_at: rule.created_at,
+        };
+      });
       
       tipArticles.push(...ruleTips);
     }

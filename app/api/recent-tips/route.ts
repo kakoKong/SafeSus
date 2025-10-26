@@ -37,14 +37,17 @@ export async function GET() {
 
     if (pinsError) throw pinsError;
 
-    const tips = (pins || []).map(pin => ({
-      id: pin.id,
-      title: pin.title,
-      tip_category: assignCategory(pin.title, pin.summary),
-      city_name: pin.city?.name,
-      city_slug: pin.city?.slug,
-      created_at: pin.created_at,
-    }));
+    const tips = (pins || []).map(pin => {
+      const city = Array.isArray(pin.city) ? pin.city[0] : pin.city;
+      return {
+        id: pin.id,
+        title: pin.title,
+        tip_category: assignCategory(pin.title, pin.summary),
+        city_name: city?.name,
+        city_slug: city?.slug,
+        created_at: pin.created_at,
+      };
+    });
 
     return NextResponse.json({ tips });
   } catch (error: any) {

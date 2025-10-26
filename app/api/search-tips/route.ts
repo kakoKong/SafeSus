@@ -59,22 +59,28 @@ export async function GET(request: Request) {
 
     // Combine and format results
     const results = [
-      ...(pins || []).map(pin => ({
-        id: pin.id,
-        title: pin.title,
-        summary: pin.summary,
-        tip_category: assignCategory(pin.title, pin.summary),
-        city_name: pin.city?.name,
-        city_slug: pin.city?.slug,
-      })),
-      ...(rules || []).map(rule => ({
-        id: rule.id + 10000,
-        title: rule.title,
-        summary: rule.reason,
-        tip_category: assignCategory(rule.title, rule.reason),
-        city_name: rule.city?.name,
-        city_slug: rule.city?.slug,
-      }))
+      ...(pins || []).map(pin => {
+        const city = Array.isArray(pin.city) ? pin.city[0] : pin.city;
+        return {
+          id: pin.id,
+          title: pin.title,
+          summary: pin.summary,
+          tip_category: assignCategory(pin.title, pin.summary),
+          city_name: city?.name,
+          city_slug: city?.slug,
+        };
+      }),
+      ...(rules || []).map(rule => {
+        const city = Array.isArray(rule.city) ? rule.city[0] : rule.city;
+        return {
+          id: rule.id + 10000,
+          title: rule.title,
+          summary: rule.reason,
+          tip_category: assignCategory(rule.title, rule.reason),
+          city_name: city?.name,
+          city_slug: city?.slug,
+        };
+      })
     ];
 
     // Sort by relevance (exact title match first)
