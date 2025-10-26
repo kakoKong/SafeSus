@@ -1,8 +1,8 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback } from 'react';
-import { useParams } from 'next/navigation';
-import MapView from '@/components/map/MapView';
+import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
+import { useParams, useSearchParams } from 'next/navigation';
+import MapView, { type MapViewRef } from '@/components/map/MapView';
 import MapFilters from '@/components/map/MapFilters';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -11,24 +11,51 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LoginModal from '@/components/shared/LoginModal';
 import ReportButton from '@/components/shared/ReportButton';
-import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, Info, ChevronDown, ChevronUp, MapPin } from 'lucide-react';
+import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, Info, ChevronDown, ChevronUp, MapPin, Heart, Backpack, Baby, Briefcase, Users, Sparkles } from 'lucide-react';
 import type { CityDetail, Zone, Pin } from '@/types';
 import { trackEvent, Events } from '@/lib/analytics';
 import { useToast } from '@/components/ui/use-toast';
 import { createClient } from '@/lib/supabase/client';
+import RulesWithCategories from '@/components/city/RulesWithCategories';
 // @ts-ignore - Turf types resolution issue
 import * as turf from '@turf/turf';
 import type mapboxgl from 'mapbox-gl';
 
+const TRIP_TYPE_INFO: Record<string, { icon: any; label: string; color: string; tips: string }> = {
+  solo: {
+    icon: Backpack,
+    label: 'Solo Traveler',
+    color: 'from-orange-500 to-amber-500',
+    tips: 'Budget-friendly safety tips, hostel areas, and solo traveler alerts prioritized'
+  },
+  family: {
+    icon: Baby,
+    label: 'Family',
+    color: 'from-blue-500 to-cyan-500',
+    tips: 'Family-friendly zones, kid-safe areas, and child-specific safety alerts highlighted'
+  },
+  couple: {
+    icon: Heart,
+    label: 'Couple',
+    color: 'from-pink-500 to-rose-500',
+    tips: 'Couple-friendly safe zones, romantic area safety, and date scams highlighted'
+  }
+};
+
 export default function CityDetailPage() {
   const params = useParams();
+  const searchParams = useSearchParams();
   const slug = params.slug as string;
+  const tripType = searchParams.get('tripType') || '';
   const [cityData, setCityData] = useState<CityDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const [showLoginModal, setShowLoginModal] = useState(false);
   const [isSaved, setIsSaved] = useState(false);
+  
+  // Map ref for controlling zoom
+  const mapRef = useRef<MapViewRef>(null);
   
   // Collapsible sections state
   const [safeZonesOpen, setSafeZonesOpen] = useState(true);
@@ -130,14 +157,24 @@ export default function CityDetailPage() {
     }
   }
 
-  const handleZoneClick = useCallback((zone: Zone) => {
+  const handleZoneClick = useCallback((zone: Zone, shouldZoom: boolean = false) => {
     setSelectedZone(zone);
     trackEvent(Events.ZONE_POPOVER_OPEN, { zone: zone.label, level: zone.level });
+    
+    // Zoom to zone if requested
+    if (shouldZoom && mapRef.current) {
+      mapRef.current.zoomToZone(zone);
+    }
   }, []);
 
-  const handlePinClick = useCallback((pin: Pin) => {
+  const handlePinClick = useCallback((pin: Pin, shouldZoom: boolean = false) => {
     setSelectedPin(pin);
     trackEvent(Events.PIN_DETAILS_OPEN, { pin: pin.title, type: pin.type });
+    
+    // Zoom to pin if requested
+    if (shouldZoom && mapRef.current) {
+      mapRef.current.zoomToPin(pin);
+    }
   }, []);
 
   const handleViewportChange = useCallback((bounds: mapboxgl.LngLatBounds) => {
@@ -239,10 +276,11 @@ export default function CityDetailPage() {
         {/* Map Section - 60% on left */}
         <div className="w-full lg:w-[60%] h-[50vh] lg:h-screen lg:sticky lg:top-0 relative">
           <MapView
+            ref={mapRef}
             zones={allZones}
             pins={allPins}
-            onZoneClick={handleZoneClick}
-            onPinClick={handlePinClick}
+            onZoneClick={(zone) => handleZoneClick(zone, false)}
+            onPinClick={(pin) => handlePinClick(pin, false)}
             onViewportChange={handleViewportChange}
           />
           
@@ -280,6 +318,26 @@ export default function CityDetailPage() {
                 <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
               </Button>
             </div>
+            
+            {/* Trip Type Banner */}
+            {tripType && TRIP_TYPE_INFO[tripType] && (
+              <div className={`mb-4 p-4 rounded-2xl bg-gradient-to-r ${TRIP_TYPE_INFO[tripType].color} text-white shadow-lg`}>
+                <div className="flex items-center gap-3 mb-2">
+                  {(() => {
+                    const Icon = TRIP_TYPE_INFO[tripType].icon;
+                    return <Icon className="h-6 w-6" />;
+                  })()}
+                  <div>
+                    <div className="font-bold text-lg">{TRIP_TYPE_INFO[tripType].label} Trip Planning Mode</div>
+                  </div>
+                  <Sparkles className="h-5 w-5 ml-auto" />
+                </div>
+                <p className="text-sm text-white/90">
+                  {TRIP_TYPE_INFO[tripType].tips}
+                </p>
+              </div>
+            )}
+            
             <div className="flex flex-wrap gap-2">
               <Badge variant="secondary" className="text-xs">
                 <CheckCircle className="h-3 w-3 mr-1" />
@@ -330,10 +388,15 @@ export default function CityDetailPage() {
                       <div 
                         key={zone.id}
                         className="group p-4 bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-900 rounded-xl hover:border-green-400 dark:hover:border-green-700 transition-all cursor-pointer"
-                        onClick={() => handleZoneClick(zone)}
+                        onClick={() => handleZoneClick(zone, true)}
                       >
-                        <h3 className="font-bold mb-1 text-green-900 dark:text-green-100">{zone.label}</h3>
-                        <p className="text-sm text-green-700 dark:text-green-300">{zone.reason_short}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <h3 className="font-bold mb-1 text-green-900 dark:text-green-100">{zone.label}</h3>
+                            <p className="text-sm text-green-700 dark:text-green-300">{zone.reason_short}</p>
+                          </div>
+                          <MapPin className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-1" />
+                        </div>
                       </div>
                     ))}
                     {safeZones.length > INITIAL_SHOW_COUNT && (
@@ -382,10 +445,15 @@ export default function CityDetailPage() {
                       <div 
                         key={zone.id}
                         className="group p-4 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl hover:border-red-400 dark:hover:border-red-700 transition-all cursor-pointer"
-                        onClick={() => handleZoneClick(zone)}
+                        onClick={() => handleZoneClick(zone, true)}
                       >
-                        <h3 className="font-bold mb-1 text-red-900 dark:text-red-100">{zone.label}</h3>
-                        <p className="text-sm text-red-700 dark:text-red-300">{zone.reason_short}</p>
+                        <div className="flex items-start justify-between gap-2">
+                          <div className="flex-1">
+                            <h3 className="font-bold mb-1 text-red-900 dark:text-red-100">{zone.label}</h3>
+                            <p className="text-sm text-red-700 dark:text-red-300">{zone.reason_short}</p>
+                          </div>
+                          <MapPin className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
+                        </div>
                       </div>
                     ))}
                     {avoidZones.length > INITIAL_SHOW_COUNT && (
@@ -434,10 +502,13 @@ export default function CityDetailPage() {
                       <div 
                         key={pin.id}
                         className="group p-4 bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-200 dark:border-orange-900 rounded-xl hover:border-orange-400 dark:hover:border-orange-700 transition-all cursor-pointer"
-                        onClick={() => handlePinClick(pin)}
+                        onClick={() => handlePinClick(pin, true)}
                       >
                         <div className="flex items-start justify-between gap-3 mb-2">
-                          <h3 className="font-bold text-orange-900 dark:text-orange-100">{pin.title}</h3>
+                          <div className="flex items-center gap-2 flex-1">
+                            <h3 className="font-bold text-orange-900 dark:text-orange-100">{pin.title}</h3>
+                            <MapPin className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
+                          </div>
                           <Badge variant="secondary" className="text-xs flex-shrink-0">{pin.type}</Badge>
                         </div>
                         <p className="text-sm text-orange-700 dark:text-orange-300">{pin.summary}</p>
@@ -476,65 +547,12 @@ export default function CityDetailPage() {
                   </Button>
                 </CollapsibleTrigger>
               </div>
-              <CollapsibleContent className="space-y-6">
-                {dos.length > 0 && (
-                  <div className="p-4 bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-900 rounded-xl">
-                    <h3 className="font-bold mb-3 flex items-center gap-2 text-green-700 dark:text-green-300">
-                      <CheckCircle className="h-5 w-5" />
-                      Things to Do ({dos.length})
-                    </h3>
-                    <ul className="space-y-3">
-                      {dos.slice(0, showAllDos ? dos.length : INITIAL_SHOW_COUNT).map((rule) => (
-                        <li key={rule.id} className="flex gap-3">
-                          <div className="w-2 h-2 rounded-full bg-green-500 mt-2 flex-shrink-0" />
-                          <div>
-                            <strong className="text-green-900 dark:text-green-100">{rule.title}</strong>
-                            <p className="text-sm text-green-700 dark:text-green-300 mt-0.5">{rule.reason}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    {dos.length > INITIAL_SHOW_COUNT && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full mt-3"
-                        onClick={() => setShowAllDos(!showAllDos)}
-                      >
-                        {showAllDos ? 'Show Less' : `Show ${dos.length - INITIAL_SHOW_COUNT} More`}
-                      </Button>
-                    )}
-                  </div>
-                )}
-                {donts.length > 0 && (
-                  <div className="p-4 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl">
-                    <h3 className="font-bold mb-3 flex items-center gap-2 text-red-700 dark:text-red-300">
-                      <XCircle className="h-5 w-5" />
-                      Things to Avoid ({donts.length})
-                    </h3>
-                    <ul className="space-y-3">
-                      {donts.slice(0, showAllDonts ? donts.length : INITIAL_SHOW_COUNT).map((rule) => (
-                        <li key={rule.id} className="flex gap-3">
-                          <div className="w-2 h-2 rounded-full bg-red-500 mt-2 flex-shrink-0" />
-                          <div>
-                            <strong className="text-red-900 dark:text-red-100">{rule.title}</strong>
-                            <p className="text-sm text-red-700 dark:text-red-300 mt-0.5">{rule.reason}</p>
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                    {donts.length > INITIAL_SHOW_COUNT && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full mt-3"
-                        onClick={() => setShowAllDonts(!showAllDonts)}
-                      >
-                        {showAllDonts ? 'Show Less' : `Show ${donts.length - INITIAL_SHOW_COUNT} More`}
-                      </Button>
-                    )}
-                  </div>
-                )}
+              <CollapsibleContent>
+                <RulesWithCategories 
+                  dos={dos} 
+                  donts={donts} 
+                  INITIAL_SHOW_COUNT={INITIAL_SHOW_COUNT}
+                />
               </CollapsibleContent>
             </Collapsible>
           )}

@@ -1,7 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
   images: {
-    domains: ['api.mapbox.com'],
+    domains: ['api.mapbox.com', 'source.unsplash.com', 'images.unsplash.com'],
+    unoptimized: false,
   },
   env: {
     NEXT_PUBLIC_MAPBOX_TOKEN: process.env.NEXT_PUBLIC_MAPBOX_TOKEN,

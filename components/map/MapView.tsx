@@ -1,12 +1,17 @@
 'use client';
 
-import React, { useRef, useEffect, useState } from 'react';
+import React, { useRef, useEffect, useState, useImperativeHandle, forwardRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
 import type { Zone, Pin, UserLocation } from '@/types';
 import { getZoneColor, getPinColor } from '@/lib/utils';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
+
+export interface MapViewRef {
+  zoomToZone: (zone: Zone) => void;
+  zoomToPin: (pin: Pin) => void;
+}
 
 interface MapViewProps {
   zones: Zone[];
@@ -19,7 +24,7 @@ interface MapViewProps {
   className?: string;
 }
 
-export default function MapView({
+const MapView = forwardRef<MapViewRef, MapViewProps>(({
   zones,
   pins,
   center = [100.5018, 13.7563], // Bangkok default
@@ -28,7 +33,7 @@ export default function MapView({
   onPinClick,
   onViewportChange,
   className = '',
-}: MapViewProps) {
+}, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
   const [mapLoaded, setMapLoaded] = useState(false);
@@ -44,6 +49,44 @@ export default function MapView({
     onPinClickRef.current = onPinClick;
     onViewportChangeRef.current = onViewportChange;
   });
+
+  // Expose zoom methods to parent via ref
+  useImperativeHandle(ref, () => ({
+    zoomToZone: (zone: Zone) => {
+      if (!map.current || !mapLoaded) return;
+
+      try {
+        // Calculate bounds for the zone polygon
+        const coordinates = zone.geom.coordinates[0] as number[][];
+        const bounds = coordinates.reduce((bounds, coord) => {
+          return bounds.extend(coord as [number, number]);
+        }, new mapboxgl.LngLatBounds(coordinates[0] as [number, number], coordinates[0] as [number, number]));
+
+        // Fit map to bounds with padding
+        map.current.fitBounds(bounds, {
+          padding: { top: 50, bottom: 50, left: 50, right: 50 },
+          maxZoom: 15,
+          duration: 1000,
+        });
+      } catch (error) {
+        console.error('Error zooming to zone:', error);
+      }
+    },
+    zoomToPin: (pin: Pin) => {
+      if (!map.current || !mapLoaded) return;
+
+      try {
+        const [lng, lat] = pin.location.coordinates;
+        map.current.flyTo({
+          center: [lng, lat],
+          zoom: 16,
+          duration: 1000,
+        });
+      } catch (error) {
+        console.error('Error zooming to pin:', error);
+      }
+    },
+  }));
 
   // Initialize map
   useEffect(() => {
@@ -312,5 +355,9 @@ export default function MapView({
       style={{ minHeight: '400px' }}
     />
   );
-}
+});
+
+MapView.displayName = 'MapView';
+
+export default MapView;
 

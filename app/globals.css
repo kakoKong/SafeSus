@@ -64,6 +64,16 @@
     @apply min-h-[44px] min-w-[44px];
   }
   
+  /* Hide scrollbar */
+  .hide-scrollbar {
+    -ms-overflow-style: none;
+    scrollbar-width: none;
+  }
+  
+  .hide-scrollbar::-webkit-scrollbar {
+    display: none;
+  }
+  
   /* Background patterns */
   .bg-grid-pattern {
     background-image: 

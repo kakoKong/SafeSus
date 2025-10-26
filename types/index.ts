@@ -46,6 +46,7 @@ export interface Rule {
   kind: RuleKind;
   title: string;
   reason: string;
+  tip_category?: string;
 }
 
 export interface SavedCity {

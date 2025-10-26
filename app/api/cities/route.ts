@@ -3,18 +3,18 @@ import { createClient } from '@/lib/supabase/server';
 
 export async function GET() {
   const supabase = createClient();
-  console.log('inside get function')
-  const { data: cities, error } = await supabase
-    .from('cities')
-    .select('*')
-    .eq('supported', true)
-    .order('name');
 
-  console.log(cities)
-  if (error) {
-    return NextResponse.json({ error: error.message }, { status: 500 });
+  try {
+    const { data: cities, error } = await supabase
+      .from('cities')
+      .select('id, name, slug, country, supported')
+      .order('name');
+
+    if (error) throw error;
+
+    return NextResponse.json({ cities: cities || [] });
+  } catch (error: any) {
+    console.error('Cities fetch error:', error);
+    return NextResponse.json({ error: error.message, cities: [] }, { status: 500 });
   }
-
-  return NextResponse.json({ cities });
 }
-
