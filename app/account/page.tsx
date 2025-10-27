@@ -194,7 +194,7 @@ export default function AccountPage() {
           <div className="flex gap-2">
             {userProfile?.role === 'admin' && (
               <Link href="/admin/dashboard">
-                <Button className="gap-2 bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700">
+                <Button className="gap-2 bg-purple-600 hover:bg-purple-700">
                   <ShieldCheck className="h-4 w-4" />
                   Admin Dashboard
                 </Button>
@@ -216,15 +216,15 @@ export default function AccountPage() {
       {userProfile && (
         <Card className={`mb-6 ${
           userProfile.role === 'admin' 
-            ? 'bg-gradient-to-r from-purple-500/10 to-blue-500/10 border-purple-500/20' 
-            : 'bg-gradient-to-r from-primary/10 to-blue-500/10 border-primary/20'
+            ? 'bg-purple-500/10 border-purple-500/20' 
+            : 'bg-primary/10 border-primary/20'
         }`}>
           <CardContent className="pt-6">
             <div className="flex items-center justify-between">
               <div className="flex items-center gap-4">
                 <div className={`p-3 rounded-full ${
                   userProfile.role === 'admin' 
-                    ? 'bg-gradient-to-br from-purple-500/20 to-blue-500/20' 
+                    ? 'bg-purple-500/20' 
                     : 'bg-primary/20'
                 }`}>
                   {userProfile.role === 'admin' && <ShieldCheck className="h-8 w-8 text-purple-600 dark:text-purple-400" />}
@@ -236,7 +236,7 @@ export default function AccountPage() {
                   <div className="flex items-center gap-2 mb-1">
                     <h3 className="text-xl font-bold capitalize">{userProfile.role}</h3>
                     {userProfile.role === 'admin' && (
-                      <Badge className="bg-gradient-to-r from-purple-600 to-blue-600 border-0">
+                      <Badge className="bg-purple-600 border-0">
                         <ShieldCheck className="h-3 w-3 mr-1" />
                         Full Access
                       </Badge>
@@ -441,7 +441,7 @@ export default function AccountPage() {
               </Link>
               {userProfile?.role === 'admin' && (
                 <Link href="/admin/dashboard">
-                  <Button className="w-full justify-start bg-gradient-to-r from-purple-600 to-blue-600 hover:from-purple-700 hover:to-blue-700 border-0">
+                  <Button className="w-full justify-start bg-purple-600 hover:bg-purple-700 border-0">
                     <ShieldCheck className="mr-2 h-4 w-4" />
                     Admin Dashboard
                   </Button>

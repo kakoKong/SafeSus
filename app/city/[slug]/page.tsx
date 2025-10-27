@@ -11,12 +11,11 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LoginModal from '@/components/shared/LoginModal';
 import ReportButton from '@/components/shared/ReportButton';
-import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, Info, ChevronDown, ChevronUp, MapPin, Heart, Backpack, Baby, Briefcase, Users, Sparkles } from 'lucide-react';
+import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp, MapPin, Heart, Backpack, Baby, Sparkles } from 'lucide-react';
 import type { CityDetail, Zone, Pin } from '@/types';
 import { trackEvent, Events } from '@/lib/analytics';
 import { useToast } from '@/components/ui/use-toast';
 import { createClient } from '@/lib/supabase/client';
-import RulesWithCategories from '@/components/city/RulesWithCategories';
 // @ts-ignore - Turf types resolution issue
 import * as turf from '@turf/turf';
 import type mapboxgl from 'mapbox-gl';
@@ -25,19 +24,19 @@ const TRIP_TYPE_INFO: Record<string, { icon: any; label: string; color: string; 
   solo: {
     icon: Backpack,
     label: 'Solo Traveler',
-    color: 'from-orange-500 to-amber-500',
+    color: 'bg-orange-500',
     tips: 'Budget-friendly safety tips, hostel areas, and solo traveler alerts prioritized'
   },
   family: {
     icon: Baby,
     label: 'Family',
-    color: 'from-blue-500 to-cyan-500',
+    color: 'bg-blue-500',
     tips: 'Family-friendly zones, kid-safe areas, and child-specific safety alerts highlighted'
   },
   couple: {
     icon: Heart,
     label: 'Couple',
-    color: 'from-pink-500 to-rose-500',
+    color: 'bg-pink-500',
     tips: 'Couple-friendly safe zones, romantic area safety, and date scams highlighted'
   }
 };
@@ -61,14 +60,11 @@ export default function CityDetailPage() {
   const [safeZonesOpen, setSafeZonesOpen] = useState(true);
   const [avoidZonesOpen, setAvoidZonesOpen] = useState(true);
   const [scamsOpen, setScamsOpen] = useState(true);
-  const [rulesOpen, setRulesOpen] = useState(true);
   
   // Show more/less state
   const [showAllSafeZones, setShowAllSafeZones] = useState(false);
   const [showAllAvoidZones, setShowAllAvoidZones] = useState(false);
   const [showAllScams, setShowAllScams] = useState(false);
-  const [showAllDos, setShowAllDos] = useState(false);
-  const [showAllDonts, setShowAllDonts] = useState(false);
   
   // Map viewport state
   const [mapBounds, setMapBounds] = useState<mapboxgl.LngLatBounds | null>(null);
@@ -321,7 +317,7 @@ export default function CityDetailPage() {
             
             {/* Trip Type Banner */}
             {tripType && TRIP_TYPE_INFO[tripType] && (
-              <div className={`mb-4 p-4 rounded-2xl bg-gradient-to-r ${TRIP_TYPE_INFO[tripType].color} text-white shadow-lg`}>
+              <div className={`mb-4 p-4 rounded-2xl ${TRIP_TYPE_INFO[tripType].color} text-white shadow-lg`}>
                 <div className="flex items-center gap-3 mb-2">
                   {(() => {
                     const Icon = TRIP_TYPE_INFO[tripType].icon;
@@ -526,33 +522,6 @@ export default function CityDetailPage() {
                     )}
                   </>
                 )}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
-
-          {/* Do's and Don'ts */}
-          {(dos.length > 0 || donts.length > 0) && (
-            <Collapsible open={rulesOpen} onOpenChange={setRulesOpen} className="mb-8">
-              <div className="flex items-center justify-between mb-6">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-primary/10 rounded-lg">
-                    <Info className="h-5 w-5 text-primary" />
-                  </div>
-                  <h2 className="text-xl font-bold">Do's & Don'ts</h2>
-                  <Badge variant="secondary" className="text-xs">{dos.length + donts.length}</Badge>
-                </div>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm">
-                    {rulesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-              <CollapsibleContent>
-                <RulesWithCategories 
-                  dos={dos} 
-                  donts={donts} 
-                  INITIAL_SHOW_COUNT={INITIAL_SHOW_COUNT}
-                />
               </CollapsibleContent>
             </Collapsible>
           )}

@@ -4,15 +4,15 @@ import { Card, CardContent } from '@/components/ui/card';
 import { Shield, Map, MessageCircle, AlertTriangle, Navigation, Users, Sparkles, Globe, Eye, MapPin, Compass, Backpack, Plane, Camera, Mountain, TrendingUp, BookOpen, Award } from 'lucide-react';
 import TripPlanner from '@/components/shared/TripPlanner';
 import FeaturedTips from '@/components/shared/FeaturedTips';
-import QuickTipSearch from '@/components/shared/QuickTipSearch';
 import RecentTipsFeed from '@/components/shared/RecentTipsFeed';
 import TripChecklist from '@/components/shared/TripChecklist';
+import AppDownloadButtons from '@/components/shared/AppDownloadButtons';
 
 export default function Home() {
   return (
     <div className="flex flex-col overflow-hidden">
       {/* Hero Section - Interactive Trip Planner */}
-      <section className="relative py-20 md:py-28">
+      <section className="relative py-20 md:py-28 bg-white dark:bg-slate-950">
         <div className="container px-4 max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -26,7 +26,7 @@ export default function Home() {
                 from travelers like you.
               </p>
               
-              <div className="flex flex-wrap gap-4">
+              <div className="flex flex-wrap gap-4 items-center">
                 <div className="flex items-center gap-2 text-sm">
                   <Shield className="h-5 w-5 text-primary" />
                   <span>Community verified</span>
@@ -36,8 +36,11 @@ export default function Home() {
                   <span>500+ contributors</span>
                 </div>
               </div>
-            </div>
-            
+              
+              {/* Download App Buttons */}
+              <AppDownloadButtons />
+              </div>
+              
             {/* Right - Trip Planner */}
             <div className="relative">
               <TripPlanner />
@@ -46,34 +49,18 @@ export default function Home() {
         </div>
       </section>
 
-      {/* Quick Search Section - MOVED UP for immediate value */}
-      <section className="py-20 px-4 bg-slate-50 dark:bg-slate-900">
-        <div className="container max-w-7xl mx-auto">
-          <div className="text-center mb-8">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Find Safety Tips Instantly
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto mb-8">
-              Search for specific tips, scams, or areas
-            </p>
-          </div>
-          
-          <QuickTipSearch />
-        </div>
-      </section>
-
       {/* Activity & Tips Section - MOVED UP to show engagement */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-white dark:bg-slate-950">
         <div className="container max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-3 gap-8 mb-20">
             <div className="lg:col-span-2">
               <RecentTipsFeed />
-            </div>
+                </div>
             <div>
               <TripChecklist />
             </div>
           </div>
-
+          
           <div className="text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
               Popular Safety Tips
@@ -110,7 +97,6 @@ export default function Home() {
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl">
             {/* Bangkok - Featured Large */}
             <Link href="/cities" className="group relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all md:col-span-2 h-[300px]">
-              <div className="absolute inset-0 bg-gradient-to-br from-slate-800 to-slate-900" />
               
               <div className="relative h-full flex flex-col justify-between p-8">
                 <div>
@@ -138,7 +124,6 @@ export default function Home() {
               { name: 'Koh Samui', desc: 'Island safety guide' }
             ].map((city) => (
               <div key={city.name} className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-8 h-[200px] group hover:border-slate-700 transition-all">
-                <div className="absolute inset-0 bg-gradient-to-br from-slate-800/50 to-slate-900/50" />
                 
                 <div className="relative h-full flex flex-col justify-between">
                   <div>
@@ -154,7 +139,7 @@ export default function Home() {
           </div>
         </div>
       </section>
-
+      
       {/* The Problem & Solution - MOVED DOWN after showing value */}
       <section className="py-20 px-4 bg-slate-50 dark:bg-slate-900">
         <div className="container max-w-6xl mx-auto">
@@ -191,12 +176,12 @@ export default function Home() {
                 That forum post from 2018? Probably not relevant anymore. Things change fast.
               </p>
             </Card>
-          </div>
-        </div>
+                  </div>
+                </div>
       </section>
       
       {/* How It Works */}
-      <section className="py-20 px-4">
+      <section className="py-20 px-4 bg-white dark:bg-slate-950">
         <div className="container max-w-6xl mx-auto">
           <div className="max-w-3xl mx-auto text-center mb-12">
             <h2 className="text-3xl md:text-4xl font-bold mb-4">
@@ -334,7 +319,7 @@ export default function Home() {
       </section>
 
       {/* Footer - Clean & Minimal */}
-      <footer className="relative py-16 border-t border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-950">
+      <footer className="relative py-16 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
         <div className="container px-4 max-w-6xl mx-auto">
           <div className="grid md:grid-cols-12 gap-12 mb-12">
             {/* Brand */}

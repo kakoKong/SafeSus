@@ -8,9 +8,9 @@ import { Input } from '@/components/ui/input';
 import { MapPin, Users, Heart, Backpack, Baby, Briefcase, ArrowRight } from 'lucide-react';
 
 const TRIP_TYPES = [
-  { id: 'solo', label: 'Solo', icon: Backpack, color: 'from-orange-500 to-amber-500' },
-  { id: 'family', label: 'Family', icon: Baby, color: 'from-blue-500 to-cyan-500' },
-  { id: 'couple', label: 'Couple', icon: Heart, color: 'from-pink-500 to-rose-500' },
+  { id: 'solo', label: 'Solo', icon: Backpack, color: 'bg-orange-500' },
+  { id: 'family', label: 'Family', icon: Baby, color: 'bg-blue-500' },
+  { id: 'couple', label: 'Couple', icon: Heart, color: 'bg-pink-500' },
 ];
 
 const CITIES = [
@@ -40,8 +40,8 @@ export default function TripPlanner() {
 
   return (
     <Card className="relative overflow-hidden bg-white dark:bg-slate-900 border-2 shadow-2xl">
-      {/* Decorative gradient */}
-      <div className="absolute top-0 left-0 right-0 h-2 bg-gradient-to-r from-primary via-purple-500 to-pink-500" />
+      {/* Decorative accent */}
+      <div className="absolute top-0 left-0 right-0 h-2 bg-primary" />
       
       <div className="p-8 space-y-6">
         <div>
@@ -117,7 +117,7 @@ export default function TripPlanner() {
                   `}
                 >
                   <div className={`
-                    w-12 h-12 rounded-xl bg-gradient-to-br ${tripType.color} 
+                    w-12 h-12 rounded-xl ${tripType.color} 
                     flex items-center justify-center mb-2 mx-auto
                     ${isSelected ? 'shadow-lg' : 'opacity-80 group-hover:opacity-100'}
                   `}>
@@ -140,7 +140,7 @@ export default function TripPlanner() {
         {/* CTA Button */}
         <Button 
           size="lg" 
-          className="w-full h-14 text-lg font-bold rounded-xl bg-gradient-to-r from-primary to-blue-500 hover:shadow-xl transition-all group"
+          className="w-full h-14 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 hover:shadow-xl transition-all group"
           onClick={handleStartPlanning}
         >
           Start Planning Your Safety

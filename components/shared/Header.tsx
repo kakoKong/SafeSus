@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useState } from 'react';
 import LoginModal from './LoginModal';
-import ModeToggle from './ModeToggle';
+import NotificationDropdown from './NotificationDropdown';
 import { Button } from '@/components/ui/button';
 import { User, LogOut, Menu, X } from 'lucide-react';
 import { useAuth } from '@/lib/auth-context';
@@ -69,6 +69,7 @@ export default function Header() {
               <>
                 {user ? (
                   <div className="hidden md:flex items-center gap-2">
+                    <NotificationDropdown />
                     <Link href="/account">
                       <Button variant="ghost" size="sm">
                         <User className="h-4 w-4 mr-2" />
@@ -132,7 +133,6 @@ export default function Header() {
               })}
               
               <div className="pt-4 border-t space-y-2">
-                <ModeToggle />
                 
                 {!loading && (
                   <>

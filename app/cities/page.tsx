@@ -29,7 +29,7 @@ export default async function CitiesPage() {
   const cities = await getCities();
 
   return (
-    <div className="min-h-screen bg-gradient-to-b from-slate-50 to-white dark:from-slate-950 dark:to-slate-900">
+    <div className="min-h-screen bg-white dark:bg-slate-950">
       {/* Hero Section */}
       <div className="relative overflow-hidden text-white">
         {/* Background Image */}
@@ -39,9 +39,8 @@ export default async function CitiesPage() {
             backgroundImage: 'url(https://images.unsplash.com/photo-1555116505-38ab61800975?q=80&w=2070&auto=format&fit=crop)',
           }}
         />
-        {/* Fade Overlay */}
-        <div className="absolute inset-0 bg-gradient-to-b from-black/60 via-black/50 to-black/70" />
-        <div className="absolute inset-0 bg-gradient-to-r from-primary/40 via-blue-500/30 to-purple-500/30" />
+        {/* Darkening Overlay */}
+        <div className="absolute inset-0 bg-black/60" />
         
         <div className="container px-4 py-16 md:py-24 max-w-6xl mx-auto relative z-10">
           <div className="max-w-3xl">
@@ -89,8 +88,8 @@ export default async function CitiesPage() {
                           backgroundImage: `url(${theme.image})`,
                         }}
                       />
-                      {/* Fade Overlay */}
-                      <div className={`absolute inset-0 ${isLive ? 'bg-gradient-to-t from-black/80 via-black/40 to-black/20' : 'bg-gradient-to-t from-slate-900/90 via-slate-800/70 to-slate-700/50'}`} />
+                      {/* Darkening Overlay */}
+                      <div className={`absolute inset-0 ${isLive ? 'bg-black/40' : 'bg-slate-900/80'}`} />
                       
                       {/* Status Badge */}
                       <div className="absolute top-4 right-4 z-20">

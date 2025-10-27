@@ -6,7 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, MapPin } from 'lucide-react';
 import { getCategoryIcon, getCategoryColor, getCategoryBgColor, getCategoryInfo, type TipCategory } from '@/lib/tip-categories';
-import { getTipImage, getImageOverlay } from '@/lib/tip-images';
+import { getTipImage } from '@/lib/tip-images';
 import TipCategoryFilter from './TipCategoryFilter';
 import TipImageWithFallback from './TipImageWithFallback';
 
@@ -136,7 +136,6 @@ export default function FeaturedTips({ showFilter = false, limit = 6 }: Featured
             const categoryInfo = getCategoryInfo(tip.tip_category);
             const Icon = categoryInfo.icon;
             const imageUrl = getTipImage(tip.tip_category, tip.id);
-            const overlayGradient = getImageOverlay(tip.tip_category);
         
             return (
               <Link 
@@ -154,8 +153,8 @@ export default function FeaturedTips({ showFilter = false, limit = 6 }: Featured
                       fill
                       className="object-cover transition-transform duration-300 group-hover:scale-110"
                     />
-                    {/* Gradient Overlay */}
-                    <div className={`absolute inset-0 bg-gradient-to-t ${overlayGradient}`} />
+                    {/* Darkening Overlay */}
+                    <div className="absolute inset-0 bg-black/20" />
                     
                     {/* Category Badge on Image */}
                     <div className="absolute top-3 right-3">
