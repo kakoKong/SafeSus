@@ -352,7 +352,7 @@ export default function CityDetailPage() {
   const totalScamPins = cityData.pins.filter((p) => p.type === 'scam').length;
 
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+    <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] overflow-hidden">
       <div className="flex flex-col lg:flex-row h-full overflow-hidden w-full">
         {/* Map Section - Full screen on mobile, 60% on desktop */}
         <div className="w-full lg:flex-[0_0_60%] max-w-full h-full lg:h-full relative overflow-hidden">
@@ -430,7 +430,7 @@ export default function CityDetailPage() {
                             return <Icon className="h-5 w-5" />;
                           })()}
                           <div>
-                            <div className="font-bold text-base">{TRIP_TYPE_INFO[tripType].label} Trip Planning Mode</div>
+                            <div className="font-bold text-base">{TRIP_TYPE_INFO[tripType].label} Safety Mode</div>
                           </div>
                         </div>
                       </div>
@@ -609,7 +609,7 @@ export default function CityDetailPage() {
                     return <Icon className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />;
                   })()}
                   <div className="min-w-0 flex-1">
-                    <div className="font-bold text-base sm:text-lg">{TRIP_TYPE_INFO[tripType].label} Trip Planning Mode</div>
+                    <div className="font-bold text-base sm:text-lg">{TRIP_TYPE_INFO[tripType].label} Safety Mode</div>
                   </div>
                   <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 ml-auto flex-shrink-0" />
                 </div>

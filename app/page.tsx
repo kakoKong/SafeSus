@@ -13,7 +13,7 @@ export default function Home() {
   return (
     <div className="flex flex-col overflow-hidden">
       {/* Hero Section - Interactive Trip Planner */}
-      <section className="relative py-20 md:py-28 bg-white dark:bg-slate-950">
+      <section className="relative py-12 md:py-20 lg:py-28 bg-white dark:bg-slate-950">
         <div className="container px-4 max-w-7xl mx-auto">
           <div className="grid lg:grid-cols-2 gap-12 items-center">
             {/* Left Content */}
@@ -34,14 +34,14 @@ export default function Home() {
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="h-5 w-5 text-primary" />
-                  <span>500+ contributors</span>
+                  <span>10+ contributors</span>
                 </div>
               </div>
               
               {/* Download App Buttons - Small on mobile, full on desktop */}
-              <div>
-                <AppDownloadButtons />
-              </div>
+              {/* <div> */}
+                {/* <AppDownloadButtons /> */}
+              {/* </div> */}
             </div>
               
             {/* Right - Trip Planner */}
@@ -292,7 +292,7 @@ export default function Home() {
               },
               {
                 q: "How much does it cost?",
-                a: "Zero. Zilch. Nada. 100% free, forever. No hidden fees, no premium tiers."
+                a: "Zero. Zilch. Nada. 100% free, but we may add premium features in the future."
               },
               {
                 q: "Which cities can I use this in?",
@@ -327,7 +327,7 @@ export default function Home() {
       <section className="py-20 px-4 bg-slate-950 text-white">
         <div className="container px-4 max-w-4xl mx-auto text-center">
           <h2 className="text-3xl md:text-5xl font-bold mb-6">
-            Start Planning Your Safe Trip
+            Start Exploring Safely
           </h2>
           
           <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto">

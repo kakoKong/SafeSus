@@ -24,6 +24,7 @@ interface MapViewProps {
   onViewportChange?: (bounds: mapboxgl.LngLatBounds) => void;
   maxBounds?: [[number, number], [number, number]] | null;
   className?: string;
+  disableZoom?: boolean;
 }
 
 const MapView = forwardRef<MapViewRef, MapViewProps>(({
@@ -36,6 +37,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   onViewportChange,
   maxBounds,
   className = '',
+  disableZoom = false,
 }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -114,6 +116,16 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       center: center,
       zoom: 12,
       ...(maxBounds && { maxBounds }),
+      ...(disableZoom && {
+        interactive: false,
+        scrollZoom: false,
+        boxZoom: false,
+        dragRotate: false,
+        dragPan: false,
+        keyboard: false,
+        doubleClickZoom: false,
+        touchZoomRotate: false,
+      }),
     });
 
     map.current.on('load', () => {

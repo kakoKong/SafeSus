@@ -45,8 +45,8 @@ export default function TripPlanner() {
       
       <div className="p-8 space-y-6">
         <div>
-          <h2 className="text-2xl font-bold mb-2">Plan Your Safe Journey</h2>
-          <p className="text-muted-foreground">Get personalized safety insights for your trip style</p>
+          <h2 className="text-2xl font-bold mb-2">Explore Safety by Trip Type</h2>
+          <p className="text-muted-foreground">Get personalized safety insights for your travel style</p>
         </div>
 
         {/* Where are you going? */}
@@ -143,7 +143,7 @@ export default function TripPlanner() {
           className="w-full h-14 text-lg font-bold rounded-xl bg-primary hover:bg-primary/90 hover:shadow-xl transition-all group"
           onClick={handleStartPlanning}
         >
-          Start Planning Your Safety
+          Explore Safety Now
           <ArrowRight className="ml-2 h-5 w-5 group-hover:translate-x-1 transition-transform" />
         </Button>
 

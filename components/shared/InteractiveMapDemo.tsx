@@ -8,14 +8,11 @@ import { Badge } from '@/components/ui/badge';
 import { MapPin, ChevronRight } from 'lucide-react';
 import Link from 'next/link';
 import type { CityDetail } from '@/types';
-import mapboxgl from 'mapbox-gl';
-// @ts-ignore - Turf types resolution issue
-import * as turf from '@turf/turf';
+// Removed turf import - no longer needed for static demo map
 
 export default function InteractiveMapDemo() {
   const [cityData, setCityData] = useState<CityDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [mapBounds, setMapBounds] = useState<mapboxgl.LngLatBounds | null>(null);
   const [showZones, setShowZones] = useState(true);
   const [showTips, setShowTips] = useState(true);
 
@@ -39,50 +36,10 @@ export default function InteractiveMapDemo() {
     fetchDemoData();
   }, []);
 
-  const handleViewportChange = (bounds: mapboxgl.LngLatBounds) => {
-    setMapBounds(bounds);
-  };
-
-  // Filter zones and pins based on map viewport
-  const { filteredZones, filteredPins } = useMemo(() => {
-    if (!cityData || !mapBounds) {
-      return {
-        filteredZones: cityData?.zones || [],
-        filteredPins: cityData?.pins || []
-      };
-    }
-
-    const boundsPolygon = turf.bboxPolygon([
-      mapBounds.getWest(),
-      mapBounds.getSouth(),
-      mapBounds.getEast(),
-      mapBounds.getNorth()
-    ]);
-
-    const zonesInView = (cityData.zones || []).filter((zone: any) => {
-      try {
-        const zoneFeature = turf.feature(zone.geom);
-        return turf.booleanIntersects(boundsPolygon, zoneFeature);
-      } catch {
-        return false;
-      }
-    });
-
-    const pinsInView = (cityData.pins || []).filter((pin: any) => {
-      try {
-        const [lng, lat] = pin.location.coordinates;
-        const point = turf.point([lng, lat]);
-        return turf.booleanPointInPolygon(point, boundsPolygon);
-      } catch {
-        return false;
-      }
-    });
-
-    return {
-      filteredZones: zonesInView,
-      filteredPins: pinsInView
-    };
-  }, [cityData, mapBounds]);
+  // Don't track viewport changes for static demo map - show all zones and pins
+  // This prevents re-renders and keeps the map static
+  const filteredZones = cityData?.zones || [];
+  const filteredPins = cityData?.pins || [];
 
   const zonesToShow = showZones ? filteredZones : [];
   const pinsToShow = showTips ? filteredPins : [];
@@ -102,10 +59,6 @@ export default function InteractiveMapDemo() {
     return null;
   }
 
-  const safeZonesCount = filteredZones.filter((z: any) => z.level === 'recommended').length;
-  const avoidZonesCount = filteredZones.filter((z: any) => z.level === 'avoid').length;
-  const scamPinsCount = filteredPins.filter((p: any) => p.type === 'scam').length;
-
   return (
     <div className="relative w-full bg-white dark:bg-slate-950 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl" style={{ height: '600px' }}>
       {/* Map Background */}
@@ -114,8 +67,8 @@ export default function InteractiveMapDemo() {
           zones={zonesToShow}
           pins={pinsToShow}
           center={[100.5018, 13.7563]}
-          onViewportChange={handleViewportChange}
           className="w-full h-full"
+          disableZoom={true}
         />
       </div>
       
@@ -129,20 +82,20 @@ export default function InteractiveMapDemo() {
                 Explore Bangkok Safety Map
               </h3>
               <p className="text-slate-300 text-sm md:text-base mb-4">
-                Pan, zoom, and click to see safe zones, avoid areas, and scam alerts
+                View safe zones, avoid areas, and scam alerts for Bangkok
               </p>
               <div className="flex flex-wrap gap-2 mb-4">
                 <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {safeZonesCount} Safe Zones
+                  {filteredZones.filter((z: any) => z.level === 'recommended').length} Safe Zones
                 </Badge>
                 <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-500/30">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {avoidZonesCount} Avoid Areas
+                  {filteredZones.filter((z: any) => z.level === 'avoid').length} Avoid Areas
                 </Badge>
                 <Badge variant="secondary" className="bg-orange-500/20 text-orange-300 border-orange-500/30">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {scamPinsCount} Scam Alerts
+                  {filteredPins.filter((p: any) => p.type === 'scam').length} Scam Alerts
                 </Badge>
               </div>
               <Link href="/city/bangkok">
