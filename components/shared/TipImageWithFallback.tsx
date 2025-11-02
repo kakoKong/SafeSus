@@ -19,15 +19,14 @@ interface TipImageWithFallbackProps {
 const getCategoryBackground = (category: TipCategory): string => {
   const backgrounds: Record<TipCategory, string> = {
     transportation: 'bg-blue-500',
-    scams_fraud: 'bg-red-500',
-    accommodation: 'bg-purple-500',
-    food_drink: 'bg-orange-500',
-    health_medical: 'bg-teal-500',
-    general_safety: 'bg-slate-500',
-    local_customs: 'bg-indigo-500',
-    emergency_contacts: 'bg-rose-500',
-    money_finance: 'bg-emerald-500',
-    shopping: 'bg-pink-500',
+    shopping: 'bg-purple-500',
+    dining: 'bg-orange-500',
+    accommodation: 'bg-cyan-500',
+    general_safety: 'bg-red-500',
+    attractions: 'bg-pink-500',
+    cultural: 'bg-green-500',
+    communication: 'bg-indigo-500',
+    money: 'bg-emerald-500',
   };
   return backgrounds[category] || backgrounds.general_safety;
 };

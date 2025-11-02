@@ -7,6 +7,7 @@ import FeaturedTips from '@/components/shared/FeaturedTips';
 import RecentTipsFeed from '@/components/shared/RecentTipsFeed';
 import TripChecklist from '@/components/shared/TripChecklist';
 import AppDownloadButtons from '@/components/shared/AppDownloadButtons';
+import InteractiveMapDemo from '@/components/shared/InteractiveMapDemo';
 
 export default function Home() {
   return (
@@ -37,9 +38,11 @@ export default function Home() {
                 </div>
               </div>
               
-              {/* Download App Buttons */}
-              <AppDownloadButtons />
+              {/* Download App Buttons - Small on mobile, full on desktop */}
+              <div>
+                <AppDownloadButtons />
               </div>
+            </div>
               
             {/* Right - Trip Planner */}
             <div className="relative">
@@ -49,14 +52,47 @@ export default function Home() {
         </div>
       </section>
 
+      {/* Interactive Map Demo */}
+      <section className="py-20 px-4 bg-slate-50 dark:bg-slate-900">
+        <div className="container max-w-7xl mx-auto">
+          <div className="max-w-3xl mx-auto text-center mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Try the Map Yourself
+            </h2>
+            <p className="text-lg text-muted-foreground">
+              Explore Bangkok's safety zones and scam alerts. Pan around, zoom in, and click on areas to see what travelers have reported.
+            </p>
+          </div>
+          
+          <InteractiveMapDemo />
+        </div>
+      </section>
+
       {/* Activity & Tips Section - MOVED UP to show engagement */}
       <section className="py-20 px-4 bg-white dark:bg-slate-950">
         <div className="container max-w-7xl mx-auto">
+          <div className="mb-12">
+            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+              Real-Time Community Activity
+            </h2>
+            <p className="text-lg text-muted-foreground max-w-3xl">
+              See what travelers are sharing right now - fresh tips, scam alerts, and safety updates from the community
+            </p>
+          </div>
+          
           <div className="grid lg:grid-cols-3 gap-8 mb-20">
             <div className="lg:col-span-2">
               <RecentTipsFeed />
-                </div>
+            </div>
             <div>
+              <div className="mb-4">
+                <h3 className="text-xl md:text-2xl font-bold mb-2">
+                  Trip Safety Checklist
+                </h3>
+                <p className="text-sm text-muted-foreground mb-4">
+                  Essential safety items to check before and during your trip. Stay prepared and informed.
+                </p>
+              </div>
               <TripChecklist />
             </div>
           </div>

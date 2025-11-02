@@ -122,8 +122,8 @@ export default function FeaturedTips({ showFilter = false, limit = 6 }: Featured
       )}
       
       {tips.length === 0 ? (
-        <Card className="p-12 text-center">
-          <p className="text-muted-foreground">
+        <Card className="p-8 sm:p-12 text-center">
+          <p className="text-sm sm:text-base text-muted-foreground">
             {(selectedCategory !== 'all' || selectedCity !== 'all') 
               ? 'No tips found with the current filters. Try adjusting your selection!'
               : 'No tips available yet. Check back soon!'
@@ -131,7 +131,7 @@ export default function FeaturedTips({ showFilter = false, limit = 6 }: Featured
           </p>
         </Card>
       ) : (
-        <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-6">
+        <div className="grid sm:grid-cols-2 lg:grid-cols-3 gap-4 sm:gap-6">
           {tips.map((tip) => {
             const categoryInfo = getCategoryInfo(tip.tip_category);
             const Icon = categoryInfo.icon;
@@ -145,7 +145,7 @@ export default function FeaturedTips({ showFilter = false, limit = 6 }: Featured
               >
                 <Card className="h-full overflow-hidden transition-all hover:shadow-xl hover:scale-[1.02] border-2 hover:border-primary/50">
                   {/* Image Header */}
-                  <div className="relative h-48 w-full overflow-hidden">
+                  <div className="relative h-40 sm:h-48 w-full overflow-hidden">
                     <TipImageWithFallback
                       src={imageUrl}
                       alt={tip.title}
@@ -157,39 +157,39 @@ export default function FeaturedTips({ showFilter = false, limit = 6 }: Featured
                     <div className="absolute inset-0 bg-black/20" />
                     
                     {/* Category Badge on Image */}
-                    <div className="absolute top-3 right-3">
+                    <div className="absolute top-2 right-2 sm:top-3 sm:right-3">
                       <Badge variant="secondary" className="backdrop-blur-sm bg-white/90 dark:bg-slate-900/90 text-xs">
                         {categoryInfo.label}
                       </Badge>
                     </div>
 
                     {/* Category Icon */}
-                    <div className={`absolute top-3 left-3 p-2 rounded-lg ${categoryInfo.bgColor} backdrop-blur-sm`}>
-                      <Icon className={`h-5 w-5 ${categoryInfo.color}`} />
+                    <div className={`absolute top-2 left-2 sm:top-3 sm:left-3 p-1.5 sm:p-2 rounded-lg ${categoryInfo.bgColor} backdrop-blur-sm`}>
+                      <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${categoryInfo.color}`} />
                     </div>
                   </div>
 
-                  <CardHeader className="pb-3">
-                    <CardTitle className="text-lg group-hover:text-primary transition-colors line-clamp-2">
+                  <CardHeader className="pb-2 sm:pb-3">
+                    <CardTitle className="text-base sm:text-lg group-hover:text-primary transition-colors line-clamp-2">
                       {tip.title}
                     </CardTitle>
                   </CardHeader>
                   
-                  <CardContent className="space-y-3">
-                    <p className="text-sm text-muted-foreground line-clamp-3">
+                  <CardContent className="space-y-2 sm:space-y-3">
+                    <p className="text-xs sm:text-sm text-muted-foreground line-clamp-3">
                       {tip.summary}
                     </p>
                     
                     <div className="flex items-center justify-between pt-2 border-t text-xs text-muted-foreground">
                       {tip.city_name && (
                         <div className="flex items-center gap-1">
-                          <MapPin className="h-3 w-3" />
-                          <span>{tip.city_name}</span>
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{tip.city_name}</span>
                         </div>
                       )}
-                      <div className="flex items-center gap-1">
+                      <div className="flex items-center gap-1 flex-shrink-0">
                         <Clock className="h-3 w-3" />
-                        <span>{new Date(tip.created_at).toLocaleDateString()}</span>
+                        <span className="whitespace-nowrap">{new Date(tip.created_at).toLocaleDateString()}</span>
                       </div>
                     </div>
                   </CardContent>

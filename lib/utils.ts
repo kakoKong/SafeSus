@@ -38,3 +38,10 @@ export function getPinColor(type: string): string {
   }
 }
 
+/**
+ * Check if a pathname matches a navigation href (supports nested routes)
+ */
+export function isActivePath(pathname: string, href: string): boolean {
+  return pathname === href || pathname.startsWith(`${href}/`);
+}
+

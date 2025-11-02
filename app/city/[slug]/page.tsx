@@ -7,18 +7,19 @@ import MapFilters from '@/components/map/MapFilters';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription } from '@/components/ui/sheet';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LoginModal from '@/components/shared/LoginModal';
 import ReportButton from '@/components/shared/ReportButton';
-import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp, MapPin, Heart, Backpack, Baby, Sparkles } from 'lucide-react';
+import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp, MapPin, Heart, Backpack, Baby, Sparkles, Info } from 'lucide-react';
 import type { CityDetail, Zone, Pin } from '@/types';
 import { trackEvent, Events } from '@/lib/analytics';
 import { useToast } from '@/components/ui/use-toast';
 import { createClient } from '@/lib/supabase/client';
 // @ts-ignore - Turf types resolution issue
 import * as turf from '@turf/turf';
-import type mapboxgl from 'mapbox-gl';
+import mapboxgl from 'mapbox-gl';
+import type { LngLatBounds as MapboxLngLatBounds } from 'mapbox-gl';
 
 const TRIP_TYPE_INFO: Record<string, { icon: any; label: string; color: string; tips: string }> = {
   solo: {
@@ -57,9 +58,9 @@ export default function CityDetailPage() {
   const mapRef = useRef<MapViewRef>(null);
   
   // Collapsible sections state
-  const [safeZonesOpen, setSafeZonesOpen] = useState(true);
-  const [avoidZonesOpen, setAvoidZonesOpen] = useState(true);
-  const [scamsOpen, setScamsOpen] = useState(true);
+  const [safeZonesOpen, setSafeZonesOpen] = useState(false);
+  const [avoidZonesOpen, setAvoidZonesOpen] = useState(false);
+  const [scamsOpen, setScamsOpen] = useState(false);
   
   // Show more/less state
   const [showAllSafeZones, setShowAllSafeZones] = useState(false);
@@ -67,11 +68,14 @@ export default function CityDetailPage() {
   const [showAllScams, setShowAllScams] = useState(false);
   
   // Map viewport state
-  const [mapBounds, setMapBounds] = useState<mapboxgl.LngLatBounds | null>(null);
+  const [mapBounds, setMapBounds] = useState<MapboxLngLatBounds | null>(null);
   
   // Map filters state
   const [showZones, setShowZones] = useState(true);
   const [showTips, setShowTips] = useState(true);
+  
+  // Mobile drawer state
+  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
   
   const { toast } = useToast();
   const supabase = createClient();
@@ -232,6 +236,50 @@ export default function CityDetailPage() {
     };
   }, [allZones, allPins, mapBounds]);
 
+  // Calculate city bounds from zones and pins
+  const cityBounds = useMemo(() => {
+    if (!cityData || (!cityData.zones.length && !cityData.pins.length)) return null;
+    
+    try {
+      const bounds = new mapboxgl.LngLatBounds();
+      let hasBounds = false;
+
+      // Add all zone bounds
+      cityData.zones.forEach((zone) => {
+        const coords = zone.geom.coordinates[0];
+        coords.forEach((coord) => {
+          bounds.extend([coord[0], coord[1]]);
+          hasBounds = true;
+        });
+      });
+
+      // Add all pin locations
+      cityData.pins.forEach((pin) => {
+        const [lng, lat] = pin.location.coordinates;
+        bounds.extend([lng, lat]);
+        hasBounds = true;
+      });
+
+      if (!hasBounds) return null;
+
+      // Add padding (extend bounds by 10%)
+      const ne = bounds.getNorthEast();
+      const sw = bounds.getSouthWest();
+      const lngPadding = (ne.lng - sw.lng) * 0.4;
+      const latPadding = (ne.lat - sw.lat) * 0.4;
+
+      const paddedBounds: [[number, number], [number, number]] = [
+        [sw.lng - lngPadding, sw.lat - latPadding],
+        [ne.lng + lngPadding, ne.lat + latPadding]
+      ];
+
+      return paddedBounds;
+    } catch (error) {
+      console.error('Error calculating city bounds:', error);
+      return null;
+    }
+  }, [cityData]);
+
   if (loading) {
     return (
       <div className="flex items-center justify-center min-h-screen">
@@ -268,9 +316,9 @@ export default function CityDetailPage() {
 
   return (
     <>
-      <div className="flex flex-col lg:flex-row min-h-screen">
-        {/* Map Section - 60% on left */}
-        <div className="w-full lg:w-[60%] h-[50vh] lg:h-screen lg:sticky lg:top-0 relative">
+      <div className="flex flex-col lg:flex-row lg:min-h-screen">
+        {/* Map Section - Full screen on mobile, 60% on desktop */}
+        <div className="w-full lg:w-[60%] h-screen lg:h-screen lg:sticky lg:top-0 relative">
           <MapView
             ref={mapRef}
             zones={allZones}
@@ -278,6 +326,7 @@ export default function CityDetailPage() {
             onZoneClick={(zone) => handleZoneClick(zone, false)}
             onPinClick={(pin) => handlePinClick(pin, false)}
             onViewportChange={handleViewportChange}
+            maxBounds={cityBounds}
           />
           
           {/* Map Filters Overlay */}
@@ -291,17 +340,202 @@ export default function CityDetailPage() {
               tipCount={cityData.pins.length}
             />
           </div>
+
+          {/* Mobile: Floating info button */}
+          <div className="lg:hidden absolute bottom-4 left-4 right-4 z-10">
+            <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
+              <SheetTrigger asChild>
+                <Button 
+                  size="lg" 
+                  className="w-full shadow-xl bg-primary hover:bg-primary/90"
+                  onClick={() => setMobileDrawerOpen(true)}
+                >
+                  <MapPin className="h-5 w-5 mr-2" />
+                  View Area Info
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="bottom" className="max-h-[90vh]">
+                <div className="pb-8">
+                  <div className="mb-6 pb-4 border-b">
+                    <div className="flex items-start justify-between gap-3 mb-3">
+                      <div>
+                        <h2 className="text-2xl font-bold mb-1">{cityData.name}</h2>
+                        <p className="text-sm text-muted-foreground">{cityData.country}</p>
+                      </div>
+                      <Button 
+                        onClick={handleSaveCity} 
+                        variant={isSaved ? 'default' : 'outline'}
+                        size="sm"
+                      >
+                        <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
+                      </Button>
+                    </div>
+                    
+                    {tripType && TRIP_TYPE_INFO[tripType] && (
+                      <div className={`p-3 rounded-xl ${TRIP_TYPE_INFO[tripType].color} text-white`}>
+                        <div className="flex items-center gap-2">
+                          {(() => {
+                            const Icon = TRIP_TYPE_INFO[tripType].icon;
+                            return <Icon className="h-5 w-5" />;
+                          })()}
+                          <div>
+                            <div className="font-bold text-base">{TRIP_TYPE_INFO[tripType].label} Trip Planning Mode</div>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+                  </div>
+
+                  {/* Mobile: Show all content sections */}
+                  {/* Safe Areas */}
+                  {(safeZones.length > 0 || totalSafeZones > 0) && (
+                    <Collapsible open={safeZonesOpen} onOpenChange={setSafeZonesOpen} className="mb-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-green-500/10 rounded-lg">
+                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
+                          </div>
+                          <h3 className="text-lg font-bold">Safe Areas</h3>
+                          <Badge variant="secondary" className="text-xs">{safeZones.length}</Badge>
+                        </div>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            {safeZonesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </Button>
+                        </CollapsibleTrigger>
+                      </div>
+                      <CollapsibleContent className="space-y-2">
+                        {safeZones.slice(0, showAllSafeZones ? safeZones.length : INITIAL_SHOW_COUNT).map((zone) => (
+                          <div 
+                            key={zone.id}
+                            className="p-3 bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-900 rounded-xl"
+                            onClick={() => {
+                              handleZoneClick(zone, true);
+                              setMobileDrawerOpen(false);
+                            }}
+                          >
+                            <h4 className="font-bold text-sm text-green-900 dark:text-green-100">{zone.label}</h4>
+                            <p className="text-xs text-green-700 dark:text-green-300">{zone.reason_short}</p>
+                          </div>
+                        ))}
+                        {safeZones.length > INITIAL_SHOW_COUNT && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-full text-xs"
+                            onClick={() => setShowAllSafeZones(!showAllSafeZones)}
+                          >
+                            {showAllSafeZones ? 'Show Less' : `Show ${safeZones.length - INITIAL_SHOW_COUNT} More`}
+                          </Button>
+                        )}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+
+                  {/* Avoid Areas */}
+                  {(avoidZones.length > 0 || totalAvoidZones > 0) && (
+                    <Collapsible open={avoidZonesOpen} onOpenChange={setAvoidZonesOpen} className="mb-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-red-500/10 rounded-lg">
+                            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
+                          </div>
+                          <h3 className="text-lg font-bold">Areas to Avoid</h3>
+                          <Badge variant="secondary" className="text-xs">{avoidZones.length}</Badge>
+                        </div>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            {avoidZonesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </Button>
+                        </CollapsibleTrigger>
+                      </div>
+                      <CollapsibleContent className="space-y-2">
+                        {avoidZones.slice(0, showAllAvoidZones ? avoidZones.length : INITIAL_SHOW_COUNT).map((zone) => (
+                          <div 
+                            key={zone.id}
+                            className="p-3 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl"
+                            onClick={() => {
+                              handleZoneClick(zone, true);
+                              setMobileDrawerOpen(false);
+                            }}
+                          >
+                            <h4 className="font-bold text-sm text-red-900 dark:text-red-100">{zone.label}</h4>
+                            <p className="text-xs text-red-700 dark:text-red-300">{zone.reason_short}</p>
+                          </div>
+                        ))}
+                        {avoidZones.length > INITIAL_SHOW_COUNT && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-full text-xs"
+                            onClick={() => setShowAllAvoidZones(!showAllAvoidZones)}
+                          >
+                            {showAllAvoidZones ? 'Show Less' : `Show ${avoidZones.length - INITIAL_SHOW_COUNT} More`}
+                          </Button>
+                        )}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+
+                  {/* Scam Patterns */}
+                  {(scamPins.length > 0 || totalScamPins > 0) && (
+                    <Collapsible open={scamsOpen} onOpenChange={setScamsOpen} className="mb-6">
+                      <div className="flex items-center justify-between mb-3">
+                        <div className="flex items-center gap-2">
+                          <div className="p-1.5 bg-orange-500/10 rounded-lg">
+                            <Info className="h-4 w-4 text-orange-600 dark:text-orange-400" />
+                          </div>
+                          <h3 className="text-lg font-bold">Common Scams</h3>
+                          <Badge variant="secondary" className="text-xs">{scamPins.length}</Badge>
+                        </div>
+                        <CollapsibleTrigger asChild>
+                          <Button variant="ghost" size="sm">
+                            {scamsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
+                          </Button>
+                        </CollapsibleTrigger>
+                      </div>
+                      <CollapsibleContent className="space-y-2">
+                        {scamPins.slice(0, showAllScams ? scamPins.length : INITIAL_SHOW_COUNT).map((pin) => (
+                          <div 
+                            key={pin.id}
+                            className="p-3 bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-200 dark:border-orange-900 rounded-xl"
+                            onClick={() => {
+                              handlePinClick(pin, true);
+                              setMobileDrawerOpen(false);
+                            }}
+                          >
+                            <h4 className="font-bold text-sm text-orange-900 dark:text-orange-100">{pin.title}</h4>
+                            <p className="text-xs text-orange-700 dark:text-orange-300">{pin.summary}</p>
+                          </div>
+                        ))}
+                        {scamPins.length > INITIAL_SHOW_COUNT && (
+                          <Button 
+                            variant="ghost" 
+                            size="sm" 
+                            className="w-full text-xs"
+                            onClick={() => setShowAllScams(!showAllScams)}
+                          >
+                            {showAllScams ? 'Show Less' : `Show ${scamPins.length - INITIAL_SHOW_COUNT} More`}
+                          </Button>
+                        )}
+                      </CollapsibleContent>
+                    </Collapsible>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
+          </div>
         </div>
 
-        {/* Content Sections - 40% on right */}
-        <div className="w-full lg:w-[40%] bg-background overflow-y-auto">
-          <div className="p-6 lg:p-8">
+        {/* Desktop: Content Sections - 40% on right */}
+        <div className="hidden lg:flex w-full lg:w-[40%] bg-background overflow-y-auto">
+          <div className="p-4 sm:p-6 lg:p-8">
           {/* Header */}
-          <div className="mb-8 pb-6 border-b">
-            <div className="flex items-start justify-between gap-4 mb-4">
-              <div>
-                <h1 className="text-3xl lg:text-4xl font-black mb-2">{cityData.name}</h1>
-                <p className="text-muted-foreground">
+          <div className="mb-6 sm:mb-8 pb-4 sm:pb-6 border-b">
+            <div className="flex items-start justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
+              <div className="min-w-0 flex-1">
+                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black mb-2">{cityData.name}</h1>
+                <p className="text-sm sm:text-base text-muted-foreground">
                   {cityData.country}
                 </p>
               </div>
@@ -317,24 +551,24 @@ export default function CityDetailPage() {
             
             {/* Trip Type Banner */}
             {tripType && TRIP_TYPE_INFO[tripType] && (
-              <div className={`mb-4 p-4 rounded-2xl ${TRIP_TYPE_INFO[tripType].color} text-white shadow-lg`}>
-                <div className="flex items-center gap-3 mb-2">
+              <div className={`mb-3 sm:mb-4 p-3 sm:p-4 rounded-2xl ${TRIP_TYPE_INFO[tripType].color} text-white shadow-lg`}>
+                <div className="flex items-center gap-2 sm:gap-3 mb-2">
                   {(() => {
                     const Icon = TRIP_TYPE_INFO[tripType].icon;
-                    return <Icon className="h-6 w-6" />;
+                    return <Icon className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />;
                   })()}
-                  <div>
-                    <div className="font-bold text-lg">{TRIP_TYPE_INFO[tripType].label} Trip Planning Mode</div>
+                  <div className="min-w-0 flex-1">
+                    <div className="font-bold text-base sm:text-lg">{TRIP_TYPE_INFO[tripType].label} Trip Planning Mode</div>
                   </div>
-                  <Sparkles className="h-5 w-5 ml-auto" />
+                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 ml-auto flex-shrink-0" />
                 </div>
-                <p className="text-sm text-white/90">
+                <p className="text-xs sm:text-sm text-white/90">
                   {TRIP_TYPE_INFO[tripType].tips}
                 </p>
               </div>
             )}
             
-            <div className="flex flex-wrap gap-2">
+            <div className="flex flex-wrap gap-1.5 sm:gap-2">
               <Badge variant="secondary" className="text-xs">
                 <CheckCircle className="h-3 w-3 mr-1" />
                 {safeZones.length}/{totalSafeZones} Safe Zones
@@ -348,7 +582,7 @@ export default function CityDetailPage() {
                 {scamPins.length}/{totalScamPins} Scam Alerts
               </Badge>
             </div>
-            <p className="text-xs text-muted-foreground mt-3">
+            <p className="text-xs text-muted-foreground mt-2 sm:mt-3">
               <MapPin className="h-3 w-3 inline mr-1" />
               Showing areas in current map view
             </p>
@@ -356,24 +590,24 @@ export default function CityDetailPage() {
 
           {/* Safe Areas */}
           {(safeZones.length > 0 || totalSafeZones > 0) && (
-            <Collapsible open={safeZonesOpen} onOpenChange={setSafeZonesOpen} className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-green-500/10 rounded-lg">
-                    <CheckCircle className="h-5 w-5 text-green-600 dark:text-green-400" />
+            <Collapsible open={safeZonesOpen} onOpenChange={setSafeZonesOpen} className="mb-6 sm:mb-8">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-green-500/10 rounded-lg flex-shrink-0">
+                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400" />
                   </div>
-                  <h2 className="text-xl font-bold">Safe Areas</h2>
-                  <Badge variant="secondary" className="text-xs">{safeZones.length}</Badge>
+                  <h2 className="text-lg sm:text-xl font-bold">Safe Areas</h2>
+                  <Badge variant="secondary" className="text-xs flex-shrink-0">{safeZones.length}</Badge>
                 </div>
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="flex-shrink-0">
                     {safeZonesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 </CollapsibleTrigger>
               </div>
-              <CollapsibleContent className="space-y-3">
+              <CollapsibleContent className="space-y-2 sm:space-y-3">
                 {safeZones.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-6 sm:py-8 text-muted-foreground">
                     <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No safe areas in current map view</p>
                     <p className="text-xs mt-1">Pan the map to explore other areas</p>
@@ -383,13 +617,13 @@ export default function CityDetailPage() {
                     {safeZones.slice(0, showAllSafeZones ? safeZones.length : INITIAL_SHOW_COUNT).map((zone) => (
                       <div 
                         key={zone.id}
-                        className="group p-4 bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-900 rounded-xl hover:border-green-400 dark:hover:border-green-700 transition-all cursor-pointer"
+                        className="group p-3 sm:p-4 bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-900 rounded-xl hover:border-green-400 dark:hover:border-green-700 transition-all cursor-pointer"
                         onClick={() => handleZoneClick(zone, true)}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <h3 className="font-bold mb-1 text-green-900 dark:text-green-100">{zone.label}</h3>
-                            <p className="text-sm text-green-700 dark:text-green-300">{zone.reason_short}</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-sm sm:text-base mb-1 text-green-900 dark:text-green-100 line-clamp-2">{zone.label}</h3>
+                            <p className="text-xs sm:text-sm text-green-700 dark:text-green-300 line-clamp-2">{zone.reason_short}</p>
                           </div>
                           <MapPin className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-1" />
                         </div>
@@ -399,7 +633,7 @@ export default function CityDetailPage() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="w-full"
+                        className="w-full text-xs sm:text-sm"
                         onClick={() => setShowAllSafeZones(!showAllSafeZones)}
                       >
                         {showAllSafeZones ? 'Show Less' : `Show ${safeZones.length - INITIAL_SHOW_COUNT} More`}
@@ -413,24 +647,24 @@ export default function CityDetailPage() {
 
           {/* Avoid Areas */}
           {(avoidZones.length > 0 || totalAvoidZones > 0) && (
-            <Collapsible open={avoidZonesOpen} onOpenChange={setAvoidZonesOpen} className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-red-500/10 rounded-lg">
-                    <AlertTriangle className="h-5 w-5 text-red-600 dark:text-red-400" />
+            <Collapsible open={avoidZonesOpen} onOpenChange={setAvoidZonesOpen} className="mb-6 sm:mb-8">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-red-500/10 rounded-lg flex-shrink-0">
+                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400" />
                   </div>
-                  <h2 className="text-xl font-bold">Areas to Avoid</h2>
-                  <Badge variant="secondary" className="text-xs">{avoidZones.length}</Badge>
+                  <h2 className="text-lg sm:text-xl font-bold">Areas to Avoid</h2>
+                  <Badge variant="secondary" className="text-xs flex-shrink-0">{avoidZones.length}</Badge>
                 </div>
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="flex-shrink-0">
                     {avoidZonesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 </CollapsibleTrigger>
               </div>
-              <CollapsibleContent className="space-y-3">
+              <CollapsibleContent className="space-y-2 sm:space-y-3">
                 {avoidZones.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-6 sm:py-8 text-muted-foreground">
                     <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No avoid areas in current map view</p>
                     <p className="text-xs mt-1">Pan the map to explore other areas</p>
@@ -440,13 +674,13 @@ export default function CityDetailPage() {
                     {avoidZones.slice(0, showAllAvoidZones ? avoidZones.length : INITIAL_SHOW_COUNT).map((zone) => (
                       <div 
                         key={zone.id}
-                        className="group p-4 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl hover:border-red-400 dark:hover:border-red-700 transition-all cursor-pointer"
+                        className="group p-3 sm:p-4 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl hover:border-red-400 dark:hover:border-red-700 transition-all cursor-pointer"
                         onClick={() => handleZoneClick(zone, true)}
                       >
                         <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1">
-                            <h3 className="font-bold mb-1 text-red-900 dark:text-red-100">{zone.label}</h3>
-                            <p className="text-sm text-red-700 dark:text-red-300">{zone.reason_short}</p>
+                          <div className="flex-1 min-w-0">
+                            <h3 className="font-bold text-sm sm:text-base mb-1 text-red-900 dark:text-red-100 line-clamp-2">{zone.label}</h3>
+                            <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 line-clamp-2">{zone.reason_short}</p>
                           </div>
                           <MapPin className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
                         </div>
@@ -456,7 +690,7 @@ export default function CityDetailPage() {
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="w-full"
+                        className="w-full text-xs sm:text-sm"
                         onClick={() => setShowAllAvoidZones(!showAllAvoidZones)}
                       >
                         {showAllAvoidZones ? 'Show Less' : `Show ${avoidZones.length - INITIAL_SHOW_COUNT} More`}
@@ -470,24 +704,24 @@ export default function CityDetailPage() {
 
           {/* Scam Patterns */}
           {(scamPins.length > 0 || totalScamPins > 0) && (
-            <Collapsible open={scamsOpen} onOpenChange={setScamsOpen} className="mb-8">
-              <div className="flex items-center justify-between mb-4">
-                <div className="flex items-center gap-3">
-                  <div className="p-2 bg-orange-500/10 rounded-lg">
-                    <Info className="h-5 w-5 text-orange-600 dark:text-orange-400" />
+            <Collapsible open={scamsOpen} onOpenChange={setScamsOpen} className="mb-6 sm:mb-8">
+              <div className="flex items-center justify-between mb-3 sm:mb-4">
+                <div className="flex items-center gap-2 sm:gap-3">
+                  <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg flex-shrink-0">
+                    <Info className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 dark:text-orange-400" />
                   </div>
-                  <h2 className="text-xl font-bold">Common Scams</h2>
-                  <Badge variant="secondary" className="text-xs">{scamPins.length}</Badge>
+                  <h2 className="text-lg sm:text-xl font-bold">Common Scams</h2>
+                  <Badge variant="secondary" className="text-xs flex-shrink-0">{scamPins.length}</Badge>
                 </div>
                 <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm">
+                  <Button variant="ghost" size="sm" className="flex-shrink-0">
                     {scamsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
                   </Button>
                 </CollapsibleTrigger>
               </div>
-              <CollapsibleContent className="space-y-3">
+              <CollapsibleContent className="space-y-2 sm:space-y-3">
                 {scamPins.length === 0 ? (
-                  <div className="text-center py-8 text-muted-foreground">
+                  <div className="text-center py-6 sm:py-8 text-muted-foreground">
                     <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
                     <p className="text-sm">No scam alerts in current map view</p>
                     <p className="text-xs mt-1">Pan the map to explore other areas</p>
@@ -497,24 +731,24 @@ export default function CityDetailPage() {
                     {scamPins.slice(0, showAllScams ? scamPins.length : INITIAL_SHOW_COUNT).map((pin) => (
                       <div 
                         key={pin.id}
-                        className="group p-4 bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-200 dark:border-orange-900 rounded-xl hover:border-orange-400 dark:hover:border-orange-700 transition-all cursor-pointer"
+                        className="group p-3 sm:p-4 bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-200 dark:border-orange-900 rounded-xl hover:border-orange-400 dark:hover:border-orange-700 transition-all cursor-pointer"
                         onClick={() => handlePinClick(pin, true)}
                       >
-                        <div className="flex items-start justify-between gap-3 mb-2">
-                          <div className="flex items-center gap-2 flex-1">
-                            <h3 className="font-bold text-orange-900 dark:text-orange-100">{pin.title}</h3>
+                        <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2">
+                          <div className="flex items-center gap-2 flex-1 min-w-0">
+                            <h3 className="font-bold text-sm sm:text-base text-orange-900 dark:text-orange-100 line-clamp-2">{pin.title}</h3>
                             <MapPin className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
                           </div>
                           <Badge variant="secondary" className="text-xs flex-shrink-0">{pin.type}</Badge>
                         </div>
-                        <p className="text-sm text-orange-700 dark:text-orange-300">{pin.summary}</p>
+                        <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-300 line-clamp-3">{pin.summary}</p>
                       </div>
                     ))}
                     {scamPins.length > INITIAL_SHOW_COUNT && (
                       <Button 
                         variant="ghost" 
                         size="sm" 
-                        className="w-full"
+                        className="w-full text-xs sm:text-sm"
                         onClick={() => setShowAllScams(!showAllScams)}
                       >
                         {showAllScams ? 'Show Less' : `Show ${scamPins.length - INITIAL_SHOW_COUNT} More`}
@@ -527,8 +761,8 @@ export default function CityDetailPage() {
           )}
 
           {/* Actions */}
-          <div className="flex flex-col gap-3 pt-6 border-t mt-8">
-            <Button variant="outline" asChild className="w-full">
+          <div className="flex flex-col gap-3 pt-4 sm:pt-6 border-t mt-6 sm:mt-8">
+            <Button variant="outline" asChild className="w-full text-xs sm:text-sm">
               <a href="/submit">
                 <Plus className="h-4 w-4 mr-2" />
                 Submit a Tip for {cityData.name}
@@ -541,7 +775,7 @@ export default function CityDetailPage() {
 
       {/* Zone Details Sheet */}
       <Sheet open={!!selectedZone} onOpenChange={() => setSelectedZone(null)}>
-        <SheetContent>
+        <SheetContent side="bottom">
           {selectedZone && (
             <>
               <SheetHeader>
@@ -574,7 +808,7 @@ export default function CityDetailPage() {
 
       {/* Pin Details Sheet */}
       <Sheet open={!!selectedPin} onOpenChange={() => setSelectedPin(null)}>
-        <SheetContent>
+        <SheetContent side="bottom">
           {selectedPin && (
             <>
               <SheetHeader>

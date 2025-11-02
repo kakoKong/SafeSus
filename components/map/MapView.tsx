@@ -21,6 +21,7 @@ interface MapViewProps {
   onZoneClick?: (zone: Zone) => void;
   onPinClick?: (pin: Pin) => void;
   onViewportChange?: (bounds: mapboxgl.LngLatBounds) => void;
+  maxBounds?: [[number, number], [number, number]] | null;
   className?: string;
 }
 
@@ -32,6 +33,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   onZoneClick,
   onPinClick,
   onViewportChange,
+  maxBounds,
   className = '',
 }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
@@ -97,6 +99,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       style: 'mapbox://styles/mapbox/light-v11',
       center: center,
       zoom: 12,
+      ...(maxBounds && { maxBounds }),
     });
 
     map.current.on('load', () => {
@@ -132,6 +135,18 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       map.current = null;
     };
   }, []);
+
+  // Update maxBounds
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+    
+    if (maxBounds) {
+      map.current.setMaxBounds(maxBounds);
+    } else {
+      // Remove maxBounds by setting to undefined (as per Mapbox docs)
+      (map.current.setMaxBounds as any)(null);
+    }
+  }, [mapLoaded, maxBounds]);
 
   // Add zones layer
   useEffect(() => {

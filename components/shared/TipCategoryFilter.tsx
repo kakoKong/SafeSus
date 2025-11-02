@@ -3,8 +3,9 @@
 import { useState } from 'react';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { ALL_CATEGORIES, type TipCategory, type TipCategoryInfo } from '@/lib/tip-categories';
-import { X, MapPin } from 'lucide-react';
+import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetTrigger } from '@/components/ui/sheet';
+import { ALL_CATEGORIES, type TipCategory } from '@/lib/tip-categories';
+import { X, MapPin, Filter } from 'lucide-react';
 
 interface City {
   slug: string;
@@ -30,15 +31,24 @@ export default function TipCategoryFilter({
   selectedCity = 'all',
   onSelectCity
 }: TipCategoryFilterProps) {
-  return (
+  const [isOpen, setIsOpen] = useState(false);
+  
+  // Count active filters
+  const activeFilterCount = (selectedCategory !== 'all' ? 1 : 0) + 
+                           (selectedCity && selectedCity !== 'all' ? 1 : 0);
+
+  const FilterContent = () => (
     <div className="space-y-6">
       {/* City Filter */}
       {cities && cities.length > 0 && onSelectCity && (
         <div className="space-y-3">
           <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Filter by City</h3>
-          <div className="flex gap-2 flex-wrap">
+          <div className="flex flex-wrap gap-2">
             <button
-              onClick={() => onSelectCity('all')}
+              onClick={() => {
+                onSelectCity('all');
+                setIsOpen(false);
+              }}
               className={`
                 flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all
                 ${selectedCity === 'all'
@@ -52,7 +62,10 @@ export default function TipCategoryFilter({
             {cities.map((city) => (
               <button
                 key={city.slug}
-                onClick={() => onSelectCity(city.slug)}
+                onClick={() => {
+                  onSelectCity(city.slug);
+                  setIsOpen(false);
+                }}
                 className={`
                   flex items-center gap-2 px-4 py-2 rounded-full font-medium text-sm transition-all
                   ${selectedCity === city.slug
@@ -72,56 +85,13 @@ export default function TipCategoryFilter({
       {/* Category Filter */}
       <div className="space-y-3">
         <h3 className="text-sm font-semibold text-muted-foreground uppercase tracking-wide">Filter by Category</h3>
-      {/* Mobile: Horizontal scroll */}
-      <div className="lg:hidden">
-        <div className="flex gap-2 overflow-x-auto pb-2 hide-scrollbar">
-          <button
-            onClick={() => onSelectCategory('all')}
-            className={`
-              flex-shrink-0 px-4 py-2 rounded-full font-semibold text-sm transition-all
-              ${selectedCategory === 'all'
-                ? 'bg-primary text-primary-foreground shadow-lg'
-                : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-              }
-            `}
-          >
-            All Tips
-          </button>
-          {ALL_CATEGORIES.map((category) => {
-            const Icon = category.icon;
-            const count = categoryCounts[category.id] || 0;
-            
-            return (
-              <button
-                key={category.id}
-                onClick={() => onSelectCategory(category.id)}
-                className={`
-                  flex-shrink-0 flex items-center gap-2 px-4 py-2 rounded-full font-semibold text-sm transition-all
-                  ${selectedCategory === category.id
-                    ? `${category.bgColor} ${category.color} shadow-lg border-2 border-current`
-                    : 'bg-slate-100 dark:bg-slate-800 text-slate-600 dark:text-slate-400 hover:bg-slate-200 dark:hover:bg-slate-700'
-                  }
-                `}
-              >
-                <Icon className="h-4 w-4" />
-                <span>{category.label}</span>
-                {showCount && count > 0 && (
-                  <Badge variant="secondary" className="ml-1 text-xs">
-                    {count}
-                  </Badge>
-                )}
-              </button>
-            );
-          })}
-        </div>
-      </div>
-
-      {/* Desktop: Grid layout */}
-      <div className="hidden lg:block">
-        <div className="grid grid-cols-2 md:grid-cols-3 lg:grid-cols-5 gap-3">
+        <div className="grid grid-cols-2 gap-3">
           {/* All Tips Card */}
           <button
-            onClick={() => onSelectCategory('all')}
+            onClick={() => {
+              onSelectCategory('all');
+              setIsOpen(false);
+            }}
             className={`
               p-4 rounded-2xl border-2 transition-all hover:scale-105
               ${selectedCategory === 'all'
@@ -152,7 +122,10 @@ export default function TipCategoryFilter({
             return (
               <button
                 key={category.id}
-                onClick={() => onSelectCategory(category.id)}
+                onClick={() => {
+                  onSelectCategory(category.id);
+                  setIsOpen(false);
+                }}
                 className={`
                   relative p-4 rounded-2xl border-2 transition-all hover:scale-105
                   ${isSelected
@@ -188,51 +161,84 @@ export default function TipCategoryFilter({
           })}
         </div>
       </div>
-
-      </div>
-
-      {/* Active filters badge */}
-      {(selectedCategory !== 'all' || (selectedCity && selectedCity !== 'all')) && (
-        <div className="flex items-center gap-2 flex-wrap">
-          <span className="text-sm text-muted-foreground">Active filters:</span>
-          {selectedCity && selectedCity !== 'all' && (
-            <Badge variant="secondary" className="flex items-center gap-2">
-              <MapPin className="h-3 w-3" />
-              <span>{cities.find(c => c.slug === selectedCity)?.name}</span>
-              {onSelectCity && (
-                <button
-                  onClick={() => onSelectCity('all')}
-                  className="hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full p-0.5"
-                >
-                  <X className="h-3 w-3" />
-                </button>
-              )}
-            </Badge>
-          )}
-          {selectedCategory !== 'all' && (
-            <Badge variant="secondary" className="flex items-center gap-2">
-              {(() => {
-                const category = ALL_CATEGORIES.find(c => c.id === selectedCategory);
-                if (!category) return null;
-                const Icon = category.icon;
-                return (
-                  <>
-                    <Icon className="h-3 w-3" />
-                    <span>{category.label}</span>
-                    <button
-                      onClick={() => onSelectCategory('all')}
-                      className="hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full p-0.5"
-                    >
-                      <X className="h-3 w-3" />
-                    </button>
-                  </>
-                );
-              })()}
-            </Badge>
-          )}
-        </div>
-      )}
     </div>
   );
-}
 
+  return (
+    <>
+      {/* Mobile: Filter Button with Sheet */}
+      <div className="lg:hidden">
+        <Sheet open={isOpen} onOpenChange={setIsOpen}>
+          <SheetTrigger asChild>
+            <Button variant="outline" className="w-full justify-start gap-2">
+              <Filter className="h-4 w-4" />
+              Filters
+              {activeFilterCount > 0 && (
+                <Badge variant="secondary" className="ml-auto">
+                  {activeFilterCount}
+                </Badge>
+              )}
+            </Button>
+          </SheetTrigger>
+          <SheetContent className="w-[90vw] sm:w-[540px] overflow-y-auto">
+            <SheetHeader>
+              <SheetTitle>Filter Tips</SheetTitle>
+            </SheetHeader>
+            <div className="mt-6">
+              <FilterContent />
+            </div>
+          </SheetContent>
+        </Sheet>
+      </div>
+
+      {/* Desktop: Full Filter Display */}
+      <div className="hidden lg:block">
+        <FilterContent />
+      </div>
+
+      {/* Active filters badge - only show on desktop */}
+      <div className="hidden lg:block">
+        {(selectedCategory !== 'all' || (selectedCity && selectedCity !== 'all')) && (
+          <div className="flex items-center gap-2 flex-wrap">
+            <span className="text-sm text-muted-foreground">Active filters:</span>
+            {selectedCity && selectedCity !== 'all' && (
+              <Badge variant="secondary" className="flex items-center gap-2">
+                <MapPin className="h-3 w-3" />
+                <span>{cities.find(c => c.slug === selectedCity)?.name}</span>
+                {onSelectCity && (
+                  <button
+                    onClick={() => onSelectCity('all')}
+                    className="hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full p-0.5"
+                  >
+                    <X className="h-3 w-3" />
+                  </button>
+                )}
+              </Badge>
+            )}
+            {selectedCategory !== 'all' && (
+              <Badge variant="secondary" className="flex items-center gap-2">
+                {(() => {
+                  const category = ALL_CATEGORIES.find(c => c.id === selectedCategory);
+                  if (!category) return null;
+                  const Icon = category.icon;
+                  return (
+                    <>
+                      <Icon className="h-3 w-3" />
+                      <span>{category.label}</span>
+                      <button
+                        onClick={() => onSelectCategory('all')}
+                        className="hover:bg-slate-200 dark:hover:bg-slate-700 rounded-full p-0.5"
+                      >
+                        <X className="h-3 w-3" />
+                      </button>
+                    </>
+                  );
+                })()}
+              </Badge>
+            )}
+          </div>
+        )}
+      </div>
+    </>
+  );
+}

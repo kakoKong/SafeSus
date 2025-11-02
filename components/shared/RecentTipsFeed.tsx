@@ -78,21 +78,21 @@ export default function RecentTipsFeed() {
   }
 
   return (
-    <Card className="p-6">
-      <div className="flex items-center gap-2 mb-4">
-        <TrendingUp className="h-5 w-5 text-primary" />
-        <h3 className="font-bold">Recent Activity</h3>
+    <Card className="p-4 sm:p-6">
+      <div className="flex items-center gap-2 mb-3 sm:mb-4">
+        <TrendingUp className="h-4 w-4 sm:h-5 sm:w-5 text-primary flex-shrink-0" />
+        <h3 className="font-bold text-sm sm:text-base">Recent Activity</h3>
         <div className="ml-auto">
           <div className="w-2 h-2 bg-green-500 rounded-full animate-pulse" />
         </div>
       </div>
 
       {tips.length === 0 ? (
-        <p className="text-sm text-muted-foreground text-center py-4">
+        <p className="text-xs sm:text-sm text-muted-foreground text-center py-4">
           No recent activity yet
         </p>
       ) : (
-        <div className="space-y-2">
+        <div className="space-y-1.5 sm:space-y-2">
           {tips.map((tip) => {
             const categoryInfo = getCategoryInfo(tip.tip_category);
             const Icon = categoryInfo.icon;
@@ -102,11 +102,11 @@ export default function RecentTipsFeed() {
               <Link
                 key={tip.id}
                 href={tip.city_slug ? `/city/${tip.city_slug}` : '/community'}
-                className="block p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
+                className="block p-2 sm:p-3 rounded-lg hover:bg-slate-50 dark:hover:bg-slate-900 transition-colors"
               >
-                <div className="flex items-start gap-3">
+                <div className="flex items-start gap-2 sm:gap-3">
                   {/* Thumbnail Image */}
-                  <div className="relative w-16 h-16 rounded-lg overflow-hidden flex-shrink-0">
+                  <div className="relative w-12 h-12 sm:w-16 sm:h-16 rounded-lg overflow-hidden flex-shrink-0">
                     <TipImageWithFallback
                       src={imageUrl}
                       alt={tip.title}
@@ -115,26 +115,26 @@ export default function RecentTipsFeed() {
                       className="object-cover"
                     />
                     <div className={`absolute inset-0 flex items-center justify-center bg-black/30`}>
-                      <div className={`p-1.5 rounded ${categoryInfo.bgColor}`}>
-                        <Icon className={`h-3 w-3 ${categoryInfo.color}`} />
+                      <div className={`p-1 sm:p-1.5 rounded ${categoryInfo.bgColor}`}>
+                        <Icon className={`h-2.5 w-2.5 sm:h-3 sm:w-3 ${categoryInfo.color}`} />
                       </div>
                     </div>
                   </div>
 
                   <div className="flex-1 min-w-0">
-                    <p className="font-medium text-sm line-clamp-2 mb-1">
+                    <p className="font-medium text-xs sm:text-sm line-clamp-2 mb-1">
                       {tip.title}
                     </p>
-                    <div className="flex items-center gap-2 text-xs text-muted-foreground">
+                    <div className="flex items-center gap-1.5 sm:gap-2 text-xs text-muted-foreground flex-wrap">
                       {tip.city_name && (
                         <>
-                          <MapPin className="h-3 w-3" />
-                          <span>{tip.city_name}</span>
+                          <MapPin className="h-3 w-3 flex-shrink-0" />
+                          <span className="truncate">{tip.city_name}</span>
                           <span>•</span>
                         </>
                       )}
-                      <Clock className="h-3 w-3" />
-                      <span>{getTimeAgo(tip.created_at)}</span>
+                      <Clock className="h-3 w-3 flex-shrink-0" />
+                      <span className="whitespace-nowrap">{getTimeAgo(tip.created_at)}</span>
                     </div>
                   </div>
                 </div>
@@ -146,7 +146,7 @@ export default function RecentTipsFeed() {
 
       <Link
         href="/community"
-        className="block mt-4 text-center text-sm text-primary font-semibold hover:underline"
+        className="block mt-3 sm:mt-4 text-center text-xs sm:text-sm text-primary font-semibold hover:underline"
       >
         View all tips →
       </Link>

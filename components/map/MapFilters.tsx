@@ -26,18 +26,18 @@ export default function MapFilters({
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <Card className="shadow-lg">
-      <CardContent className="p-4">
-        <div className="flex items-center justify-between mb-3">
-          <div className="flex items-center gap-2">
-            <Layers className="h-4 w-4 text-primary" />
-            <h3 className="font-semibold text-sm">Map Layers</h3>
+    <Card className="shadow-lg max-w-[240px] sm:max-w-none">
+      <CardContent className="p-3 sm:p-4">
+        <div className="flex items-center justify-between mb-2 sm:mb-3">
+          <div className="flex items-center gap-1.5 sm:gap-2">
+            <Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
+            <h3 className="font-semibold text-xs sm:text-sm">Map Layers</h3>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="h-6 w-6 p-0"
+            className="h-6 w-6 p-0 flex-shrink-0"
           >
             {isExpanded ? '−' : '+'}
           </Button>
@@ -55,10 +55,10 @@ export default function MapFilters({
               }`}
             >
               <div className="flex items-center gap-2">
-                <MapPin className={`h-4 w-4 ${showZones ? 'text-primary' : 'text-gray-400'}`} />
-                <span className="text-sm font-medium">Zones</span>
+                <MapPin className={`h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 ${showZones ? 'text-primary' : 'text-gray-400'}`} />
+                <span className="text-xs sm:text-sm font-medium">Zones</span>
               </div>
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs flex-shrink-0">
                 {zoneCount}
               </Badge>
             </button>
@@ -73,10 +73,10 @@ export default function MapFilters({
               }`}
             >
               <div className="flex items-center gap-2">
-                <Info className={`h-4 w-4 ${showTips ? 'text-primary' : 'text-gray-400'}`} />
-                <span className="text-sm font-medium">Tips & Alerts</span>
+                <Info className={`h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 ${showTips ? 'text-primary' : 'text-gray-400'}`} />
+                <span className="text-xs sm:text-sm font-medium">Tips & Alerts</span>
               </div>
-              <Badge variant="secondary" className="text-xs">
+              <Badge variant="secondary" className="text-xs flex-shrink-0">
                 {tipCount}
               </Badge>
             </button>
