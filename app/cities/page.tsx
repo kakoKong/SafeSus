@@ -133,10 +133,6 @@ export default async function CitiesPage() {
                             <AlertTriangle className="h-4 w-4 text-red-500" />
                             <span>Scam Alerts</span>
                           </div>
-                          <div className="flex items-center gap-1">
-                            <Navigation className="h-4 w-4 text-blue-500" />
-                            <span>Live Mode</span>
-                          </div>
                         </div>
                       ) : (
                         <div className="pt-4 border-t">

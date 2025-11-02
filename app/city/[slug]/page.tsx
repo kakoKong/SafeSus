@@ -11,7 +11,7 @@ import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTr
 import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
 import LoginModal from '@/components/shared/LoginModal';
 import ReportButton from '@/components/shared/ReportButton';
-import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp, MapPin, Heart, Backpack, Baby, Sparkles, Info } from 'lucide-react';
+import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp, MapPin, Heart, Backpack, Baby, Sparkles, Info, Navigation } from 'lucide-react';
 import type { CityDetail, Zone, Pin } from '@/types';
 import { trackEvent, Events } from '@/lib/analytics';
 import { useToast } from '@/components/ui/use-toast';
@@ -76,6 +76,9 @@ export default function CityDetailPage() {
   
   // Mobile drawer state
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
+  
+  // Location state
+  const [locationLoading, setLocationLoading] = useState(false);
   
   const { toast } = useToast();
   const supabase = createClient();
@@ -180,6 +183,40 @@ export default function CityDetailPage() {
   const handleViewportChange = useCallback((bounds: mapboxgl.LngLatBounds) => {
     setMapBounds(bounds);
   }, []);
+
+  const handleUseCurrentLocation = useCallback(() => {
+    if (!navigator.geolocation) {
+      toast({
+        title: 'Location not supported',
+        description: 'Your browser does not support geolocation.',
+        variant: 'destructive',
+      });
+      return;
+    }
+
+    setLocationLoading(true);
+    navigator.geolocation.getCurrentPosition(
+      (position) => {
+        const { longitude, latitude } = position.coords;
+        if (mapRef.current) {
+          mapRef.current.zoomToLocation(longitude, latitude);
+          toast({
+            title: 'Location found',
+            description: 'Map centered on your current location.',
+          });
+        }
+        setLocationLoading(false);
+      },
+      (error) => {
+        setLocationLoading(false);
+        toast({
+          title: 'Location error',
+          description: error.message || 'Unable to get your location. Please check your permissions.',
+          variant: 'destructive',
+        });
+      }
+    );
+  }, [toast]);
 
   // Memoize and filter zones and pins based on layer toggles
   const allZones = useMemo(() => {
@@ -315,10 +352,10 @@ export default function CityDetailPage() {
   const totalScamPins = cityData.pins.filter((p) => p.type === 'scam').length;
 
   return (
-    <>
-      <div className="flex flex-col lg:flex-row lg:min-h-screen">
+    <div className="flex flex-col h-[calc(100vh-4rem)] overflow-hidden">
+      <div className="flex flex-col lg:flex-row h-full overflow-hidden w-full">
         {/* Map Section - Full screen on mobile, 60% on desktop */}
-        <div className="w-full lg:w-[60%] h-screen lg:h-screen lg:sticky lg:top-0 relative">
+        <div className="w-full lg:flex-[0_0_60%] max-w-full h-full lg:h-full relative overflow-hidden">
           <MapView
             ref={mapRef}
             zones={allZones}
@@ -339,6 +376,20 @@ export default function CityDetailPage() {
               zoneCount={cityData.zones.length}
               tipCount={cityData.pins.length}
             />
+          </div>
+
+          {/* Current Location Button */}
+          <div className="absolute top-4 right-4 z-10">
+            <Button
+              onClick={handleUseCurrentLocation}
+              disabled={locationLoading}
+              variant="outline"
+              size="sm"
+              className="bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl"
+            >
+              <Navigation className={`h-4 w-4 mr-2 ${locationLoading ? 'animate-spin' : ''}`} />
+              {locationLoading ? 'Locating...' : 'My Location'}
+            </Button>
           </div>
 
           {/* Mobile: Floating info button */}
@@ -528,8 +579,8 @@ export default function CityDetailPage() {
         </div>
 
         {/* Desktop: Content Sections - 40% on right */}
-        <div className="hidden lg:flex w-full lg:w-[40%] bg-background overflow-y-auto">
-          <div className="p-4 sm:p-6 lg:p-8">
+        <div className="hidden lg:flex lg:flex-[0_0_40%] max-w-full bg-background overflow-y-auto overflow-x-hidden w-full h-full">
+          <div className="w-full p-4 sm:p-6 lg:p-8">
           {/* Header */}
           <div className="mb-6 sm:mb-8 pb-4 sm:pb-6 border-b">
             <div className="flex items-start justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
@@ -761,8 +812,8 @@ export default function CityDetailPage() {
           )}
 
           {/* Actions */}
-          <div className="flex flex-col gap-3 pt-4 sm:pt-6 border-t mt-6 sm:mt-8">
-            <Button variant="outline" asChild className="w-full text-xs sm:text-sm">
+          <div className="flex flex-col gap-3 pt-4 sm:pt-6 border-t mt-6 sm:mt-8 mb-6">
+            <Button variant="outline" asChild className="w-full text-xs sm:text-sm mb-4">
               <a href="/submit">
                 <Plus className="h-4 w-4 mr-2" />
                 Submit a Tip for {cityData.name}
@@ -838,7 +889,7 @@ export default function CityDetailPage() {
       </Sheet>
 
       <LoginModal open={showLoginModal} onOpenChange={setShowLoginModal} />
-    </>
+    </div>
   );
 }
 

@@ -120,9 +120,9 @@ export default function InteractiveMapDemo() {
       </div>
       
       {/* Overlay Content */}
-      <div className="absolute inset-0 z-10 flex flex-col">
+      <div className="absolute inset-0 z-10 flex flex-col pointer-events-none">
         {/* Header */}
-        <div className="bg-gradient-to-b from-slate-950/90 to-transparent p-6 pb-8">
+        <div className="bg-gradient-to-b from-slate-950/90 to-transparent p-6 pb-8 pointer-events-auto">
           <div className="flex items-start justify-between gap-4">
             <div className="flex-1">
               <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
@@ -159,7 +159,7 @@ export default function InteractiveMapDemo() {
         <div className="flex-1 pointer-events-none" />
 
         {/* Map Filters */}
-        <div className="p-4 bg-gradient-to-t from-slate-950/90 to-transparent">
+        <div className="p-4 bg-gradient-to-t from-slate-950/90 to-transparent pointer-events-auto">
           <div className="flex justify-end">
             <MapFilters
               showZones={showZones}

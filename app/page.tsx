@@ -299,10 +299,6 @@ export default function Home() {
                 a: "Bangkok has full coverage right now. Phuket, Chiang Mai, and Koh Samui coming soon."
               },
               {
-                q: "Will Live Mode kill my battery?",
-                a: "Nah, it's super lightweight. Only checks your location when needed. Turn it off anytime."
-              },
-              {
                 q: "Do I need to create an account?",
                 a: "Nope! Browse everything without signing up. Only need an account if you want to save cities, submit tips, or become a guardian."
               },
@@ -382,9 +378,6 @@ export default function Home() {
                     </Link>
                   </li>
                   <li>
-                    <Link href="/live" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Live Mode
-                    </Link>
                   </li>
                   <li>
                     <Link href="/community" className="text-muted-foreground hover:text-foreground transition-colors">

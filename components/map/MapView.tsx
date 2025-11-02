@@ -11,6 +11,7 @@ mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 export interface MapViewRef {
   zoomToZone: (zone: Zone) => void;
   zoomToPin: (pin: Pin) => void;
+  zoomToLocation: (lng: number, lat: number) => void;
 }
 
 interface MapViewProps {
@@ -86,6 +87,19 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         });
       } catch (error) {
         console.error('Error zooming to pin:', error);
+      }
+    },
+    zoomToLocation: (lng: number, lat: number) => {
+      if (!map.current || !mapLoaded) return;
+
+      try {
+        map.current.flyTo({
+          center: [lng, lat],
+          zoom: 14,
+          duration: 1000,
+        });
+      } catch (error) {
+        console.error('Error zooming to location:', error);
       }
     },
   }));
@@ -366,7 +380,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   return (
     <div
       ref={mapContainer}
-      className={`w-full h-full ${className}`}
+      className={`w-full h-full relative ${className}`}
       style={{ minHeight: '400px' }}
     />
   );

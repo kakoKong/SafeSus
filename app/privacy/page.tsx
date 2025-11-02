@@ -23,7 +23,7 @@ export default function PrivacyPage() {
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-1">Location Data</h3>
-                <p>When you use Live Mode, we access your device location to show nearby safety warnings. We do not store or track your continuous location history. Location data is used only in real-time for the features you request.</p>
+                <p>When you use the "My Location" feature on the map, we access your device location to center the map on your current position. We do not store or track your location history. Location data is used only in real-time for the features you request.</p>
               </div>
               <div>
                 <h3 className="font-semibold text-foreground mb-1">Usage Data</h3>
@@ -40,7 +40,7 @@ export default function PrivacyPage() {
             <h2 className="text-2xl font-semibold mb-3">How We Use Your Information</h2>
             <ul className="list-disc list-inside space-y-2 text-muted-foreground">
               <li>To provide and maintain our service</li>
-              <li>To show you relevant safety information based on your location (Live Mode only)</li>
+              <li>To center the map on your current location when you use the "My Location" feature</li>
               <li>To save your preferences and saved cities</li>
               <li>To moderate and publish community contributions</li>
               <li>To improve our app through anonymous analytics</li>
