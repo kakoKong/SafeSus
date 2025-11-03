@@ -51,7 +51,7 @@ export default function ReportButton({ targetType, targetId, compact = false, va
 
     try {
       const { error } = await supabase
-        .from('reports')
+        .from('content_flags')
         .insert({
           reporter_id: user.id,
           target_type: targetType,

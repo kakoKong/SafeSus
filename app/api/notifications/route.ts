@@ -58,9 +58,9 @@ export async function POST(request: Request) {
 
   // Check if user is admin or guardian
   const { data: profile } = await supabase
-    .from('profiles')
+    .from('user_profiles')
     .select('role')
-    .eq('id', user.id)
+    .eq('user_id', user.id)
     .single();
 
   if (!profile || !['admin', 'guardian'].includes(profile.role)) {

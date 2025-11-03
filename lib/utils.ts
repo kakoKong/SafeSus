@@ -15,26 +15,28 @@ export function formatDistance(meters: number): string {
 export function getZoneColor(level: 'recommended' | 'neutral' | 'caution' | 'avoid'): string {
   switch (level) {
     case 'recommended':
-      return '#4A90E2'; // Calm blue
+      return '#10B981'; // Green - safe
     case 'neutral':
-      return '#9CA3AF'; // Gray
+      return '#6B7280'; // Gray - neutral
     case 'caution':
-      return '#F59E0B'; // Amber/Yellow
+      return '#F59E0B'; // Amber/Yellow - caution
     case 'avoid':
-      return '#E57373'; // Muted red
+      return '#EF4444'; // Red - avoid
   }
 }
 
 export function getPinColor(type: string): string {
   switch (type) {
     case 'scam':
-      return '#F59E0B'; // Amber
+      return '#F59E0B'; // Amber/Orange - warning
     case 'harassment':
-      return '#EF4444'; // Red
+      return '#DC2626'; // Bright Red - danger
     case 'overcharge':
-      return '#F97316'; // Orange
+      return '#F97316'; // Orange - moderate risk
+    case 'other':
+      return '#6366F1'; // Indigo - informational
     default:
-      return '#6B7280'; // Gray
+      return '#6B7280'; // Gray - default
   }
 }
 

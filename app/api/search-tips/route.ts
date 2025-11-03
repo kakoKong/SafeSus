@@ -28,60 +28,42 @@ export async function GET(request: Request) {
   }
 
   try {
-    // Search in pins
-    const { data: pins, error: pinsError } = await supabase
-      .from('pins')
-      .select(`
-        id,
-        title,
-        summary,
-        city:cities!inner(name, slug)
-      `)
+    // Search in tip submissions
+    const { data: tipsData, error: tipsError } = await supabase
+      .from('tip_submissions')
+      .select('id, title, summary, city_id')
       .eq('status', 'approved')
       .or(`title.ilike.%${query}%,summary.ilike.%${query}%`)
-      .limit(10);
+      .limit(20);
 
-    if (pinsError) throw pinsError;
+    if (tipsError) throw tipsError;
 
-    // Search in rules
-    const { data: rules, error: rulesError } = await supabase
-      .from('rules')
-      .select(`
-        id,
-        title,
-        reason,
-        city:cities!inner(name, slug)
-      `)
-      .or(`title.ilike.%${query}%,reason.ilike.%${query}%`)
-      .limit(10);
+    // Get unique city IDs
+    const cityIds = [...new Set((tipsData || []).map(t => t.city_id).filter(Boolean))];
+    
+    // Fetch cities
+    const { data: citiesData } = cityIds.length > 0
+      ? await supabase
+          .from('cities')
+          .select('id, name, slug')
+          .in('id', cityIds)
+      : { data: [] };
 
-    if (rulesError) throw rulesError;
+    // Create city lookup map
+    const cityMap = new Map((citiesData || []).map(c => [c.id, c]));
 
-    // Combine and format results
-    const results = [
-      ...(pins || []).map(pin => {
-        const city = Array.isArray(pin.city) ? pin.city[0] : pin.city;
-        return {
-          id: pin.id,
-          title: pin.title,
-          summary: pin.summary,
-          tip_category: assignCategory(pin.title, pin.summary),
-          city_name: city?.name,
-          city_slug: city?.slug,
-        };
-      }),
-      ...(rules || []).map(rule => {
-        const city = Array.isArray(rule.city) ? rule.city[0] : rule.city;
-        return {
-          id: rule.id + 10000,
-          title: rule.title,
-          summary: rule.reason,
-          tip_category: assignCategory(rule.title, rule.reason),
-          city_name: city?.name,
-          city_slug: city?.slug,
-        };
-      })
-    ];
+    // Format results
+    const results = (tipsData || []).map(tip => {
+      const city = tip.city_id ? cityMap.get(tip.city_id) : null;
+      return {
+        id: tip.id,
+        title: tip.title,
+        summary: tip.summary,
+        tip_category: assignCategory(tip.title, tip.summary),
+        city_name: city?.name,
+        city_slug: city?.slug,
+      };
+    });
 
     // Sort by relevance (exact title match first)
     const sorted = results.sort((a, b) => {

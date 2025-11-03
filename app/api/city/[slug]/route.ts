@@ -25,12 +25,36 @@ export async function GET(
     .select('*')
     .eq('city_id', city.id);
 
-  // Get pins
+  // Get pins (published map points)
   const { data: pins, error: pinsError } = await supabase
     .from('pins')
     .select('*')
     .eq('city_id', city.id)
     .eq('status', 'approved');
+
+  // Get reports (incident reports with locations)
+  const { data: reports, error: reportsError } = await supabase
+    .from('reports')
+    .select('*')
+    .eq('city_id', city.id)
+    .eq('status', 'approved')
+    .not('geom', 'is', null);
+
+  // Get tips with locations
+  const { data: tips, error: tipsError } = await supabase
+    .from('tip_submissions')
+    .select('*')
+    .eq('city_id', city.id)
+    .eq('status', 'approved')
+    .or('location.not.is.null,location_v2.not.is.null');
+
+  // Get incidents (aggregated incidents with locations)
+  const { data: incidents, error: incidentsError } = await supabase
+    .from('incidents')
+    .select('*')
+    .eq('city_id', city.id)
+    .eq('status', 'live')
+    .not('geom', 'is', null);
 
   // Get rules
   const { data: rules, error: rulesError } = await supabase
@@ -38,7 +62,7 @@ export async function GET(
     .select('*')
     .eq('city_id', city.id);
 
-  if (zonesError || pinsError || rulesError) {
+  if (zonesError || pinsError || reportsError || tipsError || incidentsError || rulesError) {
     return NextResponse.json(
       { error: 'Failed to fetch city data' },
       { status: 500 }
@@ -50,6 +74,9 @@ export async function GET(
       ...city,
       zones: zones || [],
       pins: pins || [],
+      reports: reports || [],
+      tips: tips || [],
+      incidents: incidents || [],
       rules: rules || [],
     },
   });

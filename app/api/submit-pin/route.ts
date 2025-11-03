@@ -49,7 +49,7 @@ export async function POST(request: Request) {
       );
     }
 
-    // Insert pin submission
+    // Insert into pin_submissions table
     const { data, error } = await supabase
       .from('pin_submissions')
       .insert({

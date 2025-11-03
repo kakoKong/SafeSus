@@ -111,7 +111,7 @@ export default function AccountPage() {
         .select('*', { count: 'exact', head: true })
         .eq('user_id', user.id);
 
-      // Fetch all tip submissions
+      // Fetch user tip submissions
       const { data: tips } = await supabase
         .from('tip_submissions')
         .select('status')

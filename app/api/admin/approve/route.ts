@@ -28,13 +28,45 @@ export async function POST(request: Request) {
 
   try {
     if (type === 'tip') {
-      // For tips, just update status
-      const { error } = await supabase
+      // Get the tip submission
+      const { data: submission, error: fetchError } = await supabase
+        .from('tip_submissions')
+        .select('*')
+        .eq('id', id)
+        .single();
+
+      if (fetchError) throw fetchError;
+
+      // If tip has a location, create a pin; otherwise just approve the tip
+      if (submission.location || submission.location_v2) {
+        const location = submission.location_v2 || submission.location;
+        
+        // Create pin from tip submission
+        const { error: insertError } = await supabase
+          .from('pins')
+          .insert({
+            city_id: submission.city_id,
+            type: submission.category === 'scam' ? 'scam' : 'other',
+            title: submission.title,
+            summary: submission.summary,
+            details: submission.details,
+            location,
+            status: 'approved',
+            source: 'user',
+            verified_by: user.id,
+            source_submission_id: submission.id,
+          });
+
+        if (insertError) throw insertError;
+      }
+
+      // Update tip submission status
+      const { error: updateError } = await supabase
         .from('tip_submissions')
         .update({ status: 'approved', reviewed_by: user.id })
         .eq('id', id);
 
-      if (error) throw error;
+      if (updateError) throw updateError;
 
     } else if (type === 'pin') {
       // Get the pin submission
@@ -57,7 +89,9 @@ export async function POST(request: Request) {
           details: submission.details,
           location: submission.location,
           status: 'approved',
+          source: 'user',
           verified_by: user.id,
+          source_submission_id: submission.id,
         });
 
       if (insertError) throw insertError;
@@ -69,6 +103,15 @@ export async function POST(request: Request) {
         .eq('id', id);
 
       if (updateError) throw updateError;
+
+    } else if (type === 'report') {
+      // For reports (incident reports), just update status
+      const { error } = await supabase
+        .from('reports')
+        .update({ status: 'approved' })
+        .eq('id', id);
+
+      if (error) throw error;
 
     } else if (type === 'zone') {
       // Get the zone submission
@@ -109,9 +152,9 @@ export async function POST(request: Request) {
 
     // Award points to the submitter
     try {
-      if (type === 'pin' || type === 'zone') {
+      if (type === 'tip') {
         const { data: submission } = await supabase
-          .from(type === 'pin' ? 'pin_submissions' : 'zone_submissions')
+          .from('tip_submissions')
           .select('user_id')
           .eq('id', id)
           .single();
@@ -119,7 +162,46 @@ export async function POST(request: Request) {
         if (submission?.user_id) {
           await supabase.rpc('increment_user_score', {
             target_user_id: submission.user_id,
-            points: 20, // Bonus for approved pin/zone
+            points: 20, // Bonus for approved tip
+          });
+        }
+      } else if (type === 'pin') {
+        const { data: submission } = await supabase
+          .from('pin_submissions')
+          .select('user_id')
+          .eq('id', id)
+          .single();
+
+        if (submission?.user_id) {
+          await supabase.rpc('increment_user_score', {
+            target_user_id: submission.user_id,
+            points: 20, // Bonus for approved pin
+          });
+        }
+      } else if (type === 'report') {
+        const { data: submission } = await supabase
+          .from('reports')
+          .select('reporter_user_id')
+          .eq('id', id)
+          .single();
+
+        if (submission?.reporter_user_id) {
+          await supabase.rpc('increment_user_score', {
+            target_user_id: submission.reporter_user_id,
+            points: 20, // Bonus for approved report
+          });
+        }
+      } else if (type === 'zone') {
+        const { data: submission } = await supabase
+          .from('zone_submissions')
+          .select('user_id')
+          .eq('id', id)
+          .single();
+
+        if (submission?.user_id) {
+          await supabase.rpc('increment_user_score', {
+            target_user_id: submission.user_id,
+            points: 20, // Bonus for approved zone
           });
         }
       }

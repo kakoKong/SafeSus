@@ -153,35 +153,40 @@ export default function AdminDashboard() {
   async function loadAllData() {
     try {
       // Load tip submissions
-      const { data: tips } = await supabase
+      const { data: tipData } = await supabase
         .from('tip_submissions')
         .select('*')
         .order('created_at', { ascending: false });
-      setTipSubmissions(tips || []);
-
-      // Load pin submissions with geometry as GeoJSON
-      const { data: pins } = await supabase
+      
+      setTipSubmissions(tipData || []);
+      
+      // Load pin submissions
+      const { data: pinData } = await supabase
         .from('pin_submissions')
-        .select('*, location')
+        .select('*')
         .order('created_at', { ascending: false });
       
-      // Parse geometry for pins
-      const parsedPins = pins?.map(pin => {
-        if (pin.location) {
-          try {
-            // PostGIS returns geometry in various formats, try to parse
-            const parsed = typeof pin.location === 'string' 
-              ? parsePostGISGeometry(pin.location)
-              : pin.location;
-            return { ...pin, location: parsed };
-          } catch (e) {
-            console.error('Error parsing pin geometry:', e);
-            return pin;
-          }
-        }
-        return pin;
-      }) || [];
-      setPinSubmissions(parsedPins);
+      setPinSubmissions(pinData || []);
+      
+      // Load content flags (reports for moderation)
+      const { data: flagsData } = await supabase
+        .from('content_flags')
+        .select('*')
+        .order('created_at', { ascending: false });
+      
+      // Transform to match expected format
+      const transformedFlags = flagsData?.map(flag => ({
+        id: flag.id,
+        reporter_id: flag.reporter_id,
+        target_type: flag.target_type,
+        target_id: flag.target_id,
+        reason: flag.reason,
+        details: flag.details,
+        status: flag.status,
+        created_at: flag.created_at,
+      })) || [];
+      
+      setReports(transformedFlags);
 
       // Load zone submissions with geometry as GeoJSON
       const { data: zones } = await supabase
@@ -206,13 +211,6 @@ export default function AdminDashboard() {
       }) || [];
       setZoneSubmissions(parsedZones);
 
-      // Load reports
-      const { data: reportData } = await supabase
-        .from('reports')
-        .select('*')
-        .order('created_at', { ascending: false });
-      setReports(reportData || []);
-
       // Load stats
       const { count: userCount } = await supabase
         .from('user_profiles')
@@ -225,10 +223,10 @@ export default function AdminDashboard() {
 
       setStats({
         totalUsers: userCount || 0,
-        pendingTips: tips?.filter(t => t.status === 'pending').length || 0,
-        pendingPins: pins?.filter(p => p.status === 'pending').length || 0,
+        pendingTips: tipData?.filter(t => t.status === 'pending').length || 0,
+        pendingPins: pinData?.filter(p => p.status === 'pending').length || 0,
         pendingZones: zones?.filter(z => z.status === 'pending').length || 0,
-        pendingReports: reportData?.filter(r => r.status === 'pending').length || 0,
+        pendingReports: flagsData?.filter(r => r.status === 'pending').length || 0,
         totalGuardians: guardianCount || 0,
       });
 
@@ -272,9 +270,14 @@ export default function AdminDashboard() {
   }
 
   async function handleReject(type: 'tip' | 'pin' | 'zone', id: number) {
-    const table = type === 'tip' ? 'tip_submissions' : 
-                  type === 'pin' ? 'pin_submissions' : 
-                  'zone_submissions';
+    let table: string;
+    if (type === 'zone') {
+      table = 'zone_submissions';
+    } else if (type === 'tip') {
+      table = 'tip_submissions';
+    } else {
+      table = 'pin_submissions';
+    }
 
     const { error } = await supabase
       .from(table)
@@ -294,8 +297,9 @@ export default function AdminDashboard() {
   }
 
   async function handleReportReview(id: number, status: 'reviewed' | 'dismissed') {
+    // Reports table has status: pending, reviewed, dismissed
     const { error } = await supabase
-      .from('reports')
+      .from('content_flags')
       .update({ status })
       .eq('id', id);
 

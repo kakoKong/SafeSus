@@ -85,23 +85,10 @@ export default function GuardianDashboard() {
       // Update submission status
       const { error: updateError } = await supabase
         .from('tip_submissions')
-        .update({ status })
+        .update({ status, reviewed_by: userProfile?.user_id || null })
         .eq('id', submissionId);
 
       if (updateError) throw updateError;
-
-      // Create verification record
-      const { error: verifyError } = await supabase
-        .from('verifications')
-        .insert({
-          guardian_id: userProfile?.user_id,
-          target_type: 'tip',
-          target_id: submissionId,
-          status,
-          notes: reviewNotes || null,
-        });
-
-      if (verifyError) throw verifyError;
 
       // If approved, update user score
       if (status === 'approved') {

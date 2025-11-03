@@ -317,41 +317,245 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     };
   }, [mapLoaded, zones]);
 
-  // Add pins markers
+  // Add pins with clustering
   useEffect(() => {
-    if (!map.current || !mapLoaded || pins.length === 0) return;
+    if (!map.current || !mapLoaded) return;
 
-    const markers: mapboxgl.Marker[] = [];
+    const mapInstance = map.current;
 
-    pins.forEach((pin) => {
-      const el = document.createElement('div');
-      el.className = 'custom-marker';
-      el.style.width = '24px';
-      el.style.height = '24px';
-      el.style.borderRadius = '50%';
-      el.style.backgroundColor = getPinColor(pin.type);
-      el.style.border = '2px solid white';
-      el.style.cursor = 'pointer';
-      el.style.boxShadow = '0 2px 4px rgba(0,0,0,0.3)';
+    const addPinsLayer = () => {
+      // Create GeoJSON source for pins with clustering
+      const pinsGeoJSON: GeoJSON.FeatureCollection<GeoJSON.Point> = {
+        type: 'FeatureCollection',
+        features: pins.map((pin) => ({
+          type: 'Feature',
+          properties: {
+            id: pin.id,
+            type: pin.type,
+            title: pin.title,
+            summary: pin.summary,
+          },
+          geometry: {
+            type: 'Point',
+            coordinates: pin.location.coordinates,
+          },
+        })),
+      };
 
-      const marker = new mapboxgl.Marker(el)
-        .setLngLat(pin.location.coordinates as [number, number])
-        .addTo(map.current!);
-
-      el.addEventListener('click', () => {
-        if (onPinClickRef.current) {
-          onPinClickRef.current(pin);
+      // If no pins, remove layers and return
+      if (pins.length === 0) {
+        try {
+          if (mapInstance.getLayer('pins-clusters')) {
+            mapInstance.removeLayer('pins-clusters');
+          }
+          if (mapInstance.getLayer('pins-count')) {
+            mapInstance.removeLayer('pins-count');
+          }
+          if (mapInstance.getLayer('pins-unclustered')) {
+            mapInstance.removeLayer('pins-unclustered');
+          }
+          if (mapInstance.getSource('pins')) {
+            mapInstance.removeSource('pins');
+          }
+        } catch (e) {
+          // Ignore
         }
-      });
+        return;
+      }
 
-      markers.push(marker);
-    });
+      // Remove existing source/layers if they exist
+      if (mapInstance.getLayer('pins-clusters')) {
+        mapInstance.removeLayer('pins-clusters');
+      }
+      if (mapInstance.getLayer('pins-count')) {
+        mapInstance.removeLayer('pins-count');
+      }
+      if (mapInstance.getLayer('pins-unclustered')) {
+        mapInstance.removeLayer('pins-unclustered');
+      }
+      
+      const existingSource = mapInstance.getSource('pins') as mapboxgl.GeoJSONSource;
+      if (existingSource) {
+        existingSource.setData(pinsGeoJSON);
+      } else {
+        // Add source with clustering
+        mapInstance.addSource('pins', {
+          type: 'geojson',
+          data: pinsGeoJSON,
+          cluster: true,
+          clusterMaxZoom: 14, // Max zoom to cluster points on
+          clusterRadius: 50, // Radius of each cluster when clustering points
+        });
+      }
+
+      // Add cluster circles (only if layer doesn't exist)
+      if (!mapInstance.getLayer('pins-clusters')) {
+        mapInstance.addLayer({
+          id: 'pins-clusters',
+          type: 'circle',
+          source: 'pins',
+          filter: ['has', 'point_count'],
+          paint: {
+            'circle-color': [
+              'step',
+              ['get', 'point_count'],
+              '#F59E0B', // Amber for small clusters (2-9)
+              10, '#F97316', // Orange for medium clusters (10-49)
+              50, '#DC2626', // Red for large clusters (50+)
+            ],
+            'circle-radius': [
+              'step',
+              ['get', 'point_count'],
+              20, // Base radius for 2-9 pins
+              10, 28, // 10+ pins = bigger
+              50, 38, // 50+ pins = even bigger
+            ],
+            'circle-stroke-width': 3,
+            'circle-stroke-color': '#ffffff',
+            'circle-opacity': 0.85,
+          },
+        });
+      }
+
+      // Add cluster count labels (only if layer doesn't exist)
+      if (!mapInstance.getLayer('pins-count')) {
+        mapInstance.addLayer({
+          id: 'pins-count',
+          type: 'symbol',
+          source: 'pins',
+          filter: ['has', 'point_count'],
+          layout: {
+            'text-field': '{point_count_abbreviated}',
+            'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+            'text-size': 14,
+          },
+          paint: {
+            'text-color': '#ffffff',
+          },
+        });
+      }
+
+      // Add unclustered points (individual pins) - only if layer doesn't exist
+      if (!mapInstance.getLayer('pins-unclustered')) {
+        mapInstance.addLayer({
+          id: 'pins-unclustered',
+          type: 'circle',
+          source: 'pins',
+          filter: ['!', ['has', 'point_count']],
+          paint: {
+            'circle-color': [
+              'match',
+              ['get', 'type'],
+              'scam', '#F59E0B', // Amber/Orange - warning
+              'harassment', '#DC2626', // Bright Red - danger
+              'overcharge', '#F97316', // Orange - moderate risk
+              'other', '#6366F1', // Indigo - informational
+              '#6B7280', // Gray - default
+            ],
+            'circle-radius': 10,
+            'circle-stroke-width': 3,
+            'circle-stroke-color': '#ffffff',
+            'circle-opacity': 0.95,
+          },
+        });
+      }
+
+      // Click handler for clusters - zoom in
+      const handleClusterClick = (e: mapboxgl.MapLayerMouseEvent) => {
+        const features = mapInstance.queryRenderedFeatures(e.point, {
+          layers: ['pins-clusters'],
+        });
+        if (!features.length) return;
+        
+        const clusterId = features[0].properties?.cluster_id;
+        const source = mapInstance.getSource('pins') as mapboxgl.GeoJSONSource;
+        
+        source.getClusterExpansionZoom(clusterId, (err, zoom) => {
+          if (err || !mapInstance) return;
+          
+          const coordinates = (features[0].geometry as GeoJSON.Point).coordinates as [number, number];
+          mapInstance.easeTo({
+            center: coordinates,
+            zoom: zoom || 15,
+          });
+        });
+      };
+
+      // Click handler for individual pins
+      const handlePinClick = (e: mapboxgl.MapLayerMouseEvent) => {
+        if (!e.features || !e.features[0]) return;
+        const pinId = e.features[0].properties?.id;
+        const pinData = pins.find((p) => p.id === pinId);
+        if (pinData && onPinClickRef.current) {
+          onPinClickRef.current(pinData);
+        }
+      };
+
+      // Change cursor on hover
+      const handleMouseEnter = () => {
+        mapInstance.getCanvas().style.cursor = 'pointer';
+      };
+      const handleMouseLeave = () => {
+        mapInstance.getCanvas().style.cursor = '';
+      };
+
+      // Remove existing listeners if any (cleanup previous handlers)
+      try {
+        mapInstance.off('click', 'pins-clusters');
+        mapInstance.off('click', 'pins-unclustered');
+        mapInstance.off('mouseenter', 'pins-clusters');
+        mapInstance.off('mouseleave', 'pins-clusters');
+        mapInstance.off('mouseenter', 'pins-unclustered');
+        mapInstance.off('mouseleave', 'pins-unclustered');
+      } catch (e) {
+        // Ignore
+      }
+
+      // Add new listeners
+      mapInstance.on('click', 'pins-clusters', handleClusterClick);
+      mapInstance.on('click', 'pins-unclustered', handlePinClick);
+      mapInstance.on('mouseenter', 'pins-clusters', handleMouseEnter);
+      mapInstance.on('mouseleave', 'pins-clusters', handleMouseLeave);
+      mapInstance.on('mouseenter', 'pins-unclustered', handleMouseEnter);
+      mapInstance.on('mouseleave', 'pins-unclustered', handleMouseLeave);
+    };
+
+    if (!mapInstance.isStyleLoaded()) {
+      mapInstance.once('style.load', addPinsLayer);
+      return () => {
+        mapInstance.off('style.load', addPinsLayer);
+      };
+    }
+
+    addPinsLayer();
 
     return () => {
+      if (!mapInstance || !mapInstance.getStyle()) return;
+      
       try {
-        markers.forEach((marker) => marker.remove());
+        // Remove event listeners
+        mapInstance.off('click', 'pins-clusters');
+        mapInstance.off('click', 'pins-unclustered');
+        mapInstance.off('mouseenter', 'pins-clusters');
+        mapInstance.off('mouseleave', 'pins-clusters');
+        mapInstance.off('mouseenter', 'pins-unclustered');
+        mapInstance.off('mouseleave', 'pins-unclustered');
+        
+        // Remove layers
+        if (mapInstance.getLayer('pins-clusters')) {
+          mapInstance.removeLayer('pins-clusters');
+        }
+        if (mapInstance.getLayer('pins-count')) {
+          mapInstance.removeLayer('pins-count');
+        }
+        if (mapInstance.getLayer('pins-unclustered')) {
+          mapInstance.removeLayer('pins-unclustered');
+        }
+        if (mapInstance.getSource('pins')) {
+          mapInstance.removeSource('pins');
+        }
       } catch (error) {
-        // Markers might be removed already, ignore errors
+        // Ignore errors
       }
     };
   }, [mapLoaded, pins]);

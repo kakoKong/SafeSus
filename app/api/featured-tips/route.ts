@@ -56,67 +56,43 @@ export async function GET(request: Request) {
   const limit = parseInt(searchParams.get('limit') || '20');
 
   try {
-    // Get recently approved pins (scams) with city info
-    const { data: pins, error: pinsError } = await supabase
-      .from('pins')
-      .select(`
-        id,
-        type,
-        title,
-        summary,
-        created_at,
-        city:cities!inner(name, slug)
-      `)
+    // Get recently approved tip submissions with city info
+    const { data: tipsData, error: tipsError } = await supabase
+      .from('tip_submissions')
+      .select('id, category, title, summary, created_at, city_id')
       .eq('status', 'approved')
       .order('created_at', { ascending: false })
-      .limit(Math.ceil(limit * 0.6));
+      .limit(limit);
 
-    if (pinsError) throw pinsError;
+    if (tipsError) throw tipsError;
 
-    // Transform pins data with intelligent categorization
-    const tipArticles = (pins || []).map(pin => {
-      const city = Array.isArray(pin.city) ? pin.city[0] : pin.city;
+    // Get unique city IDs
+    const cityIds = [...new Set((tipsData || []).map(t => t.city_id).filter(Boolean))];
+    
+    // Fetch cities
+    const { data: citiesData } = cityIds.length > 0
+      ? await supabase
+          .from('cities')
+          .select('id, name, slug')
+          .in('id', cityIds)
+      : { data: [] };
+
+    // Create city lookup map
+    const cityMap = new Map((citiesData || []).map(c => [c.id, c]));
+
+    // Transform tip submissions data with intelligent categorization
+    const tipArticles = (tipsData || []).map(tip => {
+      const city = tip.city_id ? cityMap.get(tip.city_id) : null;
       return {
-        id: pin.id,
-        title: pin.title,
-        summary: pin.summary,
-        tip_category: assignCategory(pin.title, pin.summary, pin.type),
+        id: tip.id,
+        title: tip.title,
+        summary: tip.summary,
+        tip_category: assignCategory(tip.title, tip.summary, tip.category),
         city_name: city?.name,
         city_slug: city?.slug,
-        created_at: pin.created_at,
+        created_at: tip.created_at,
       };
     });
-
-    // Get some rules as tips
-    const { data: rules, error: rulesError } = await supabase
-      .from('rules')
-      .select(`
-        id,
-        kind,
-        title,
-        reason,
-        created_at,
-        city:cities!inner(name, slug)
-      `)
-      .order('created_at', { ascending: false })
-      .limit(Math.ceil(limit * 0.4));
-
-    if (!rulesError && rules) {
-      const ruleTips = rules.map(rule => {
-        const city = Array.isArray(rule.city) ? rule.city[0] : rule.city;
-        return {
-          id: rule.id + 10000, // Offset to avoid collision with pin IDs
-          title: rule.title,
-          summary: rule.reason,
-          tip_category: assignCategory(rule.title, rule.reason),
-          city_name: city?.name,
-          city_slug: city?.slug,
-          created_at: rule.created_at,
-        };
-      });
-      
-      tipArticles.push(...ruleTips);
-    }
 
     // Shuffle and limit
     const shuffled = tipArticles.sort(() => Math.random() - 0.5).slice(0, limit);

@@ -74,6 +74,9 @@ export interface TipSubmission {
 export interface CityDetail extends City {
   zones: Zone[];
   pins: Pin[];
+  reports?: any[]; // User incident reports with locations
+  tips?: any[]; // Tip submissions with locations
+  incidents?: any[]; // Aggregated incidents with locations
   rules: Rule[];
 }
 

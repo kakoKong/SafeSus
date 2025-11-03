@@ -3,7 +3,7 @@
 import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
 import { useParams, useSearchParams } from 'next/navigation';
 import MapView, { type MapViewRef } from '@/components/map/MapView';
-import MapFilters from '@/components/map/MapFilters';
+import MapFilterSidebar, { type MapFilters as MapFiltersType } from '@/components/map/MapFilterSidebar';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
@@ -12,7 +12,7 @@ import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/component
 import LoginModal from '@/components/shared/LoginModal';
 import ReportButton from '@/components/shared/ReportButton';
 import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp, MapPin, Heart, Backpack, Baby, Sparkles, Info, Navigation } from 'lucide-react';
-import type { CityDetail, Zone, Pin } from '@/types';
+import type { CityDetail, Zone, Pin, PinType } from '@/types';
 import { trackEvent, Events } from '@/lib/analytics';
 import { useToast } from '@/components/ui/use-toast';
 import { createClient } from '@/lib/supabase/client';
@@ -71,8 +71,17 @@ export default function CityDetailPage() {
   const [mapBounds, setMapBounds] = useState<MapboxLngLatBounds | null>(null);
   
   // Map filters state
-  const [showZones, setShowZones] = useState(true);
-  const [showTips, setShowTips] = useState(true);
+  const [mapFilters, setMapFilters] = useState<MapFiltersType>({
+    zoneLevels: ['avoid', 'caution', 'neutral', 'recommended'],
+    pinTypes: ['scam', 'harassment', 'overcharge', 'other'],
+    tipCategories: ['stay', 'scam', 'do_dont'],
+    showZones: true,
+    showPins: true,
+    showTips: true,
+    showReports: true,
+    showIncidents: true,
+    dateRange: 'all',
+  });
   
   // Mobile drawer state
   const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
@@ -218,24 +227,56 @@ export default function CityDetailPage() {
     );
   }, [toast]);
 
-  // Memoize and filter zones and pins based on layer toggles
+  // Memoize and filter zones and pins based on layer toggles and filter criteria
   const allZones = useMemo(() => {
-    if (!cityData) return [];
-    return showZones ? cityData.zones : [];
-  }, [cityData, showZones]);
+    if (!cityData || !mapFilters.showZones) return [];
+    return cityData.zones.filter(zone => mapFilters.zoneLevels.includes(zone.level));
+  }, [cityData, mapFilters.showZones, mapFilters.zoneLevels]);
 
   const allPins = useMemo(() => {
-    if (!cityData) return [];
-    return showTips ? cityData.pins : [];
-  }, [cityData, showTips]);
+    if (!cityData || !mapFilters.showPins) return [];
+    return cityData.pins.filter(pin => mapFilters.pinTypes.includes(pin.type));
+  }, [cityData, mapFilters.showPins, mapFilters.pinTypes]);
 
-  // Filter zones and pins based on map viewport - always active
-  // This works on top of the layer filters
-  const { filteredZones, filteredPins } = useMemo(() => {
+  // Get reports with locations that match pin types (reports.category maps to pin types)
+  const allReports = useMemo(() => {
+    if (!cityData || !mapFilters.showReports) return [];
+    const categoryToPinType: Record<string, string> = {
+      'scam': 'scam',
+      'harassment': 'harassment',
+      'overcharge': 'overcharge',
+      'accommodation': 'other',
+      'other': 'other',
+    };
+    return (cityData.reports || []).filter(report => {
+      const pinType = categoryToPinType[report.category] || 'other';
+      return mapFilters.pinTypes.includes(pinType as any);
+    });
+  }, [cityData, mapFilters.showReports, mapFilters.pinTypes]);
+
+  // Get tips with locations that match tip categories
+  const allTips = useMemo(() => {
+    if (!cityData || !mapFilters.showTips) return [];
+    return (cityData.tips || []).filter(tip => 
+      mapFilters.tipCategories.includes(tip.category as any)
+    );
+  }, [cityData, mapFilters.showTips, mapFilters.tipCategories]);
+
+  // Get incidents
+  const allIncidents = useMemo(() => {
+    if (!cityData || !mapFilters.showIncidents) return [];
+    return cityData.incidents || [];
+  }, [cityData, mapFilters.showIncidents]);
+
+  // Filter all items based on map viewport - always active
+  const { filteredZones, filteredPins, filteredReports, filteredTips, filteredIncidents } = useMemo(() => {
     if (!mapBounds) {
       return {
         filteredZones: allZones,
-        filteredPins: allPins
+        filteredPins: allPins,
+        filteredReports: allReports,
+        filteredTips: allTips,
+        filteredIncidents: allIncidents,
       };
     }
 
@@ -256,22 +297,96 @@ export default function CityDetailPage() {
       }
     });
 
-    // Filter pins that are within the viewport
+    // Helper to check if point is in viewport
+    const isPointInView = (lng: number, lat: number) => {
+      try {
+        const point = turf.point([lng, lat]);
+        return turf.booleanPointInPolygon(point, boundsPolygon);
+      } catch {
+        return false;
+      }
+    };
+
+    // Filter pins
     const pinsInView = allPins.filter(pin => {
       try {
         const [lng, lat] = pin.location.coordinates;
-        const point = turf.point([lng, lat]);
-        return turf.booleanPointInPolygon(point, boundsPolygon);
-      } catch (error) {
+        return isPointInView(lng, lat);
+      } catch {
+        return false;
+      }
+    });
+
+    // Filter reports (convert geom to coordinates)
+    const reportsInView = allReports.filter(report => {
+      try {
+        // Parse PostGIS geometry or use geom coordinates
+        if (report.geom?.coordinates) {
+          const [lng, lat] = report.geom.coordinates;
+          return isPointInView(lng, lat);
+        }
+        // If it's a string, try to parse it
+        if (typeof report.geom === 'string' && report.geom.includes('POINT')) {
+          const match = report.geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+          if (match) {
+            return isPointInView(parseFloat(match[1]), parseFloat(match[2]));
+          }
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    });
+
+    // Filter tips
+    const tipsInView = allTips.filter(tip => {
+      try {
+        const location = tip.location_v2 || tip.location;
+        if (!location) return false;
+        if (location.coordinates) {
+          const [lng, lat] = location.coordinates;
+          return isPointInView(lng, lat);
+        }
+        // Parse if string
+        if (typeof location === 'string' && location.includes('POINT')) {
+          const match = location.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+          if (match) {
+            return isPointInView(parseFloat(match[1]), parseFloat(match[2]));
+          }
+        }
+        return false;
+      } catch {
+        return false;
+      }
+    });
+
+    // Filter incidents
+    const incidentsInView = allIncidents.filter(incident => {
+      try {
+        if (incident.geom?.coordinates) {
+          const [lng, lat] = incident.geom.coordinates;
+          return isPointInView(lng, lat);
+        }
+        if (typeof incident.geom === 'string' && incident.geom.includes('POINT')) {
+          const match = incident.geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+          if (match) {
+            return isPointInView(parseFloat(match[1]), parseFloat(match[2]));
+          }
+        }
+        return false;
+      } catch {
         return false;
       }
     });
 
     return {
       filteredZones: zonesInView,
-      filteredPins: pinsInView
+      filteredPins: pinsInView,
+      filteredReports: reportsInView,
+      filteredTips: tipsInView,
+      filteredIncidents: incidentsInView,
     };
-  }, [allZones, allPins, mapBounds]);
+  }, [allZones, allPins, allReports, allTips, allIncidents, mapBounds]);
 
   // Calculate city bounds from zones and pins
   const cityBounds = useMemo(() => {
@@ -354,29 +469,117 @@ export default function CityDetailPage() {
   return (
     <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] overflow-hidden">
       <div className="flex flex-col lg:flex-row h-full overflow-hidden w-full">
-        {/* Map Section - Full screen on mobile, 60% on desktop */}
-        <div className="w-full lg:flex-[0_0_60%] max-w-full h-full lg:h-full relative overflow-hidden">
+        {/* Map Section - Full width */}
+        <div className="w-full h-full relative overflow-hidden">
+          {/* Filter Modal Button */}
+          <MapFilterSidebar
+            filters={mapFilters}
+            onFiltersChange={setMapFilters}
+            counts={{
+              zones: cityData.zones.length,
+              pins: cityData.pins.length,
+              tips: (cityData.tips || []).length,
+              reports: (cityData.reports || []).length,
+              incidents: (cityData.incidents || []).length,
+            }}
+          />
           <MapView
             ref={mapRef}
-            zones={allZones}
-            pins={allPins}
+            zones={filteredZones}
+            pins={(() => {
+              const allMapPins: Pin[] = [...filteredPins];
+              
+              // Convert reports to pin format
+              filteredReports.forEach((r: any) => {
+                let location: GeoJSON.Point | null = null;
+                if (r.geom?.coordinates) {
+                  location = r.geom;
+                } else if (typeof r.geom === 'string' && r.geom.includes('POINT')) {
+                  const match = r.geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+                  if (match) {
+                    location = { type: 'Point' as const, coordinates: [parseFloat(match[1]), parseFloat(match[2])] };
+                  }
+                }
+                if (location) {
+                  allMapPins.push({
+                    id: r.id + 10000,
+                    city_id: r.city_id,
+                    type: (r.category === 'scam' ? 'scam' : r.category === 'harassment' ? 'harassment' : r.category === 'overcharge' ? 'overcharge' : 'other') as PinType,
+                    title: r.title,
+                    summary: r.summary,
+                    details: r.details,
+                    location,
+                    status: 'approved' as const,
+                    source: 'user' as const,
+                    created_at: r.created_at,
+                  });
+                }
+              });
+              
+              // Convert tips to pin format
+              filteredTips.forEach((t: any) => {
+                const location = t.location_v2 || t.location;
+                if (!location) return;
+                let coords: [number, number] | null = null;
+                if (location.coordinates && Array.isArray(location.coordinates) && location.coordinates.length === 2) {
+                  coords = location.coordinates as [number, number];
+                } else if (typeof location === 'string' && location.includes('POINT')) {
+                  const match = location.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+                  if (match) {
+                    coords = [parseFloat(match[1]), parseFloat(match[2])];
+                  }
+                }
+                if (coords) {
+                  allMapPins.push({
+                    id: t.id + 20000,
+                    city_id: t.city_id,
+                    type: (t.category === 'scam' ? 'scam' : 'other') as PinType,
+                    title: t.title,
+                    summary: t.summary,
+                    details: t.details,
+                    location: { type: 'Point' as const, coordinates: coords },
+                    status: 'approved' as const,
+                    source: 'user' as const,
+                    created_at: t.created_at,
+                  });
+                }
+              });
+              
+              // Convert incidents to pin format
+              filteredIncidents.forEach((i: any) => {
+                let coords: [number, number] | null = null;
+                if (i.geom?.coordinates && Array.isArray(i.geom.coordinates) && i.geom.coordinates.length === 2) {
+                  coords = i.geom.coordinates as [number, number];
+                } else if (typeof i.geom === 'string' && i.geom.includes('POINT')) {
+                  const match = i.geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
+                  if (match) {
+                    coords = [parseFloat(match[1]), parseFloat(match[2])];
+                  }
+                }
+                if (coords) {
+                  allMapPins.push({
+                    id: i.id + 30000,
+                    city_id: i.city_id,
+                    type: 'scam' as PinType,
+                    title: i.title,
+                    summary: i.canonical_summary || '',
+                    details: null,
+                    location: { type: 'Point' as const, coordinates: coords },
+                    status: 'approved' as const,
+                    source: 'curated' as const,
+                    created_at: i.first_report_at || i.updated_at,
+                  });
+                }
+              });
+              
+              return allMapPins;
+            })()}
             onZoneClick={(zone) => handleZoneClick(zone, false)}
             onPinClick={(pin) => handlePinClick(pin, false)}
             onViewportChange={handleViewportChange}
             maxBounds={cityBounds}
           />
           
-          {/* Map Filters Overlay */}
-          <div className="absolute top-4 left-4 z-10">
-            <MapFilters
-              showZones={showZones}
-              showTips={showTips}
-              onToggleZones={() => setShowZones(!showZones)}
-              onToggleTips={() => setShowTips(!showTips)}
-              zoneCount={cityData.zones.length}
-              tipCount={cityData.pins.length}
-            />
-          </div>
 
           {/* Current Location Button */}
           <div className="absolute top-4 right-4 z-10">

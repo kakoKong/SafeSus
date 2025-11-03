@@ -5,7 +5,6 @@ import { Shield, Map, MessageCircle, AlertTriangle, Navigation, Users, Sparkles,
 import TripPlanner from '@/components/shared/TripPlanner';
 import FeaturedTips from '@/components/shared/FeaturedTips';
 import RecentTipsFeed from '@/components/shared/RecentTipsFeed';
-import TripChecklist from '@/components/shared/TripChecklist';
 import AppDownloadButtons from '@/components/shared/AppDownloadButtons';
 import InteractiveMapDemo from '@/components/shared/InteractiveMapDemo';
 
@@ -80,21 +79,8 @@ export default function Home() {
             </p>
           </div>
           
-          <div className="grid lg:grid-cols-3 gap-8 mb-20">
-            <div className="lg:col-span-2">
-              <RecentTipsFeed />
-            </div>
-            <div>
-              <div className="mb-4">
-                <h3 className="text-xl md:text-2xl font-bold mb-2">
-                  Trip Safety Checklist
-                </h3>
-                <p className="text-sm text-muted-foreground mb-4">
-                  Essential safety items to check before and during your trip. Stay prepared and informed.
-                </p>
-              </div>
-              <TripChecklist />
-            </div>
+          <div className="mb-12">
+            <RecentTipsFeed />
           </div>
           
           <div className="text-center mb-12">

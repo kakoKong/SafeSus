@@ -12,7 +12,7 @@ export async function POST(request: Request) {
     return NextResponse.json({ error: 'Unauthorized' }, { status: 401 });
   }
 
-  const { city_id, category, title, summary, details, location } = await request.json();
+  const { city_id, category, title, summary, details, location, occurred_at } = await request.json();
 
   if (!category || !title || !summary) {
     return NextResponse.json(
@@ -21,6 +21,9 @@ export async function POST(request: Request) {
     );
   }
 
+  // Insert into tip_submissions table
+  const locationWkt = location ? `SRID=4326;POINT(${location.coordinates[0]} ${location.coordinates[1]})` : null;
+  
   const { data, error } = await supabase
     .from('tip_submissions')
     .insert({
@@ -29,8 +32,9 @@ export async function POST(request: Request) {
       category,
       title,
       summary,
-      details,
-      location,
+      details: details || null,
+      location: locationWkt,
+      location_v2: locationWkt, // Use location_v2 for new submissions
       status: 'pending',
     })
     .select()

@@ -23,18 +23,33 @@ export async function GET(request: Request) {
   }
   const { data: zones } = await zonesQuery;
 
-  // Get nearby pins (within 500m) using PostGIS
-  let pinsQuery = supabase.rpc('nearby_pins', {
+  // Get nearby pins (within 500m) using PostGIS function
+  const { data: nearbyPinsData, error: nearbyError } = await supabase.rpc('nearby_pins', {
     lat,
     lng,
     radius: 500,
   });
 
-  if (cityId) {
-    pinsQuery = pinsQuery.eq('city_id', parseInt(cityId));
+  if (nearbyError) {
+    console.error('Error fetching nearby pins:', nearbyError);
   }
 
-  const { data: nearbyPins } = await pinsQuery;
+  // Filter and format pins
+  const nearbyPins = (nearbyPinsData || [])
+    .filter((pin: any) => (!cityId || pin.city_id === parseInt(cityId)) && pin.status === 'approved')
+    .map((pin: any) => ({
+      id: pin.id,
+      city_id: pin.city_id,
+      type: pin.type,
+      title: pin.title,
+      summary: pin.summary,
+      details: pin.details,
+      location: pin.location || pin.geom,
+      status: pin.status,
+      source: pin.source,
+      created_at: pin.created_at,
+      distance: pin.distance || 0,
+    }));
 
   // Find current zone (client-side check will be more accurate)
   // For now, return all zones and let client determine which one user is in
