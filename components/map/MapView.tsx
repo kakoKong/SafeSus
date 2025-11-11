@@ -3,7 +3,7 @@
 import React, { useRef, useEffect, useState, useImperativeHandle, forwardRef } from 'react';
 import mapboxgl from 'mapbox-gl';
 import 'mapbox-gl/dist/mapbox-gl.css';
-import type { Zone, Pin, UserLocation } from '@/types';
+import type { Zone, Pin, UserLocation, PinType, PinStatus, PinSource } from '@/types';
 import { getZoneColor, getPinColor } from '@/lib/utils';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
@@ -139,8 +139,11 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       }
     });
 
-    // Track viewport changes
+    // Track viewport changes only if callback is provided
+    // Use 'moveend' and 'zoomend' instead of 'idle' to avoid firing on every tile load
+    if (onViewportChangeRef.current) {
     const handleViewportChange = () => {
+        // Only call callback if map is loaded and user has actually moved/zoomed
       if (map.current && onViewportChangeRef.current) {
         const bounds = map.current.getBounds();
         if (bounds) {
@@ -149,13 +152,22 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       }
     };
 
+      // Only track actual user interactions, not tile loading
     map.current.on('moveend', handleViewportChange);
     map.current.on('zoomend', handleViewportChange);
+      
+      // Store handler for cleanup
+      (map.current as any)._handleViewportChange = handleViewportChange;
+    }
 
     return () => {
       if (map.current) {
+        const handleViewportChange = (map.current as any)._handleViewportChange;
+        if (handleViewportChange) {
         map.current.off('moveend', handleViewportChange);
         map.current.off('zoomend', handleViewportChange);
+          delete (map.current as any)._handleViewportChange;
+        }
       }
       map.current?.remove();
       map.current = null;
@@ -176,7 +188,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
 
   // Add zones layer
   useEffect(() => {
-    if (!map.current || !mapLoaded || zones.length === 0) return;
+    if (!map.current || !mapLoaded) return;
 
     const mapInstance = map.current;
     
@@ -189,6 +201,23 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
           onZoneClickRef.current(zoneData);
         }
       }
+    };
+    
+    // Zone click handler with pin priority check
+    const handleZoneClickWithPinCheck = (e: mapboxgl.MapLayerMouseEvent) => {
+      // Check if a pin was clicked at this point - if so, don't show zone
+      const clickedPoint = e.point;
+      const pinFeatures = mapInstance.queryRenderedFeatures(clickedPoint, {
+        layers: ['pins-unclustered', 'pins-clusters'],
+      });
+      
+      // If a pin was clicked, don't show zone info
+      if (pinFeatures && pinFeatures.length > 0) {
+        return;
+      }
+      
+      // No pin clicked, proceed with zone click
+      handleZoneClick(e);
     };
 
     const handleMouseEnter = () => {
@@ -219,9 +248,31 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       // Check if source already exists
       const source = mapInstance.getSource('zones') as mapboxgl.GeoJSONSource;
       if (source) {
-        // Update existing source data instead of recreating
+        // Update existing source data
+        try {
         source.setData(zonesGeoJSON);
+        } catch (error) {
+          console.error('Error updating zones source:', error);
+          // If update fails, remove and recreate
+          try {
+            if (mapInstance.getLayer('zones-outline')) {
+              mapInstance.removeLayer('zones-outline');
+            }
+            if (mapInstance.getLayer('zones-layer')) {
+              mapInstance.removeLayer('zones-layer');
+            }
+            mapInstance.removeSource('zones');
+            // Recreate below
+          } catch (e) {
+            console.error('Error removing zones:', e);
+            return;
+          }
+        }
+        
+        // If source exists and was updated successfully, return
+        if (mapInstance.getSource('zones')) {
         return;
+        }
       }
 
       // Create new source and layers
@@ -275,7 +326,7 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       },
     });
 
-      mapInstance.on('click', 'zones-layer', handleZoneClick);
+      mapInstance.on('click', 'zones-layer', handleZoneClickWithPinCheck);
       mapInstance.on('mouseenter', 'zones-layer', handleMouseEnter);
       mapInstance.on('mouseleave', 'zones-layer', handleMouseLeave);
     };
@@ -298,7 +349,14 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       if (!mapInstance || !mapInstance.getStyle()) return;
       
       try {
-        mapInstance.off('click', 'zones-layer', handleZoneClick);
+        const zoneClickTimeout = (mapInstance as any)._zoneClickTimeout;
+        if (zoneClickTimeout) {
+          clearTimeout(zoneClickTimeout);
+          delete (mapInstance as any)._zoneClickTimeout;
+        }
+        
+        // Remove handlers
+        mapInstance.off('click', 'zones-layer', handleZoneClickWithPinCheck);
         mapInstance.off('mouseenter', 'zones-layer', handleMouseEnter);
         mapInstance.off('mouseleave', 'zones-layer', handleMouseLeave);
         
@@ -324,73 +382,314 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     const mapInstance = map.current;
 
     const addPinsLayer = () => {
+      console.log(`[MapView] addPinsLayer called with ${pins.length} pins`);
+      
+      // Helper function to create pin with alert icon SVG
+      const createPinAlertSVG = (color: string) => {
+        return `<svg width="32" height="40" viewBox="0 0 32 40" xmlns="http://www.w3.org/2000/svg">
+          <!-- Pin shadow -->
+          <ellipse cx="16" cy="38" rx="4" ry="2" fill="rgba(0,0,0,0.2)"/>
+          <!-- Pin body -->
+          <path d="M16 0C7.163 0 0 7.163 0 16c0 8.837 16 24 16 24s16-15.163 16-24C32 7.163 24.837 0 16 0z" fill="${color}" stroke="#ffffff" stroke-width="2"/>
+          <!-- Alert triangle icon inside -->
+          <path d="M16 8L8 20h16L16 8z" fill="#ffffff" stroke="${color}" stroke-width="1.5" stroke-linejoin="round"/>
+          <path d="M16 12v4M16 18h.01" stroke="${color}" stroke-width="1.5" stroke-linecap="round"/>
+        </svg>`;
+      };
+
+      // Load icon images to map style (ensure they're always loaded)
+      const loadIcons = (callback?: () => void) => {
+        const iconImages = [
+          { name: 'scam-icon', svg: createPinAlertSVG('#F59E0B') },
+          { name: 'harassment-icon', svg: createPinAlertSVG('#DC2626') },
+          { name: 'overcharge-icon', svg: createPinAlertSVG('#F97316') },
+          { name: 'other-icon', svg: createPinAlertSVG('#6366F1') },
+          // Ensure default icon is always available
+          { name: 'default-pin-icon', svg: createPinAlertSVG('#6B7280') },
+        ];
+
+        let loadedCount = 0;
+        const totalIcons = iconImages.length;
+        let callbackCalled = false;
+
+        const checkComplete = () => {
+          if (loadedCount === totalIcons && !callbackCalled && callback) {
+            callbackCalled = true;
+            callback();
+          }
+        };
+
+        iconImages.forEach((icon) => {
+          // Only reload icon if it doesn't exist - don't reload unnecessarily
+          if (mapInstance.hasImage(icon.name)) {
+            loadedCount++;
+            checkComplete();
+            return;
+          }
+
+          try {
+            const img = new Image();
+            img.onload = () => {
+              try {
+                if (!mapInstance.hasImage(icon.name)) {
+                  mapInstance.addImage(icon.name, img);
+                }
+              } catch (e) {
+                console.error(`Error adding icon ${icon.name} to map:`, e);
+              }
+              loadedCount++;
+              checkComplete();
+            };
+            img.onerror = () => {
+              console.error(`Error loading icon ${icon.name}`);
+              loadedCount++;
+              checkComplete();
+            };
+            // Use encodeURIComponent instead of btoa for better SVG support
+            img.src = `data:image/svg+xml;charset=utf-8,${encodeURIComponent(icon.svg)}`;
+          } catch (error) {
+            console.error(`Error setting up icon ${icon.name}:`, error);
+            loadedCount++;
+            checkComplete();
+          }
+        });
+      };
+
+      // Filter out pins with invalid locations and create GeoJSON
+      const validPins = pins.filter((pin) => {
+        if (!pin.location || !pin.location.coordinates) {
+          console.warn('[MapView] Pin missing location:', pin.id, pin);
+          return false;
+        }
+        const coords = pin.location.coordinates;
+        if (!Array.isArray(coords) || coords.length !== 2) {
+          console.warn('[MapView] Pin has invalid coordinates format:', pin.id, coords);
+          return false;
+        }
+        const [lng, lat] = coords;
+        if (typeof lng !== 'number' || typeof lat !== 'number' || 
+            isNaN(lng) || isNaN(lat) ||
+            lng < -180 || lng > 180 || lat < -90 || lat > 90) {
+          console.warn('[MapView] Pin has invalid coordinates values:', pin.id, coords);
+          return false;
+        }
+        return true;
+      });
+      
+      console.log(`[MapView] Filtered to ${validPins.length} valid pins out of ${pins.length} total`);
+
       // Create GeoJSON source for pins with clustering
+      // Store full pin data in properties for click handler
       const pinsGeoJSON: GeoJSON.FeatureCollection<GeoJSON.Point> = {
         type: 'FeatureCollection',
-        features: pins.map((pin) => ({
+        features: validPins.map((pin) => ({
           type: 'Feature',
           properties: {
             id: pin.id,
             type: pin.type,
             title: pin.title,
             summary: pin.summary,
+            details: pin.details,
+            city_id: pin.city_id,
+            status: pin.status,
+            source: pin.source,
+            created_at: pin.created_at,
+            // Store the full pin object reference for click handler
+            _pinData: pin,
           },
           geometry: {
             type: 'Point',
-            coordinates: pin.location.coordinates,
+            coordinates: pin.location.coordinates as [number, number],
           },
         })),
       };
 
-      // If no pins, remove layers and return
-      if (pins.length === 0) {
-        try {
-          if (mapInstance.getLayer('pins-clusters')) {
-            mapInstance.removeLayer('pins-clusters');
+      // If no valid pins, update source with empty FeatureCollection but keep layers
+      // This ensures layers are ready when pins load
+      console.log(`[MapView] Processing ${validPins.length} valid pins`);
+      if (validPins.length === 0) {
+        console.log('[MapView] No valid pins, setting up empty source and layers');
+        const emptyGeoJSON: GeoJSON.FeatureCollection<GeoJSON.Point> = {
+          type: 'FeatureCollection',
+          features: [],
+        };
+        
+        const existingSource = mapInstance.getSource('pins') as mapboxgl.GeoJSONSource;
+        if (existingSource) {
+          try {
+            existingSource.setData(emptyGeoJSON);
+          } catch (error) {
+            console.error('Error updating empty pins source:', error);
           }
-          if (mapInstance.getLayer('pins-count')) {
-            mapInstance.removeLayer('pins-count');
+        } else {
+          // Create empty source so layers can be added
+          try {
+            mapInstance.addSource('pins', {
+              type: 'geojson',
+              data: emptyGeoJSON,
+              cluster: true,
+              clusterMaxZoom: 14,
+              clusterRadius: 50,
+            });
+          } catch (error) {
+            console.error('Error adding empty pins source:', error);
+            return;
           }
-          if (mapInstance.getLayer('pins-unclustered')) {
-            mapInstance.removeLayer('pins-unclustered');
-          }
-          if (mapInstance.getSource('pins')) {
-            mapInstance.removeSource('pins');
-          }
-        } catch (e) {
-          // Ignore
         }
+        
+        // Ensure layers exist even with empty data
+        if (!mapInstance.getLayer('pins-clusters')) {
+          try {
+            mapInstance.addLayer({
+              id: 'pins-clusters',
+              type: 'circle',
+              source: 'pins',
+              filter: ['has', 'point_count'],
+              paint: {
+                'circle-color': [
+                  'step',
+                  ['get', 'point_count'],
+                  '#51bbd6',
+                  100,
+                  '#f1f075',
+                  750,
+                  '#f28cb1',
+                ],
+                'circle-radius': [
+                  'step',
+                  ['get', 'point_count'],
+                  20,
+                  100,
+                  30,
+                  750,
+                  40,
+                ],
+                'circle-stroke-width': 1,
+                'circle-stroke-color': '#ffffff',
+                'circle-opacity': 0.85,
+              },
+            });
+          } catch (error) {
+            console.error('Error adding pins-clusters layer:', error);
+          }
+        }
+        
+        if (!mapInstance.getLayer('pins-count')) {
+          try {
+            mapInstance.addLayer({
+              id: 'pins-count',
+              type: 'symbol',
+              source: 'pins',
+              filter: ['has', 'point_count'],
+              layout: {
+                'text-field': '{point_count_abbreviated}',
+                'text-font': ['DIN Offc Pro Medium', 'Arial Unicode MS Bold'],
+                'text-size': 14,
+              },
+              paint: {
+                'text-color': '#ffffff',
+              },
+            });
+          } catch (error) {
+            console.error('Error adding pins-count layer:', error);
+          }
+        }
+        
+        if (!mapInstance.getLayer('pins-unclustered')) {
+          // Load icons first, then add layer
+          loadIcons(() => {
+            if (!mapInstance.getSource('pins')) return;
+            try {
+              mapInstance.addLayer({
+                id: 'pins-unclustered',
+                type: 'symbol',
+                source: 'pins',
+                filter: ['!', ['has', 'point_count']],
+                layout: {
+                  'icon-image': [
+                    'coalesce',
+                    [
+                      'match',
+                      ['get', 'type'],
+                      'scam', 'scam-icon',
+                      'harassment', 'harassment-icon',
+                      'overcharge', 'overcharge-icon',
+                      'other', 'other-icon',
+                      'default-pin-icon', // default for unknown types
+                    ],
+                    'default-pin-icon', // ultimate fallback if match/coalesce returns null
+                  ],
+                  'icon-size': 1,
+                  'icon-anchor': 'bottom',
+                  'icon-allow-overlap': true,
+                },
+              });
+            } catch (error) {
+              console.error('Error adding pins-unclustered layer:', error);
+            }
+          });
+        }
+        
+        console.log('[MapView] Empty pins setup complete, returning');
         return;
       }
 
-      // Remove existing source/layers if they exist
-      if (mapInstance.getLayer('pins-clusters')) {
-        mapInstance.removeLayer('pins-clusters');
-      }
-      if (mapInstance.getLayer('pins-count')) {
-        mapInstance.removeLayer('pins-count');
-      }
-      if (mapInstance.getLayer('pins-unclustered')) {
-        mapInstance.removeLayer('pins-unclustered');
-      }
-      
+      console.log('[MapView] Has valid pins, proceeding with source/layer setup');
+      // Handle source update/creation
       const existingSource = mapInstance.getSource('pins') as mapboxgl.GeoJSONSource;
       if (existingSource) {
-        existingSource.setData(pinsGeoJSON);
+        // Update existing source data
+        try {
+          existingSource.setData(pinsGeoJSON);
+          console.log(`[MapView] Updated pins source with ${validPins.length} pins`);
+        } catch (error) {
+          console.error('Error updating pins source:', error);
+          // If update fails, remove and recreate
+          try {
+            if (mapInstance.getLayer('pins-clusters')) {
+              mapInstance.removeLayer('pins-clusters');
+            }
+            if (mapInstance.getLayer('pins-count')) {
+              mapInstance.removeLayer('pins-count');
+            }
+            if (mapInstance.getLayer('pins-unclustered')) {
+              mapInstance.removeLayer('pins-unclustered');
+            }
+            mapInstance.removeSource('pins');
+            mapInstance.addSource('pins', {
+              type: 'geojson',
+              data: pinsGeoJSON,
+              cluster: true,
+              clusterMaxZoom: 14,
+              clusterRadius: 50,
+            });
+            console.log(`[MapView] Recreated pins source with ${validPins.length} pins`);
+          } catch (recreateError) {
+            console.error('Error recreating pins source:', recreateError);
+            return;
+          }
+        }
       } else {
-        // Add source with clustering
-        mapInstance.addSource('pins', {
-          type: 'geojson',
-          data: pinsGeoJSON,
-          cluster: true,
-          clusterMaxZoom: 14, // Max zoom to cluster points on
-          clusterRadius: 50, // Radius of each cluster when clustering points
-        });
+        // Add new source with clustering
+        try {
+          mapInstance.addSource('pins', {
+            type: 'geojson',
+            data: pinsGeoJSON,
+            cluster: true,
+            clusterMaxZoom: 14, // Max zoom to cluster points on
+            clusterRadius: 50, // Radius of each cluster when clustering points
+          });
+          console.log(`[MapView] Created new pins source with ${validPins.length} pins`);
+        } catch (error) {
+          console.error('Error adding pins source:', error);
+          return;
+        }
       }
 
-      // Add cluster circles (only if layer doesn't exist)
+      // Add or update cluster circles
       if (!mapInstance.getLayer('pins-clusters')) {
-        mapInstance.addLayer({
+        try {
+          mapInstance.addLayer({
           id: 'pins-clusters',
           type: 'circle',
           source: 'pins',
@@ -415,11 +714,15 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
             'circle-opacity': 0.85,
           },
         });
+        } catch (error) {
+          console.error('Error adding pins-clusters layer:', error);
+        }
       }
 
-      // Add cluster count labels (only if layer doesn't exist)
+      // Add or update cluster count labels
       if (!mapInstance.getLayer('pins-count')) {
-        mapInstance.addLayer({
+        try {
+          mapInstance.addLayer({
           id: 'pins-count',
           type: 'symbol',
           source: 'pins',
@@ -433,31 +736,93 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
             'text-color': '#ffffff',
           },
         });
+        } catch (error) {
+          console.error('Error adding pins-count layer:', error);
+        }
       }
 
-      // Add unclustered points (individual pins) - only if layer doesn't exist
+      // Function to add/update unclustered layer
+      const addUnclusteredLayer = () => {
+        // Don't recreate layer if it already exists - just update source data
+        if (mapInstance.getLayer('pins-unclustered')) {
+          return; // Layer already exists, source update will handle it
+        }
+
+        // Check if source exists
+        if (!mapInstance.getSource('pins')) {
+          console.warn('Pins source does not exist, cannot add layer');
+          return;
+        }
+
+        // Verify all icons are loaded (including default)
+        const requiredIcons = ['scam-icon', 'harassment-icon', 'overcharge-icon', 'other-icon', 'default-pin-icon'];
+        const allIconsLoaded = requiredIcons.every(name => mapInstance.hasImage(name));
+
+        if (!allIconsLoaded) {
+          console.warn('Not all icons are loaded yet, retrying...');
+          // Retry after a short delay
+          setTimeout(() => {
+            if (mapInstance.getSource('pins') && !mapInstance.getLayer('pins-unclustered')) {
+              addUnclusteredLayer();
+            }
+          }, 100);
+          return;
+        }
+
+        try {
+          // Add pins layer AFTER zones so pins render on top and have click priority
+          // Mapbox renders layers in the order they're added (later = on top)
+          mapInstance.addLayer({
+            id: 'pins-unclustered',
+            type: 'symbol',
+            source: 'pins',
+            filter: ['!', ['has', 'point_count']],
+            layout: {
+              'icon-image': [
+                'coalesce',
+                [
+                  'match',
+                  ['get', 'type'],
+                  'scam', 'scam-icon',
+                  'harassment', 'harassment-icon',
+                  'overcharge', 'overcharge-icon',
+                  'other', 'other-icon',
+                  'default-pin-icon', // default for unknown types
+                ],
+                'default-pin-icon', // ultimate fallback if match/coalesce returns null
+              ],
+              'icon-size': 1,
+              'icon-anchor': 'bottom',
+              'icon-allow-overlap': true,
+            },
+          }); // Add after zones layer so pins render on top (Mapbox renders layers in order)
+          console.log('[MapView] Added pins-unclustered layer');
+        } catch (error) {
+          console.error('Error adding pins-unclustered layer:', error);
+        }
+      };
+
+      // Load icons and add unclustered layer if it doesn't exist
+      // This must happen AFTER source is created/updated so the layer can reference it
       if (!mapInstance.getLayer('pins-unclustered')) {
-        mapInstance.addLayer({
-          id: 'pins-unclustered',
-          type: 'circle',
-          source: 'pins',
-          filter: ['!', ['has', 'point_count']],
-          paint: {
-            'circle-color': [
-              'match',
-              ['get', 'type'],
-              'scam', '#F59E0B', // Amber/Orange - warning
-              'harassment', '#DC2626', // Bright Red - danger
-              'overcharge', '#F97316', // Orange - moderate risk
-              'other', '#6366F1', // Indigo - informational
-              '#6B7280', // Gray - default
-            ],
-            'circle-radius': 10,
-            'circle-stroke-width': 3,
-            'circle-stroke-color': '#ffffff',
-            'circle-opacity': 0.95,
-          },
+        console.log('[MapView] Loading icons and adding unclustered layer...');
+        // Load icons first, then add layer
+        loadIcons(() => {
+          console.log('[MapView] Icons loaded, adding unclustered layer');
+          addUnclusteredLayer();
         });
+        
+        // Also check immediately if icons are already loaded (for faster initial render)
+        const requiredIcons = ['scam-icon', 'harassment-icon', 'overcharge-icon', 'other-icon', 'default-pin-icon'];
+        const allIconsLoaded = requiredIcons.every(name => mapInstance.hasImage(name));
+        if (allIconsLoaded) {
+          console.log('[MapView] Icons already loaded, adding unclustered layer immediately');
+          addUnclusteredLayer();
+        } else {
+          console.log('[MapView] Icons not loaded yet, waiting for loadIcons callback');
+        }
+      } else {
+        console.log('[MapView] pins-unclustered layer already exists');
       }
 
       // Click handler for clusters - zoom in
@@ -483,11 +848,47 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
 
       // Click handler for individual pins
       const handlePinClick = (e: mapboxgl.MapLayerMouseEvent) => {
-        if (!e.features || !e.features[0]) return;
-        const pinId = e.features[0].properties?.id;
-        const pinData = pins.find((p) => p.id === pinId);
-        if (pinData && onPinClickRef.current) {
+        if (!e.features || !e.features[0] || !onPinClickRef.current) return;
+        
+        const properties = e.features[0].properties;
+        if (!properties) return;
+        
+        // Try to get pin data from stored reference (may not work after serialization)
+        let pinData = properties._pinData as Pin | undefined;
+        
+        // If _pinData is not available (serialized), reconstruct from properties
+        if (!pinData || !pinData.id) {
+          const pinId = properties.id;
+          if (pinId) {
+            // Try to find in pins array
+            pinData = pins.find((p) => p.id === pinId);
+            
+            // If not found, reconstruct from properties (for converted reports/tips/incidents)
+            if (!pinData && properties) {
+              const coords = (e.features[0].geometry as GeoJSON.Point).coordinates;
+              pinData = {
+                id: properties.id,
+                city_id: properties.city_id || 0,
+                type: (properties.type || 'other') as PinType,
+                title: properties.title || 'Unknown',
+                summary: properties.summary || '',
+                details: properties.details || null,
+                location: {
+                  type: 'Point',
+                  coordinates: coords as [number, number],
+                },
+                status: (properties.status || 'approved') as PinStatus,
+                source: (properties.source || 'user') as PinSource,
+                created_at: properties.created_at || new Date().toISOString(),
+              } as Pin;
+            }
+          }
+        }
+        
+        if (pinData) {
           onPinClickRef.current(pinData);
+        } else {
+          console.warn('Could not find pin data for click:', properties);
         }
       };
 
@@ -521,12 +922,18 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     };
 
     if (!mapInstance.isStyleLoaded()) {
-      mapInstance.once('style.load', addPinsLayer);
+      console.log('[MapView] Style not loaded yet, waiting for style.load event');
+      const handleStyleLoad = () => {
+        console.log('[MapView] Style loaded, calling addPinsLayer');
+        addPinsLayer();
+      };
+      mapInstance.once('style.load', handleStyleLoad);
       return () => {
-        mapInstance.off('style.load', addPinsLayer);
+        mapInstance.off('style.load', handleStyleLoad);
       };
     }
 
+    console.log('[MapView] Style already loaded, calling addPinsLayer immediately');
     addPinsLayer();
 
     return () => {

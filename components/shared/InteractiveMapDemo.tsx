@@ -14,7 +14,8 @@ export default function InteractiveMapDemo() {
   const [cityData, setCityData] = useState<CityDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showZones, setShowZones] = useState(true);
-  const [showTips, setShowTips] = useState(true);
+  const [showTips, setShowTips] = useState(false);
+  const [hasInitializedPins, setHasInitializedPins] = useState(false);
 
   useEffect(() => {
     async function fetchDemoData() {
@@ -36,13 +37,26 @@ export default function InteractiveMapDemo() {
     fetchDemoData();
   }, []);
 
-  // Don't track viewport changes for static demo map - show all zones and pins
-  // This prevents re-renders and keeps the map static
-  const filteredZones = cityData?.zones || [];
-  const filteredPins = cityData?.pins || [];
+  useEffect(() => {
+    if (!hasInitializedPins && cityData?.pins?.length) {
+      setShowTips(true);
+      setHasInitializedPins(true);
+    }
+  }, [cityData, hasInitializedPins]);
 
-  const zonesToShow = showZones ? filteredZones : [];
-  const pinsToShow = showTips ? filteredPins : [];
+  // Memoize data so MapView receives stable references
+  const filteredZones = useMemo(() => cityData?.zones ?? [], [cityData]);
+  const filteredPins = useMemo(() => cityData?.pins ?? [], [cityData]);
+
+  const zonesToShow = useMemo(
+    () => (showZones ? [...filteredZones] : []),
+    [filteredZones, showZones]
+  );
+
+  const pinsToShow = useMemo(
+    () => (showTips ? [...filteredPins] : []),
+    [filteredPins, showTips]
+  );
 
   if (loading) {
     return (
@@ -98,12 +112,6 @@ export default function InteractiveMapDemo() {
                   {filteredPins.filter((p: any) => p.type === 'scam').length} Scam Alerts
                 </Badge>
               </div>
-              <Link href="/city/bangkok">
-                <Button size="sm" className="bg-white text-slate-950 hover:bg-slate-100">
-                  Explore Full Map
-                  <ChevronRight className="h-4 w-4 ml-1" />
-                </Button>
-              </Link>
             </div>
           </div>
         </div>

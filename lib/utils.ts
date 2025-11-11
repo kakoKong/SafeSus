@@ -40,6 +40,36 @@ export function getPinColor(type: string): string {
   }
 }
 
+export function getPinBadgeClasses(type: string): string {
+  switch (type) {
+    case 'scam':
+      return 'bg-amber-500/20 text-amber-700 dark:text-amber-300 border-amber-500/30';
+    case 'harassment':
+      return 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30';
+    case 'overcharge':
+      return 'bg-orange-500/20 text-orange-700 dark:text-orange-300 border-orange-500/30';
+    case 'other':
+      return 'bg-indigo-500/20 text-indigo-700 dark:text-indigo-300 border-indigo-500/30';
+    default:
+      return 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30';
+  }
+}
+
+export function getZoneBadgeClasses(level: string): string {
+  switch (level) {
+    case 'recommended':
+      return 'bg-green-500/20 text-green-700 dark:text-green-300 border-green-500/30';
+    case 'neutral':
+      return 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30';
+    case 'caution':
+      return 'bg-yellow-500/20 text-yellow-700 dark:text-yellow-300 border-yellow-500/30';
+    case 'avoid':
+      return 'bg-red-500/20 text-red-700 dark:text-red-300 border-red-500/30';
+    default:
+      return 'bg-gray-500/20 text-gray-700 dark:text-gray-300 border-gray-500/30';
+  }
+}
+
 /**
  * Check if a pathname matches a navigation href (supports nested routes)
  */

@@ -1,108 +1,298 @@
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
-import { Card, CardContent } from '@/components/ui/card';
-import { Shield, Map, MessageCircle, AlertTriangle, Navigation, Users, Sparkles, Globe, Eye, MapPin, Compass, Backpack, Plane, Camera, Mountain, TrendingUp, BookOpen, Award } from 'lucide-react';
-import TripPlanner from '@/components/shared/TripPlanner';
-import FeaturedTips from '@/components/shared/FeaturedTips';
+import { Card } from '@/components/ui/card';
+import {
+  Shield,
+  Map,
+  AlertTriangle,
+  Users,
+  Sparkles,
+  CheckCircle,
+  MapPin,
+  Satellite,
+  AlarmCheck,
+  Smartphone,
+  ShieldAlert,
+  TrendingUp,
+} from 'lucide-react';
 import RecentTipsFeed from '@/components/shared/RecentTipsFeed';
-import AppDownloadButtons from '@/components/shared/AppDownloadButtons';
 import InteractiveMapDemo from '@/components/shared/InteractiveMapDemo';
+import ModeSwitcher from '@/components/shared/ModeSwitcher';
 
 export default function Home() {
   return (
     <div className="flex flex-col overflow-hidden">
-      {/* Hero Section - Interactive Trip Planner */}
-      <section className="relative py-12 md:py-20 lg:py-28 bg-white dark:bg-slate-950">
-        <div className="container px-4 max-w-7xl mx-auto">
-          <div className="grid lg:grid-cols-2 gap-12 items-center">
-            {/* Left Content */}
-            <div className="space-y-6">
-              <h1 className="text-4xl md:text-6xl font-bold leading-tight">
-                Travel safer with tips from people who've been there
+      {/* Hero Section */}
+      <section className="relative bg-white py-12 dark:bg-slate-950 md:py-20 lg:py-24">
+        <div className="container mx-auto grid max-w-7xl gap-12 px-4 lg:grid-cols-[1.1fr,0.9fr] lg:items-center">
+          <div className="space-y-8">
+            <div className="space-y-4">
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+                <Sparkles className="h-4 w-4" />
+                Private beta now forming
+              </span>
+              <h1 className="text-4xl font-bold leading-tight md:text-6xl">
+                A single control room for travel safety
               </h1>
-              
-              <p className="text-lg md:text-xl text-muted-foreground">
-                Real scam alerts, safe neighborhoods, and local advice. No BS, just honest experiences 
-                from travelers like you.
+              <p className="text-lg text-muted-foreground md:text-xl">
+                Safesus keeps travelers and community guardians aligned with context-aware alerts, SafeGroup check-ins, and zone intelligence you can actually trust.
               </p>
-              
-              <div className="flex flex-wrap gap-4 items-center">
+            </div>
+
+            <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Shield className="h-5 w-5 text-primary" />
-                  <span>Community verified</span>
+                <span>Guardian-reviewed intel</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="h-5 w-5 text-primary" />
-                  <span>10+ contributors</span>
+                <span>Community-powered signals</span>
+              </div>
+            </div>
+              
+            <div className="space-y-4">
+              <ModeSwitcher />
+              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+                <Button size="lg" className="w-full sm:w-auto" disabled>
+                  Request beta invite
+                </Button>
+                <p className="text-sm text-muted-foreground">
+                  Android, iOS, and web dashboards rolling out city by city.
+                </p>
+              </div>
+            </div>
+          </div>
+
+            <div className="relative">
+            <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-8 text-white shadow-xl dark:border-slate-800">
+              <div className="space-y-6">
+                <div>
+                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wide">
+                    Live demo stream
+                  </span>
+                  <h3 className="mt-4 text-2xl font-semibold">Bangkok signal summary</h3>
+                </div>
+
+                <div className="space-y-4 text-sm text-slate-300">
+                  <div className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <MapPin className="h-5 w-5 text-green-400" />
+                      <div>
+                        <p className="font-semibold text-white">Phrom Phong</p>
+                        <p className="text-xs text-slate-400">Lifestyle corridor • SafeGroup: 3 members</p>
+                      </div>
+                    </div>
+                    <AlarmCheck className="h-5 w-5 text-green-400" />
+                  </div>
+
+                  <div className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
+                    <div className="flex items-center gap-3">
+                      <MapPin className="h-5 w-5 text-yellow-300" />
+                      <div>
+                        <p className="font-semibold text-white">Chatuchak Market</p>
+                        <p className="text-xs text-slate-400">Crowded hours • Scam signals detected</p>
+                      </div>
+                    </div>
+                    <ShieldAlert className="h-5 w-5 text-yellow-300" />
+                  </div>
+
+                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
+                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Next check-in</p>
+                    <div className="mt-2 flex items-center justify-between">
+                      <div>
+                    <p className="font-semibold text-white">SafeGroup sync</p>
+                        <p className="text-xs text-slate-400">Auto-check in at landing • 12m</p>
+                      </div>
+                      <div className="flex items-center gap-2 text-xs text-white">
+                        <div className="h-2 w-2 rounded-full bg-green-400" />
+                        Live
+                      </div>
+                    </div>
+                  </div>
+
+                  <div className="grid gap-3 sm:grid-cols-2">
+                    <div className="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3">
+                      <Satellite className="h-5 w-5 text-cyan-300" />
+                      <span className="text-xs uppercase tracking-wide text-slate-400">Geo-fenced alerts</span>
+                    </div>
+                    <div className="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3">
+                      <Smartphone className="h-5 w-5 text-purple-300" />
+                      <span className="text-xs uppercase tracking-wide text-slate-400">No extra hardware</span>
+                    </div>
+                  </div>
                 </div>
               </div>
-              
-              {/* Download App Buttons - Small on mobile, full on desktop */}
-              {/* <div> */}
-                {/* <AppDownloadButtons /> */}
-              {/* </div> */}
-            </div>
-              
-            {/* Right - Trip Planner */}
-            <div className="relative">
-              <TripPlanner />
             </div>
           </div>
         </div>
       </section>
 
-      {/* Interactive Map Demo */}
-      <section className="py-20 px-4 bg-slate-50 dark:bg-slate-900">
-        <div className="container max-w-7xl mx-auto">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Try the Map Yourself
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Explore Bangkok's safety zones and scam alerts. Pan around, zoom in, and click on areas to see what travelers have reported.
-            </p>
+      <div className="space-y-16 px-4 py-16 md:space-y-24 md:py-20">
+        {/* SafeMap Overview */}
+        <section>
+          <div className="container mx-auto max-w-7xl">
+            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
+              <div className="space-y-12 p-8 md:p-12">
+                <div className="space-y-4 text-center lg:text-left">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                    SafeMap
+                  </span>
+                  <div className="mx-auto max-w-3xl space-y-3 lg:mx-0">
+                    <h2 className="text-3xl font-bold md:text-4xl">Understand the city at a glance</h2>
+                    <p className="text-base text-muted-foreground md:text-lg">
+                      Safesus translates real guardian reports into live zone intelligence so you always know what mode to be in—cruise, watch, or override.
+                    </p>
+                  </div>
+                </div>
+
+                <div className="space-y-6">
+                  <div className="grid gap-4 sm:grid-cols-3">
+                    <div className="rounded-2xl border border-emerald-300 bg-emerald-100 p-4 text-center shadow-sm dark:border-emerald-900/70 dark:bg-emerald-900/40">
+                      <div className="mb-2 flex items-center justify-center gap-2 text-emerald-700 dark:text-emerald-100">
+                        <Shield className="h-5 w-5" />
+                        <span className="text-sm font-semibold uppercase tracking-wide">Cruise</span>
+                      </div>
+                      <p className="text-sm text-emerald-900 dark:text-emerald-100">
+                        Guardian-verified corridors with smooth traffic, open venues, and backups.
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-amber-300 bg-amber-100 p-4 text-center shadow-sm dark:border-amber-900/70 dark:bg-amber-900/40">
+                      <div className="mb-2 flex items-center justify-center gap-2 text-amber-700 dark:text-amber-100">
+                        <AlertTriangle className="h-5 w-5" />
+                        <span className="text-sm font-semibold uppercase tracking-wide">Watch</span>
+                      </div>
+                      <p className="text-sm text-amber-900 dark:text-amber-100">
+                        Great experiences with caveats—tout routes, pickpockets, or nightlife surges.
+                      </p>
+                    </div>
+                    <div className="rounded-2xl border border-red-400 bg-red-100 p-4 text-center shadow-sm dark:border-red-900/70 dark:bg-red-900/40">
+                      <div className="mb-2 flex items-center justify-center gap-2 text-red-700 dark:text-red-100">
+                        <ShieldAlert className="h-5 w-5" />
+                        <span className="text-sm font-semibold uppercase tracking-wide">Override</span>
+                      </div>
+                      <p className="text-sm text-red-900 dark:text-red-100">
+                        High incident density or local advisories. We only paint zones red when signals stack.
+                      </p>
+                    </div>
           </div>
           
+                  <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-white p-4 shadow-md dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
+                    <div className="overflow-hidden rounded-2xl bg-white shadow-lg dark:bg-slate-950">
           <InteractiveMapDemo />
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
         </div>
       </section>
 
-      {/* Activity & Tips Section - MOVED UP to show engagement */}
-      <section className="py-20 px-4 bg-white dark:bg-slate-950">
-        <div className="container max-w-7xl mx-auto">
-          <div className="mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Real-Time Community Activity
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-3xl">
-              See what travelers are sharing right now - fresh tips, scam alerts, and safety updates from the community
-            </p>
+        {/* SafeAlert Feed */}
+        <section className="scroll-mt-12">
+          <div className="container mx-auto max-w-7xl">
+            <div className="rounded-3xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
+              <div className="space-y-10 p-8 md:p-12">
+                <div className="space-y-4 text-center lg:text-left">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+                    SafeAlert
+                  </span>
+                  <div className="mx-auto max-w-3xl space-y-3 lg:mx-0">
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">Live community signals</h2>
+                    <p className="text-base text-slate-600 dark:text-slate-300 md:text-lg">
+                      Scam reports, safe-area confirmations, and route updates as they land. We keep the feed raw so you can read the city&rsquo;s mood in under a minute.
+                    </p>
+                  </div>
           </div>
           
-          <div className="mb-12">
             <RecentTipsFeed />
+              </div>
+            </div>
           </div>
-          
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Popular Safety Tips
-            </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              What travelers are reading right now
+        </section>
+
+        {/* SafeGroup Feature */}
+        <section className="scroll-mt-12">
+          <div className="container mx-auto max-w-7xl">
+            <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
+              <div className="absolute inset-0 pointer-events-none">
+                <div className="absolute top-10 right-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
+                <div className="absolute bottom-0 left-10 h-48 w-48 rounded-full bg-sky-500/10 blur-3xl" />
+                <div className="absolute inset-0 bg-grid-slate-200/40 [mask-image:linear-gradient(to_bottom,white,transparent)] dark:bg-grid-slate-800/40" />
+              </div>
+              <div className="relative space-y-12 p-8 md:p-12">
+                <div className="space-y-4 text-center lg:text-left">
+                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
+                    SafeGroup
+                  </span>
+                  <div className="mx-auto max-w-3xl space-y-3 lg:mx-0">
+                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">Keep the people who matter in the loop</h2>
+                    <p className="text-base text-slate-600 dark:text-slate-300 md:text-lg">
+                      SafeGroup is how travelers share just enough with their inner circle—no spammy texts, just calm updates that everyone can trust.
             </p>
           </div>
-          
-          <FeaturedTips />
-          
-          <div className="text-center mt-12">
-            <Link href="/community">
-              <Button size="lg" variant="outline">
-                View All Tips
-              </Button>
-            </Link>
+                </div>
+
+                <div className="grid gap-6 lg:grid-cols-[1.15fr,0.85fr]">
+                  <div className="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/70">
+                    <div className="flex items-center gap-3 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary dark:border-primary/30 dark:bg-primary/10 dark:text-primary-foreground">
+                      Live feed
+                    </div>
+                    <h3 className="mt-6 text-2xl font-semibold text-slate-900 dark:text-white lg:text-[26px]">What your circle sees in real time</h3>
+
+                    <div className="mt-8 space-y-4">
+                      {[
+                        {
+                          title: 'Location heartbeat',
+                          desc: 'Auto-check-ins with zone context so your people know you’re on track.',
+                        },
+                        {
+                          title: 'Zone drift alerts',
+                          desc: 'If you wander into yellow or red zones, they see what’s happening and why.',
+                        },
+                        {
+                          title: 'Journey timeline',
+                          desc: 'A clean breadcrumb trail of your moves, annotated with guardian-approved cues.',
+                        },
+                      ].map((item) => (
+                        <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
+                          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-white">{item.title}</h4>
+                          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{item.desc}</p>
+                        </div>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="space-y-6">
+                    <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
+                      <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
+                        Built for
+                      </div>
+                      <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">The people who keep you grounded</h3>
+                      <ul className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
+                        {[
+                          'Solo explorers finding their rhythm',
+                          'Backpackers bouncing between hostels',
+                          'Couples covering different cities',
+                          'Close friends syncing weekend plans',
+                          'Parents watching over kids abroad',
+                        ].map((item) => (
+                          <li key={item} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-950/40">
+                            <Users className="h-4 w-4 text-primary" />
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 text-sm text-slate-600 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
+                      Whether it’s a Bangkok night run or a Chiang Mai hike, SafeGroup keeps everyone calm, connected, and informed—without hovering.
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </div>
+        </section>
         </div>
-      </section>
 
       {/* Cities Section - MOVED UP to show what's available */}
       <section className="py-20 px-4 bg-slate-950 text-white">
@@ -112,32 +302,31 @@ export default function Home() {
               Available Cities
             </h2>
             <p className="text-lg text-slate-400">
-              Start with Bangkok. More cities coming soon.
+              Start with Bangkok. More cities coming soon. Access opens as SafeGroup cohorts launch.
             </p>
           </div>
           
           <div className="grid md:grid-cols-2 gap-6 max-w-5xl">
             {/* Bangkok - Featured Large */}
-            <Link href="/cities" className="group relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 hover:border-slate-700 transition-all md:col-span-2 h-[300px]">
-              
-              <div className="relative h-full flex flex-col justify-between p-8">
-                <div>
-                  <span className="inline-block px-3 py-1 bg-green-500/20 border border-green-500/30 rounded-full text-xs font-semibold text-green-400 mb-4">
-                    LIVE NOW
+            <div className="relative h-[300px] overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-8 md:col-span-2">
+              <div className="flex h-full flex-col justify-between">
+                <div className="space-y-4">
+                  <span className="inline-block rounded-full border border-green-500/30 bg-green-500/20 px-3 py-1 text-xs font-semibold text-green-400">
+                    ALPHA COHORT
                   </span>
-                  <h3 className="text-4xl md:text-5xl font-bold mb-3">Bangkok</h3>
-                  <p className="text-slate-400 text-lg max-w-xl">
-                    Full safety coverage including Sukhumvit, Khao San, Rattanakosin, and more. Scam alerts, safe zones, and local tips.
+                  <h3 className="text-4xl font-bold md:text-5xl">Bangkok</h3>
+                  <p className="text-lg text-slate-400">
+                    Safety coverage for Sukhumvit, Khao San, Rattanakosin, riverside ferries, and intercity terminals. SafeGroup runs nightly stress tests here first.
                   </p>
                 </div>
-                <div className="flex items-center gap-2 text-sm text-slate-400 group-hover:text-white transition-colors">
-                  <span>Explore Bangkok</span>
-                  <svg className="w-4 h-4 group-hover:translate-x-1 transition-transform" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M9 5l7 7-7 7" />
-                  </svg>
+                <div className="flex items-center justify-between text-sm text-slate-400">
+                  <span>Request to join the next Bangkok drop</span>
+                  <span className="rounded-full bg-slate-800 px-3 py-1 text-xs uppercase tracking-wide text-slate-300">
+                    Coming soon
+                  </span>
                 </div>
               </div>
-            </Link>
+            </div>
             
             {/* Coming Soon Cities */}
             {[
@@ -321,16 +510,12 @@ export default function Home() {
           </p>
           
           <div className="flex flex-wrap gap-4 justify-center">
-            <Link href="/cities">
-              <Button size="lg" className="bg-white text-slate-950 hover:bg-slate-100">
-                View Map
+            <Button size="lg" className="bg-white text-slate-950 hover:bg-slate-100" disabled>
+              Map preview coming soon
               </Button>
-            </Link>
-            <Link href="/community">
-              <Button size="lg" variant="outline" className=":bg-slate-500 border-slate-700 text-white hover:bg-slate-900 hover:text-gray-100">
-                Browse Tips
+            <Button size="lg" variant="outline" className="border-slate-700 text-white hover:bg-slate-900" disabled>
+              Community beta waitlist
               </Button>
-            </Link>
           </div>
           
         </div>
@@ -359,16 +544,12 @@ export default function Home() {
                 <h4 className="font-semibold mb-3 text-sm">Product</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <Link href="/cities" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Cities
-                    </Link>
+                    <span className="text-muted-foreground">Cities (beta gating)</span>
                   </li>
                   <li>
                   </li>
                   <li>
-                    <Link href="/community" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Community
-                    </Link>
+                    <span className="text-muted-foreground">Community (waitlist)</span>
                   </li>
                 </ul>
               </div>
@@ -377,19 +558,13 @@ export default function Home() {
                 <h4 className="font-semibold mb-3 text-sm">Company</h4>
                 <ul className="space-y-2 text-sm">
                   <li>
-                    <Link href="/submit" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Submit Tips
-                    </Link>
+                    <span className="text-muted-foreground">Submit Tips (invite-only)</span>
                   </li>
                   <li>
-                    <Link href="/privacy" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Privacy
-                    </Link>
+                    <span className="text-muted-foreground">Privacy Policy (on request)</span>
                   </li>
                   <li>
-                    <Link href="/terms" className="text-muted-foreground hover:text-foreground transition-colors">
-                      Terms
-                    </Link>
+                    <span className="text-muted-foreground">Terms (coming soon)</span>
                   </li>
                 </ul>
               </div>
