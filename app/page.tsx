@@ -295,33 +295,33 @@ export default function Home() {
         </div>
 
       {/* Cities Section - MOVED UP to show what's available */}
-      <section className="py-20 px-4 bg-slate-950 text-white">
+      <section className="py-12 px-4 bg-slate-950 text-white">
         <div className="container px-4 max-w-7xl mx-auto">
-          <div className="max-w-2xl mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+          <div className="max-w-2xl mb-8">
+            <h2 className="text-2xl md:text-3xl font-bold mb-3">
               Available Cities
             </h2>
-            <p className="text-lg text-slate-400">
+            <p className="text-base text-slate-400">
               Start with Bangkok. More cities coming soon. Access opens as SafeGroup cohorts launch.
             </p>
           </div>
           
-          <div className="grid md:grid-cols-2 gap-6 max-w-5xl">
+          <div className="grid md:grid-cols-2 gap-4 max-w-4xl">
             {/* Bangkok - Featured Large */}
-            <div className="relative h-[300px] overflow-hidden rounded-2xl border border-slate-800 bg-slate-900 p-8 md:col-span-2">
+            <div className="relative h-[200px] overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-6 md:col-span-2">
               <div className="flex h-full flex-col justify-between">
-                <div className="space-y-4">
-                  <span className="inline-block rounded-full border border-green-500/30 bg-green-500/20 px-3 py-1 text-xs font-semibold text-green-400">
+                <div className="space-y-3">
+                  <span className="inline-block rounded-full border border-green-500/30 bg-green-500/20 px-2.5 py-0.5 text-xs font-semibold text-green-400">
                     ALPHA COHORT
                   </span>
-                  <h3 className="text-4xl font-bold md:text-5xl">Bangkok</h3>
-                  <p className="text-lg text-slate-400">
-                    Safety coverage for Sukhumvit, Khao San, Rattanakosin, riverside ferries, and intercity terminals. SafeGroup runs nightly stress tests here first.
+                  <h3 className="text-2xl md:text-3xl font-bold">Bangkok</h3>
+                  <p className="text-sm text-slate-400">
+                    Safety coverage for Sukhumvit, Khao San, and Rattanakosin.
                   </p>
                 </div>
-                <div className="flex items-center justify-between text-sm text-slate-400">
+                <div className="flex items-center justify-between text-xs text-slate-400">
                   <span>Request to join the next Bangkok drop</span>
-                  <span className="rounded-full bg-slate-800 px-3 py-1 text-xs uppercase tracking-wide text-slate-300">
+                  <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs uppercase tracking-wide text-slate-300">
                     Coming soon
                   </span>
                 </div>
@@ -331,64 +331,23 @@ export default function Home() {
             {/* Coming Soon Cities */}
             {[
               { name: 'Phuket', desc: 'Beaches & nightlife safety' },
-              { name: 'Chiang Mai', desc: 'Old city & digital nomad areas' },
-              { name: 'Koh Samui', desc: 'Island safety guide' }
+              { name: 'Chiang Mai', desc: 'Old city & digital nomad areas' }
             ].map((city) => (
-              <div key={city.name} className="relative overflow-hidden rounded-2xl bg-slate-900 border border-slate-800 p-8 h-[200px] group hover:border-slate-700 transition-all">
+              <div key={city.name} className="relative overflow-hidden rounded-xl bg-slate-900 border border-slate-800 p-6 h-[140px] group hover:border-slate-700 transition-all">
                 
                 <div className="relative h-full flex flex-col justify-between">
                   <div>
-                    <span className="inline-block px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-xs font-semibold text-slate-400 mb-3">
+                    <span className="inline-block px-2.5 py-0.5 bg-slate-800 border border-slate-700 rounded-full text-xs font-semibold text-slate-400 mb-2">
                       COMING SOON
                     </span>
-                    <h3 className="text-2xl font-bold mb-2">{city.name}</h3>
-                    <p className="text-slate-500 text-sm">{city.desc}</p>
+                    <h3 className="text-xl font-bold mb-1.5">{city.name}</h3>
+                    <p className="text-slate-500 text-xs">{city.desc}</p>
                   </div>
                 </div>
               </div>
             ))}
           </div>
         </div>
-      </section>
-      
-      {/* The Problem & Solution - MOVED DOWN after showing value */}
-      <section className="py-20 px-4 bg-slate-50 dark:bg-slate-900">
-        <div className="container max-w-6xl mx-auto">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              Why Safesus?
-            </h2>
-            <p className="text-lg text-muted-foreground">
-              Because travel safety info is scattered, outdated, and hard to trust.
-            </p>
-          </div>
-          
-          <div className="grid md:grid-cols-3 gap-6 max-w-5xl mx-auto mb-16">
-            <Card className="p-6">
-              <AlertTriangle className="h-10 w-10 text-red-500 mb-4" />
-              <h3 className="text-xl font-bold mb-2">Scams Everywhere</h3>
-              <p className="text-muted-foreground">
-                From fake taxis to gem shop scams, tourists are easy targets when they don't know the local tricks.
-              </p>
-            </Card>
-            
-            <Card className="p-6">
-              <MapPin className="h-10 w-10 text-orange-500 mb-4" />
-              <h3 className="text-xl font-bold mb-2">Which Areas Are Safe?</h3>
-              <p className="text-muted-foreground">
-                Google Maps shows you where things are, but not which neighborhoods to avoid at night.
-              </p>
-            </Card>
-            
-            <Card className="p-6">
-              <Shield className="h-10 w-10 text-blue-500 mb-4" />
-              <h3 className="text-xl font-bold mb-2">Info is Outdated</h3>
-              <p className="text-muted-foreground">
-                That forum post from 2018? Probably not relevant anymore. Things change fast.
-              </p>
-            </Card>
-                  </div>
-                </div>
       </section>
       
       {/* How It Works */}
@@ -499,9 +458,9 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4 bg-slate-950 text-white">
+      <section className="py-20 px-4 bg-slate-950">
         <div className="container px-4 max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6">
+          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
             Start Exploring Safely
           </h2>
           

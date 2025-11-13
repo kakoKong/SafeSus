@@ -34,6 +34,8 @@ export default function InteractiveMapDrawer({
   
   const [selectedPoint, setSelectedPoint] = useState<{ lng: number; lat: number } | null>(null);
   const [drawnZone, setDrawnZone] = useState<number[][] | null>(null);
+  const [isDrawing, setIsDrawing] = useState(false);
+  const [isCardCollapsed, setIsCardCollapsed] = useState(false);
 
   // Initialize map
   useEffect(() => {
@@ -131,6 +133,7 @@ export default function InteractiveMapDrawer({
       if (feature.geometry.type === 'Polygon') {
         const coords = feature.geometry.coordinates[0];
         setDrawnZone(coords);
+        setIsDrawing(false);
         if (onZoneDrawn) {
           onZoneDrawn(coords);
         }
@@ -140,6 +143,7 @@ export default function InteractiveMapDrawer({
 
   const handleDrawDelete = () => {
     setDrawnZone(null);
+    setIsDrawing(false);
     if (onZoneDrawn) {
       onZoneDrawn([]);
     }
@@ -154,6 +158,8 @@ export default function InteractiveMapDrawer({
 
     // Start drawing polygon (user will draw rectangle manually)
     draw.current.changeMode('draw_polygon');
+    setIsDrawing(true);
+    setIsCardCollapsed(true);
   };
 
   // Clear selection
@@ -187,56 +193,76 @@ export default function InteractiveMapDrawer({
       />
 
       {/* Instructions Overlay */}
-      <div className="absolute top-4 left-4 bg-white dark:bg-slate-900 rounded-lg shadow-lg p-4 max-w-xs">
-        <div className="flex items-start gap-3">
-          {mode === 'point' ? (
-            <>
-              <div className="p-2 bg-red-500/10 rounded-lg">
-                <MapPin className="h-5 w-5 text-red-500" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm mb-1">Pin Location</h4>
-                <p className="text-xs text-muted-foreground">
-                  Click anywhere on the map to pin the exact location of the incident
-                </p>
-                {selectedPoint && (
-                  <div className="mt-2 text-xs">
-                    <p className="font-medium text-green-600 dark:text-green-400">✓ Location selected</p>
-                    <p className="text-muted-foreground">
-                      {selectedPoint.lat.toFixed(5)}, {selectedPoint.lng.toFixed(5)}
-                    </p>
-                  </div>
-                )}
-              </div>
-            </>
-          ) : (
-            <>
-              <div className="p-2 bg-blue-500/10 rounded-lg">
-                <Square className="h-5 w-5 text-blue-500" />
-              </div>
-              <div>
-                <h4 className="font-semibold text-sm mb-1">Draw Safety Zone</h4>
-                <p className="text-xs text-muted-foreground mb-2">
-                  Click "Draw Zone" then click points on map to create a rectangle/polygon. Double-click to finish.
-                </p>
-                <Button
-                  size="sm"
-                  onClick={startDrawingRectangle}
-                  className="w-full"
-                >
-                  <Square className="h-3 w-3 mr-1" />
-                  Draw Zone
-                </Button>
-                {drawnZone && (
-                  <p className="mt-2 text-xs font-medium text-green-600 dark:text-green-400">
-                    ✓ Zone drawn ({drawnZone.length} points)
-                  </p>
-                )}
-              </div>
-            </>
-          )}
+      {mode === 'rectangle' && isCardCollapsed ? (
+        <div className="absolute top-4 left-4 bg-white dark:bg-slate-900 rounded-lg shadow-lg p-2">
+          <Button
+            size="sm"
+            variant="ghost"
+            onClick={() => {
+              setIsCardCollapsed(false);
+              if (draw.current) {
+                draw.current.changeMode('simple_select');
+                setIsDrawing(false);
+              }
+            }}
+            className="text-xs"
+          >
+            Show Instructions
+          </Button>
         </div>
-      </div>
+      ) : (
+        <div className="absolute top-4 left-4 bg-white dark:bg-slate-900 rounded-lg shadow-lg p-4 max-w-xs">
+          <div className="flex items-start gap-3">
+            {mode === 'point' ? (
+              <>
+                <div className="p-2 bg-red-500/10 rounded-lg">
+                  <MapPin className="h-5 w-5 text-red-500" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Pin Location</h4>
+                  <p className="text-xs text-muted-foreground">
+                    Click anywhere on the map to pin the exact location of the incident
+                  </p>
+                  {selectedPoint && (
+                    <div className="mt-2 text-xs">
+                      <p className="font-medium text-green-600 dark:text-green-400">✓ Location selected</p>
+                      <p className="text-muted-foreground">
+                        {selectedPoint.lat.toFixed(5)}, {selectedPoint.lng.toFixed(5)}
+                      </p>
+                    </div>
+                  )}
+                </div>
+              </>
+            ) : (
+              <>
+                <div className="p-2 bg-blue-500/10 rounded-lg">
+                  <Square className="h-5 w-5 text-blue-500" />
+                </div>
+                <div>
+                  <h4 className="font-semibold text-sm mb-1">Draw Safety Zone</h4>
+                  <p className="text-xs text-muted-foreground mb-2">
+                    Click "Draw Zone" then click points on map to create a rectangle/polygon. Double-click to finish.
+                  </p>
+                  <Button
+                    size="sm"
+                    onClick={startDrawingRectangle}
+                    className="w-full"
+                    disabled={isDrawing}
+                  >
+                    <Square className="h-3 w-3 mr-1" />
+                    {isDrawing ? 'Drawing...' : 'Draw Zone'}
+                  </Button>
+                  {drawnZone && (
+                    <p className="mt-2 text-xs font-medium text-green-600 dark:text-green-400">
+                      ✓ Zone drawn ({drawnZone.length} points)
+                    </p>
+                  )}
+                </div>
+              </>
+            )}
+          </div>
+        </div>
+      )}
 
       {/* Clear Button */}
       {(selectedPoint || drawnZone) && (

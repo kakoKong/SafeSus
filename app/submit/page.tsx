@@ -25,6 +25,8 @@ export default function SubmitTipPage() {
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
   const [submissionType, setSubmissionType] = useState<SubmissionType>('tip');
+  const [isGuestMode, setIsGuestMode] = useState(false);
+  const [guestName, setGuestName] = useState('');
 
   const [formData, setFormData] = useState({
     category: '',
@@ -44,18 +46,31 @@ export default function SubmitTipPage() {
   async function checkAuth() {
     const { data: { user } } = await supabase.auth.getUser();
     setIsAuthenticated(!!user);
-    if (!user) {
-      setShowLoginModal(true);
-    }
+    // Don't show login modal automatically - allow guest mode
   }
 
   async function handleSubmit(e: React.FormEvent) {
     e.preventDefault();
 
     const { data: { user } } = await supabase.auth.getUser();
-    if (!user) {
+    
+    // For pin submissions (scam), allow guest mode
+    if (submissionType === 'scam' && !user) {
+      if (!guestName || guestName.trim().length === 0) {
+        toast({
+          title: 'Name required',
+          description: 'Please enter your name to submit as a guest.',
+          variant: 'destructive',
+        });
+        return;
+      }
+      setIsGuestMode(true);
+    } else if (!user) {
+      // For tips and zones, require login
       setShowLoginModal(true);
       return;
+    } else {
+      setIsGuestMode(false);
     }
 
     // Validation
@@ -103,7 +118,8 @@ export default function SubmitTipPage() {
           location: {
             type: 'Point',
             coordinates: [pinLocation!.lng, pinLocation!.lat]
-          }
+          },
+          ...(!user && { guest_name: guestName.trim() })
         };
       } else if (submissionType === 'zone') {
         endpoint = '/api/submit-zone';
@@ -183,7 +199,10 @@ export default function SubmitTipPage() {
         {/* Submission Type Selector */}
         <div className="grid md:grid-cols-3 gap-4 mb-8">
           <button
-            onClick={() => setSubmissionType('tip')}
+            onClick={() => {
+              setSubmissionType('tip');
+              setIsGuestMode(false);
+            }}
             className={`p-6 rounded-xl border-2 transition-all ${
               submissionType === 'tip'
                 ? 'border-primary bg-primary/5'
@@ -209,7 +228,10 @@ export default function SubmitTipPage() {
           </button>
 
           <button
-            onClick={() => setSubmissionType('zone')}
+            onClick={() => {
+              setSubmissionType('zone');
+              setIsGuestMode(false);
+            }}
             className={`p-6 rounded-xl border-2 transition-all ${
               submissionType === 'zone'
                 ? 'border-primary bg-primary/5'
@@ -299,6 +321,23 @@ export default function SubmitTipPage() {
 
               {submissionType === 'scam' && (
                 <>
+                  {!isAuthenticated && (
+                    <div>
+                      <label className="text-sm font-medium mb-2 block">
+                        Your Name <span className="text-destructive">*</span>
+                      </label>
+                      <Input
+                        placeholder="Enter your name"
+                        value={guestName}
+                        onChange={(e) => setGuestName(e.target.value)}
+                        required
+                      />
+                      <p className="text-xs text-muted-foreground mt-1">
+                        You can submit as a guest without signing in
+                      </p>
+                    </div>
+                  )}
+
                   <div>
                     <label className="text-sm font-medium mb-2 block">
                       Incident Type <span className="text-destructive">*</span>

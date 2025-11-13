@@ -1,18 +1,33 @@
 'use client';
 
 import Link from 'next/link';
-import { usePathname } from 'next/navigation';
+import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
-import { Menu, X } from 'lucide-react';
+import {
+  DropdownMenu,
+  DropdownMenuContent,
+  DropdownMenuItem,
+  DropdownMenuLabel,
+  DropdownMenuSeparator,
+  DropdownMenuTrigger,
+} from '@/components/ui/dropdown-menu';
+import { Menu, X, User, LogOut, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
+import { useToast } from '@/components/ui/use-toast';
+import LoginModal from '@/components/shared/LoginModal';
 
 export default function Header() {
   const pathname = usePathname();
+  const router = useRouter();
+  const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
   const [isAdmin, setIsAdmin] = useState(false);
   const [checkingAuth, setCheckingAuth] = useState(true);
+  const [user, setUser] = useState<any>(null);
+  const [userProfile, setUserProfile] = useState<any>(null);
+  const [showLoginModal, setShowLoginModal] = useState(false);
   const supabase = createClient();
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
@@ -32,13 +47,24 @@ export default function Header() {
 
   async function checkAdminStatus() {
     try {
-      const { data: { user } } = await supabase.auth.getUser();
+      const { data: { user: authUser } } = await supabase.auth.getUser();
+      setUser(authUser);
       
-      if (!user) {
+      if (!authUser) {
         setIsAdmin(false);
+        setUserProfile(null);
         setCheckingAuth(false);
         return;
       }
+
+      // Fetch user profile
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('*')
+        .eq('user_id', authUser.id)
+        .single();
+      
+      setUserProfile(profile);
 
       // Check if user logged in with Google
       const { data: { session } } = await supabase.auth.getSession();
@@ -52,12 +78,6 @@ export default function Header() {
       }
 
       // Check if user has admin role
-      const { data: profile } = await supabase
-        .from('user_profiles')
-        .select('role')
-        .eq('user_id', user.id)
-        .single();
-
       setIsAdmin(profile?.role === 'admin');
     } catch (error) {
       console.error('Error checking admin status:', error);
@@ -65,6 +85,17 @@ export default function Header() {
     } finally {
       setCheckingAuth(false);
     }
+  }
+
+  async function handleLogout() {
+    await supabase.auth.signOut();
+    setUser(null);
+    setUserProfile(null);
+    toast({
+      title: 'Signed out',
+      description: 'You have been successfully signed out.',
+    });
+    router.push('/');
   }
 
   return (
@@ -111,6 +142,81 @@ export default function Header() {
 
           {/* Right side */}
           <div className="flex items-center gap-2">
+            {!checkingAuth && user && (
+              <DropdownMenu>
+                <DropdownMenuTrigger asChild>
+                  <Button variant="ghost" size="sm" className="hidden md:flex items-center gap-2">
+                    <div className="w-8 h-8 rounded-full bg-primary/10 flex items-center justify-center">
+                      {user.user_metadata?.avatar_url ? (
+                        <img 
+                          src={user.user_metadata.avatar_url} 
+                          alt="Profile" 
+                          className="w-8 h-8 rounded-full"
+                        />
+                      ) : (
+                        <User className="h-4 w-4 text-primary" />
+                      )}
+                    </div>
+                    <span className="text-sm font-medium hidden lg:inline">
+                      {user.user_metadata?.full_name || user.email?.split('@')[0] || 'User'}
+                    </span>
+                  </Button>
+                </DropdownMenuTrigger>
+                <DropdownMenuContent align="end" className="w-56">
+                  <DropdownMenuLabel>
+                    <div className="flex flex-col space-y-1">
+                      <p className="text-sm font-medium">
+                        {user.user_metadata?.full_name || 'User'}
+                      </p>
+                      <p className="text-xs text-muted-foreground">
+                        {user.email}
+                      </p>
+                      {userProfile && (
+                        <div className="flex items-center gap-2 mt-1">
+                          <span className="text-xs px-2 py-0.5 rounded-full bg-primary/10 text-primary capitalize">
+                            {userProfile.role}
+                          </span>
+                          {userProfile.score !== undefined && (
+                            <span className="text-xs text-muted-foreground">
+                              {userProfile.score} pts
+                            </span>
+                          )}
+                        </div>
+                      )}
+                    </div>
+                  </DropdownMenuLabel>
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem asChild>
+                    <Link href="/account" className="cursor-pointer">
+                      <User className="mr-2 h-4 w-4" />
+                      My Account
+                    </Link>
+                  </DropdownMenuItem>
+                  {isAdmin && (
+                    <DropdownMenuItem asChild>
+                      <Link href="/admin/dashboard" className="cursor-pointer">
+                        <Settings className="mr-2 h-4 w-4" />
+                        Admin Dashboard
+                      </Link>
+                    </DropdownMenuItem>
+                  )}
+                  <DropdownMenuSeparator />
+                  <DropdownMenuItem onClick={handleLogout} className="cursor-pointer text-red-600 dark:text-red-400">
+                    <LogOut className="mr-2 h-4 w-4" />
+                    Sign Out
+                  </DropdownMenuItem>
+                </DropdownMenuContent>
+              </DropdownMenu>
+            )}
+            {!checkingAuth && !user && (
+              <Button
+                onClick={() => setShowLoginModal(true)}
+                size="sm"
+                className="hidden md:flex"
+              >
+                Sign In
+              </Button>
+            )}
             <Button
               variant="ghost"
               size="icon"
@@ -164,10 +270,55 @@ export default function Header() {
                   Admin
                 </Link>
               )}
+              {!checkingAuth && user && (
+                <>
+                  <Link
+                    href="/account"
+                    className={cn(
+                      'block rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                      pathname?.startsWith('/account') 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                    )}
+                    onClick={closeMobileMenu}
+                  >
+                    My Account
+                  </Link>
+                  <button
+                    onClick={() => {
+                      handleLogout();
+                      closeMobileMenu();
+                    }}
+                    className="block rounded-lg px-4 py-2 text-sm font-medium transition-colors text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 w-full text-left"
+                  >
+                    Sign Out
+                  </button>
+                </>
+              )}
+              {!checkingAuth && !user && (
+                <button
+                  onClick={() => {
+                    setShowLoginModal(true);
+                    closeMobileMenu();
+                  }}
+                  className="block rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90 w-full text-center"
+                >
+                  Sign In
+                </button>
+              )}
             </div>
           </div>
         )}
       </header>
+
+      <LoginModal
+        open={showLoginModal}
+        onOpenChange={setShowLoginModal}
+        onSuccess={() => {
+          setShowLoginModal(false);
+          checkAdminStatus();
+        }}
+      />
     </>
   );
 }

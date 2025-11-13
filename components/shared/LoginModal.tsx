@@ -12,6 +12,7 @@ import {
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { useToast } from '@/components/ui/use-toast';
+import { User } from 'lucide-react';
 
 interface LoginModalProps {
   open: boolean;
@@ -78,7 +79,7 @@ export default function LoginModal({ open, onOpenChange, onSuccess }: LoginModal
         <DialogHeader>
           <DialogTitle>Sign in to Safesus</DialogTitle>
           <DialogDescription>
-            Sign in to save cities, submit tips, and access personalized features.
+            Sign in to save cities, submit tips, and access personalized features. Or continue as a guest to browse and submit pins.
           </DialogDescription>
         </DialogHeader>
 
@@ -131,6 +132,30 @@ export default function LoginModal({ open, onOpenChange, onSuccess }: LoginModal
               {loading ? 'Sending...' : 'Send Magic Link'}
             </Button>
           </form>
+
+          <div className="relative">
+            <div className="absolute inset-0 flex items-center">
+              <span className="w-full border-t" />
+            </div>
+            <div className="relative flex justify-center text-xs uppercase">
+              <span className="bg-background px-2 text-muted-foreground">Or</span>
+            </div>
+          </div>
+
+          <Button
+            onClick={() => {
+              onOpenChange(false);
+              if (onSuccess) onSuccess();
+            }}
+            variant="ghost"
+            className="w-full"
+          >
+            <User className="mr-2 h-4 w-4" />
+            Continue as Guest
+          </Button>
+          <p className="text-xs text-center text-muted-foreground">
+            Browse the site and submit pins without signing in
+          </p>
         </div>
       </DialogContent>
     </Dialog>

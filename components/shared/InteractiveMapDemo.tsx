@@ -165,11 +165,11 @@ export default function InteractiveMapDemo() {
           onClick={() => setSelectedPin(null)}
         >
           <div 
-            className="pointer-events-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col"
+            className="pointer-events-auto bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-sm w-full max-h-[70vh] overflow-hidden flex flex-col"
             onClick={(e) => e.stopPropagation()}
           >
             {/* Image */}
-            <div className="relative h-48 bg-slate-200 dark:bg-slate-800">
+            <div className="relative h-32 bg-slate-200 dark:bg-slate-800">
               <img
                 src={getPinImage(selectedPin.type, selectedPin.id)}
                 alt={selectedPin.title}
@@ -178,29 +178,29 @@ export default function InteractiveMapDemo() {
               <Button
                 variant="ghost"
                 size="icon"
-                className="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-900"
+                className="absolute top-1.5 right-1.5 bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-900 h-7 w-7"
                 onClick={() => setSelectedPin(null)}
               >
-                <X className="h-4 w-4" />
+                <X className="h-3 w-3" />
               </Button>
-              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
-                <div className="flex items-center gap-2 text-white">
-                  <AlertTriangle className="h-5 w-5" />
-                  <span className="text-sm font-semibold uppercase">{selectedPin.type}</span>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-2.5">
+                <div className="flex items-center gap-1.5 text-white">
+                  <AlertTriangle className="h-3.5 w-3.5" />
+                  <span className="text-xs font-semibold uppercase">{selectedPin.type}</span>
                 </div>
               </div>
             </div>
 
             {/* Content */}
-            <div className="p-4 sm:p-6 flex-1 overflow-y-auto">
-              <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">
+            <div className="p-3 sm:p-4 flex-1 overflow-y-auto">
+              <h3 className="text-base font-bold mb-1.5 text-slate-900 dark:text-white">
                 {selectedPin.title}
               </h3>
-              <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
+              <p className="text-xs text-slate-600 dark:text-slate-300 mb-2">
                 {selectedPin.summary}
               </p>
               {selectedPin.details && (
-                <p className="text-sm text-slate-500 dark:text-slate-400">
+                <p className="text-xs text-slate-500 dark:text-slate-400">
                   {selectedPin.details}
                 </p>
               )}

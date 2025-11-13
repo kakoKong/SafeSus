@@ -5,19 +5,22 @@ export async function POST(request: Request) {
   try {
     const supabase = createClient();
     
-    // Check authentication
+    // Check authentication - allow guest mode
     const { data: { user }, error: authError } = await supabase.auth.getUser();
     
-    if (authError || !user) {
+    // Parse request body
+    const body = await request.json();
+    const { type, title, summary, details, location, guest_name } = body;
+
+    // Allow guest submissions for pins
+    const isGuest = !user && guest_name && guest_name.trim().length > 0;
+    
+    if (!user && !isGuest) {
       return NextResponse.json(
-        { error: 'Unauthorized. Please sign in.' },
+        { error: 'Please sign in or enter your name to submit as a guest.' },
         { status: 401 }
       );
     }
-
-    // Parse request body
-    const body = await request.json();
-    const { type, title, summary, details, location } = body;
 
     // Validate required fields
     if (!type || !title || !summary || !location) {
@@ -50,18 +53,25 @@ export async function POST(request: Request) {
     }
 
     // Insert into pin_submissions table
+    const insertData: any = {
+      user_id: user?.id || null,
+      city_id: 1, // Default to Bangkok for now - should be dynamic based on map location
+      type,
+      title,
+      summary,
+      details: details || null,
+      location: `SRID=4326;POINT(${location.coordinates[0]} ${location.coordinates[1]})`,
+      status: 'pending',
+    };
+
+    // Add guest name if guest submission
+    if (isGuest) {
+      insertData.guest_name = guest_name.trim();
+    }
+
     const { data, error } = await supabase
       .from('pin_submissions')
-      .insert({
-        user_id: user.id,
-        city_id: 1, // Default to Bangkok for now - should be dynamic based on map location
-        type,
-        title,
-        summary,
-        details: details || null,
-        location: `SRID=4326;POINT(${location.coordinates[0]} ${location.coordinates[1]})`,
-        status: 'pending',
-      })
+      .insert(insertData)
       .select()
       .single();
 
