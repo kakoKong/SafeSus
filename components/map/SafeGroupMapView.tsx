@@ -16,6 +16,8 @@ interface GroupMember {
   };
   area: string;
   status: 'active' | 'idle' | 'away';
+  lastSeen: string;
+  battery?: number;
 }
 
 interface SafeGroupMapViewProps {
