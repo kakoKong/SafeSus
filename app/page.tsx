@@ -563,14 +563,25 @@ export default function Home() {
               <div>
                 <h4 className="font-semibold mb-3 text-sm">Connect</h4>
                 <ul className="space-y-2 text-sm">
-                  <li className="text-muted-foreground">
-                    Twitter
+                  <li>
+                    <Link 
+                      href="https://x.com/sus_safe" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      X (Twitter)
+                    </Link>
                   </li>
-                  <li className="text-muted-foreground">
-                    Instagram
-                  </li>
-                  <li className="text-muted-foreground">
-                    Reddit
+                  <li>
+                    <Link 
+                      href="https://www.facebook.com/profile.php?id=61583405924159" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      Facebook
+                    </Link>
                   </li>
                 </ul>
               </div>
