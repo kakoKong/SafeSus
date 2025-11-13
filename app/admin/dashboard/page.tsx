@@ -69,7 +69,7 @@ export default function AdminDashboard() {
 
   // Calculate center of a zone for map display
   function calculateZoneCenter(geom: any): [number, number] {
-    if (!geom?.coordinates?.[0]) return [100.5018, 13.7563]; // Bangkok default
+    if (!geom?.coordinates?.[0]) return [100.5320, 13.7463]; // Siam, Bangkok default
     
     const coords = geom.coordinates[0];
     const lngs = coords.map((c: number[]) => c[0]);

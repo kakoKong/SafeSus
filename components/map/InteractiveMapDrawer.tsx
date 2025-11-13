@@ -23,7 +23,7 @@ export default function InteractiveMapDrawer({
   mode,
   onLocationSelect,
   onZoneDrawn,
-  center = [100.5018, 13.7563], // Bangkok default
+  center = [100.5320, 13.7463], // Siam, Bangkok default
   zoom = 12,
   className = '',
 }: InteractiveMapDrawerProps) {

@@ -30,7 +30,7 @@ interface MapViewProps {
 const MapView = forwardRef<MapViewRef, MapViewProps>(({
   zones,
   pins,
-  center = [100.5018, 13.7563], // Bangkok default
+  center = [100.5320, 13.7463], // Siam, Bangkok default
   userLocation,
   onZoneClick,
   onPinClick,

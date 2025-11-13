@@ -102,7 +102,7 @@ export default function InteractiveMapDemo() {
         <MapView
           zones={zonesToShow}
           pins={pinsToShow}
-          center={[100.5018, 13.7563]}
+          center={[100.5320, 13.7463]}
           className="w-full h-full"
           disableZoom={false}
           maxBounds={bangkokBounds}
