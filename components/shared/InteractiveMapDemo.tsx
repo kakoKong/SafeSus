@@ -5,7 +5,7 @@ import MapView from '@/components/map/MapView';
 import MapFilters from '@/components/map/MapFilters';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, X, AlertTriangle } from 'lucide-react';
+import { MapPin, X, AlertTriangle, Eye, EyeOff } from 'lucide-react';
 import type { CityDetail, Pin, PinType } from '@/types';
 
 // Get image for pin type
@@ -47,7 +47,7 @@ export default function InteractiveMapDemo() {
         // Fetch Bangkok data as demo
         const res = await fetch('/api/city/bangkok');
         const data = await res.json();
-        
+
         if (data.city) {
           setCityData(data.city);
         }
@@ -97,7 +97,7 @@ export default function InteractiveMapDemo() {
   ];
 
   return (
-    <div className="relative w-full bg-white dark:bg-slate-950 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl -mx-4 px-4 sm:mx-0 sm:px-0" style={{ height: '600px' }}>
+    <div className="relative w-full h-[600px] bg-slate-200 dark:bg-slate-800 rounded-2xl border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center">
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
         <MapView

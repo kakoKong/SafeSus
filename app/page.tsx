@@ -195,11 +195,9 @@ export default function Home() {
                     </div>
                   </div>
 
-                  <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-100 via-white to-white p-4 shadow-md dark:border-slate-800 dark:from-slate-900 dark:via-slate-950 dark:to-slate-900">
-                    <div className="overflow-hidden rounded-2xl bg-white shadow-lg dark:bg-slate-950">
+                  {/* <div className="rounded-3xl bg-gradient-to-br from-slate-100 via-white to-white p-4 shadow-md dark:from-slate-900 dark:via-slate-950 dark:to-slate-900"> */}
                       <InteractiveMapDemo />
-                    </div>
-                  </div>
+                  {/* </div> */}
                   {/* Community Submission Section */}
                   <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/60">
                     <div className="flex items-center gap-3">
