@@ -35,10 +35,10 @@ export default function Home() {
                 <p className="text-2xl md:text-3xl font-bold text-primary tracking-tight">
                   Travel Safe, Travel Sus
                 </p>
-                <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
-                  <Sparkles className="h-4 w-4" />
-                  Coming soon
-                </span>
+              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
+                <Sparkles className="h-4 w-4" />
+                Coming soon
+              </span>
               </div>
               <h1 className="text-4xl font-bold leading-tight md:text-6xl">
                 See the safe zones. Skip the sketchy ones.
@@ -62,8 +62,18 @@ export default function Home() {
             <div className="space-y-4">
               <ModeSwitcher />
               <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
-                <Button size="lg" className="w-full sm:w-auto" disabled>
-                  Get on the waitlist
+                <Button 
+                  size="lg" 
+                  className="w-full sm:w-auto" 
+                  asChild
+                >
+                  <a 
+                    href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form" 
+                    target="_blank" 
+                    rel="noopener noreferrer"
+                  >
+                    Get on the waitlist
+                  </a>
                 </Button>
                 <p className="text-sm text-muted-foreground">
                   Starting in Bangkok. More cities when we're ready.
@@ -500,8 +510,19 @@ export default function Home() {
 
           <div className="flex flex-wrap gap-4 justify-center">
 
-            <Button size="lg" variant="outline" className="border-slate-700 bg-gray-900 text-white hover:bg-slate-900 hover:text-gray-300">
-              Get on the waitlist
+            <Button 
+              size="lg" 
+              variant="outline" 
+              className="border-slate-700 bg-gray-900 text-white hover:bg-slate-900 hover:text-gray-300"
+              asChild
+            >
+              <a 
+                href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                Get on the waitlist
+              </a>
             </Button>
           </div>
 
