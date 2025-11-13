@@ -4,15 +4,41 @@ import { useEffect, useState, useMemo } from 'react';
 import MapView from '@/components/map/MapView';
 import MapFilters from '@/components/map/MapFilters';
 import { Badge } from '@/components/ui/badge';
-import { MapPin } from 'lucide-react';
-import type { CityDetail } from '@/types';
-// Removed turf import - no longer needed for static demo map
+import { Button } from '@/components/ui/button';
+import { MapPin, X, AlertTriangle } from 'lucide-react';
+import type { CityDetail, Pin, PinType } from '@/types';
+
+// Get image for pin type
+function getPinImage(type: PinType, seed?: number): string {
+  const images: Record<PinType, string[]> = {
+    scam: [
+      'https://images.unsplash.com/photo-1554224155-6726b3ff858f?w=800&h=600&fit=crop&q=80', // Warning sign
+      'https://images.unsplash.com/photo-1573164713714-d95e436ab8d6?w=800&h=600&fit=crop&q=80', // Alert
+    ],
+    harassment: [
+      'https://images.unsplash.com/photo-1584433144859-1fc3ab64a957?w=800&h=600&fit=crop&q=80', // Crowded street
+      'https://images.unsplash.com/photo-1511632765486-a01980e01a18?w=800&h=600&fit=crop&q=80', // Night scene
+    ],
+    overcharge: [
+      'https://images.unsplash.com/photo-1580519542036-c47de6196ba5?w=800&h=600&fit=crop&q=80', // Money
+      'https://images.unsplash.com/photo-1567427017947-545c5f8d16ad?w=800&h=600&fit=crop&q=80', // Currency
+    ],
+    other: [
+      'https://images.unsplash.com/photo-1469854523086-cc02fe5d8800?w=800&h=600&fit=crop&q=80', // Travel
+      'https://images.unsplash.com/photo-1488646953014-85cb44e25828?w=800&h=600&fit=crop&q=80', // Safety
+    ],
+  };
+  const typeImages = images[type] || images.other;
+  const index = seed ? Math.abs(seed % typeImages.length) : 0;
+  return typeImages[index];
+}
 
 export default function InteractiveMapDemo() {
   const [cityData, setCityData] = useState<CityDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [showZones, setShowZones] = useState(true);
   const [showTips, setShowTips] = useState(false);
+  const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
 
   useEffect(() => {
     async function fetchDemoData() {
@@ -63,8 +89,14 @@ export default function InteractiveMapDemo() {
     return null;
   }
 
+  // Bangkok bounds: [[west, south], [east, north]]
+  const bangkokBounds: [[number, number], [number, number]] = [
+    [100.3, 13.5], // Southwest corner
+    [100.8, 13.9], // Northeast corner
+  ];
+
   return (
-    <div className="relative w-full bg-white dark:bg-slate-950 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl" style={{ height: '600px' }}>
+    <div className="relative w-full bg-white dark:bg-slate-950 rounded-2xl overflow-hidden border border-slate-200 dark:border-slate-800 shadow-xl -mx-4 px-4 sm:mx-0 sm:px-0" style={{ height: '600px' }}>
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
         <MapView
@@ -72,34 +104,36 @@ export default function InteractiveMapDemo() {
           pins={pinsToShow}
           center={[100.5018, 13.7563]}
           className="w-full h-full"
-          disableZoom={true}
+          disableZoom={false}
+          maxBounds={bangkokBounds}
+          onPinClick={(pin) => setSelectedPin(pin)}
         />
       </div>
       
       {/* Overlay Content */}
       <div className="absolute inset-0 z-10 flex flex-col pointer-events-none">
         {/* Header */}
-        <div className="bg-gradient-to-b from-slate-950/90 to-transparent p-6 pb-8 pointer-events-auto">
+        <div className="bg-gradient-to-b from-slate-950/90 to-transparent p-4 sm:p-6 pb-6 sm:pb-8 pointer-events-auto">
           <div className="flex items-start justify-between gap-4">
-            <div className="flex-1">
-              <h3 className="text-2xl md:text-3xl font-bold text-white mb-2">
-                Explore Bangkok Safety Map
+            <div className="flex-1 min-w-0">
+              <h3 className="text-xl sm:text-2xl md:text-3xl font-bold text-white mb-1 sm:mb-2">
+                Bangkok Safety Map
               </h3>
-              <p className="text-slate-300 text-sm md:text-base mb-4">
-                View safe zones, avoid areas, and scam alerts for Bangkok
+              <p className="text-slate-300 text-xs sm:text-sm md:text-base mb-3 sm:mb-4">
+                Pan and zoom to explore
               </p>
-              <div className="flex flex-wrap gap-2 mb-4">
-                <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30">
+              <div className="flex flex-wrap gap-2 mb-2 sm:mb-4">
+                <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30 text-xs">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {filteredZones.filter((z: any) => z.level === 'recommended').length} Safe Zones
+                  {filteredZones.filter((z: any) => z.level === 'recommended').length} Safe
                 </Badge>
-                <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-500/30">
+                <Badge variant="secondary" className="bg-red-500/20 text-red-300 border-red-500/30 text-xs">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {filteredZones.filter((z: any) => z.level === 'avoid').length} Avoid Areas
+                  {filteredZones.filter((z: any) => z.level === 'avoid').length} Avoid
                 </Badge>
-                <Badge variant="secondary" className="bg-orange-500/20 text-orange-300 border-orange-500/30">
+                <Badge variant="secondary" className="bg-orange-500/20 text-orange-300 border-orange-500/30 text-xs">
                   <MapPin className="h-3 w-3 mr-1" />
-                  {filteredPins.filter((p: any) => p.type === 'scam').length} Scam Alerts
+                  {filteredPins.filter((p: any) => p.type === 'scam').length} Alerts
                 </Badge>
               </div>
             </div>
@@ -110,7 +144,7 @@ export default function InteractiveMapDemo() {
         <div className="flex-1 pointer-events-none" />
 
         {/* Map Filters */}
-        <div className="p-4 bg-gradient-to-t from-slate-950/90 to-transparent pointer-events-auto">
+        <div className="p-3 sm:p-4 pointer-events-auto">
           <div className="flex justify-end">
             <MapFilters
               showZones={showZones}
@@ -123,6 +157,57 @@ export default function InteractiveMapDemo() {
           </div>
         </div>
       </div>
+
+      {/* Pin Detail Overlay */}
+      {selectedPin && (
+        <div 
+          className="absolute inset-0 z-20 flex items-center justify-center p-4 pointer-events-auto"
+          onClick={() => setSelectedPin(null)}
+        >
+          <div 
+            className="pointer-events-auto bg-white dark:bg-slate-900 rounded-2xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-md w-full max-h-[80vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Image */}
+            <div className="relative h-48 bg-slate-200 dark:bg-slate-800">
+              <img
+                src={getPinImage(selectedPin.type, selectedPin.id)}
+                alt={selectedPin.title}
+                className="w-full h-full object-cover"
+              />
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 bg-white/90 dark:bg-slate-900/90 hover:bg-white dark:hover:bg-slate-900"
+                onClick={() => setSelectedPin(null)}
+              >
+                <X className="h-4 w-4" />
+              </Button>
+              <div className="absolute bottom-0 left-0 right-0 bg-gradient-to-t from-black/60 to-transparent p-4">
+                <div className="flex items-center gap-2 text-white">
+                  <AlertTriangle className="h-5 w-5" />
+                  <span className="text-sm font-semibold uppercase">{selectedPin.type}</span>
+                </div>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 sm:p-6 flex-1 overflow-y-auto">
+              <h3 className="text-xl font-bold mb-2 text-slate-900 dark:text-white">
+                {selectedPin.title}
+              </h3>
+              <p className="text-sm text-slate-600 dark:text-slate-300 mb-3">
+                {selectedPin.summary}
+              </p>
+              {selectedPin.details && (
+                <p className="text-sm text-slate-500 dark:text-slate-400">
+                  {selectedPin.details}
+                </p>
+              )}
+            </div>
+          </div>
+        </div>
+      )}
     </div>
   );
 }

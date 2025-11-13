@@ -1,6 +1,6 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Button } from '@/components/ui/button';
@@ -37,9 +37,9 @@ export default function SubmitTipPage() {
   const [pinLocation, setPinLocation] = useState<{ lng: number; lat: number } | null>(null);
   const [zoneCoordinates, setZoneCoordinates] = useState<number[][] | null>(null);
 
-  useState(() => {
+  useEffect(() => {
     checkAuth();
-  });
+  }, []);
 
   async function checkAuth() {
     const { data: { user } } = await supabase.auth.getUser();

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState } from 'react';
+import { useRouter } from 'next/navigation';
 import { createClient } from '@/lib/supabase/client';
 import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
 import { Button } from '@/components/ui/button';
@@ -10,14 +11,65 @@ import { CheckCircle, XCircle } from 'lucide-react';
 import type { TipSubmission } from '@/types';
 
 export default function AdminReviewPage() {
+  const router = useRouter();
   const [submissions, setSubmissions] = useState<TipSubmission[]>([]);
   const [loading, setLoading] = useState(true);
+  const [isAuthorized, setIsAuthorized] = useState(false);
   const { toast } = useToast();
   const supabase = createClient();
 
   useEffect(() => {
-    fetchSubmissions();
+    checkAdminAccess();
   }, []);
+
+  async function checkAdminAccess() {
+    const { data: { user }, error: authError } = await supabase.auth.getUser();
+    
+    if (authError || !user) {
+      toast({
+        title: 'Access Denied',
+        description: 'You must be signed in to access this page.',
+        variant: 'destructive',
+      });
+      router.push('/');
+      return;
+    }
+
+    // Check if user logged in with Google
+    const { data: { session } } = await supabase.auth.getSession();
+    const isGoogleLogin = session?.user?.app_metadata?.provider === 'google' || 
+                         session?.user?.identities?.some((identity: any) => identity.provider === 'google');
+
+    if (!isGoogleLogin) {
+      toast({
+        title: 'Access Denied',
+        description: 'Admin access requires Google sign-in.',
+        variant: 'destructive',
+      });
+      router.push('/');
+      return;
+    }
+
+    // Check if user is admin
+    const { data: profile } = await supabase
+      .from('user_profiles')
+      .select('role')
+      .eq('user_id', user.id)
+      .single();
+
+    if (!profile || profile.role !== 'admin') {
+      toast({
+        title: 'Access Denied',
+        description: 'This page is restricted to administrators only.',
+        variant: 'destructive',
+      });
+      router.push('/');
+      return;
+    }
+
+    setIsAuthorized(true);
+    fetchSubmissions();
+  }
 
   async function fetchSubmissions() {
     const { data, error } = await supabase
@@ -70,7 +122,7 @@ export default function AdminReviewPage() {
     }
   }
 
-  if (loading) {
+  if (loading || !isAuthorized) {
     return (
       <div className="container px-4 py-12 max-w-4xl mx-auto text-center">
         <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto"></div>

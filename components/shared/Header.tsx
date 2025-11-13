@@ -2,16 +2,70 @@
 
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
 import { Menu, X } from 'lucide-react';
 import { cn } from '@/lib/utils';
+import { createClient } from '@/lib/supabase/client';
 
 export default function Header() {
   const pathname = usePathname();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
+  const [isAdmin, setIsAdmin] = useState(false);
+  const [checkingAuth, setCheckingAuth] = useState(true);
+  const supabase = createClient();
 
   const closeMobileMenu = () => setMobileMenuOpen(false);
+
+  useEffect(() => {
+    checkAdminStatus();
+
+    // Listen for auth state changes
+    const {
+      data: { subscription },
+    } = supabase.auth.onAuthStateChange(() => {
+      checkAdminStatus();
+    });
+
+    return () => subscription.unsubscribe();
+  }, []);
+
+  async function checkAdminStatus() {
+    try {
+      const { data: { user } } = await supabase.auth.getUser();
+      
+      if (!user) {
+        setIsAdmin(false);
+        setCheckingAuth(false);
+        return;
+      }
+
+      // Check if user logged in with Google
+      const { data: { session } } = await supabase.auth.getSession();
+      const isGoogleLogin = session?.user?.app_metadata?.provider === 'google' || 
+                           session?.user?.identities?.some((identity: any) => identity.provider === 'google');
+
+      if (!isGoogleLogin) {
+        setIsAdmin(false);
+        setCheckingAuth(false);
+        return;
+      }
+
+      // Check if user has admin role
+      const { data: profile } = await supabase
+        .from('user_profiles')
+        .select('role')
+        .eq('user_id', user.id)
+        .single();
+
+      setIsAdmin(profile?.role === 'admin');
+    } catch (error) {
+      console.error('Error checking admin status:', error);
+      setIsAdmin(false);
+    } finally {
+      setCheckingAuth(false);
+    }
+  }
 
   return (
     <>
@@ -22,20 +76,41 @@ export default function Header() {
             Safesus
           </Link>
 
-          {/* Desktop Messaging */}
-          <div className="hidden flex-1 items-center justify-center md:flex">
-            <div className="rounded-full border border-slate-200 bg-white px-4 py-1.5 text-xs font-medium text-slate-600 shadow-sm dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-              {pathname === '/'
-                ? 'Private beta • All other pages gated'
-                : 'This area is gated • Return to the landing page'}
-            </div>
-          </div>
+          {/* Desktop Navigation */}
+          <nav className="hidden flex-1 items-center justify-center gap-6 md:flex">
+            <Link
+              href="/"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary',
+                pathname === '/' ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
+              Home
+            </Link>
+            <Link
+              href="/submit"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary',
+                pathname === '/submit' ? 'text-primary' : 'text-muted-foreground'
+              )}
+            >
+              Submit
+            </Link>
+            {!checkingAuth && isAdmin && (
+              <Link
+                href="/admin/dashboard"
+                className={cn(
+                  'text-sm font-medium transition-colors hover:text-primary',
+                  pathname?.startsWith('/admin') ? 'text-primary' : 'text-muted-foreground'
+                )}
+              >
+                Admin
+              </Link>
+            )}
+          </nav>
 
           {/* Right side */}
           <div className="flex items-center gap-2">
-            <Button size="sm" variant="outline" className="hidden md:inline-flex" disabled>
-              Beta waitlist locked
-            </Button>
             <Button
               variant="ghost"
               size="icon"
@@ -50,23 +125,45 @@ export default function Header() {
         {/* Mobile Navigation */}
         {mobileMenuOpen && (
           <div className="md:hidden border-t">
-            <div className="container space-y-3 px-3 py-4 sm:px-4">
-              <div className="rounded-xl border border-slate-200 bg-slate-50 p-4 text-sm font-medium text-slate-600 dark:border-slate-800 dark:bg-slate-900 dark:text-slate-300">
-                We are keeping everything else dark until SafeGroup is ready. Tap below to head back to safety.
-              </div>
-              <Button
-                type="button"
-                size="lg"
-                className="w-full"
-                onClick={() => {
-                  if (pathname !== '/') {
-                    window.location.href = '/';
-                  }
-                  closeMobileMenu();
-                }}
+            <div className="container space-y-2 px-3 py-4 sm:px-4">
+              <Link
+                href="/"
+                className={cn(
+                  'block rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                  pathname === '/' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                )}
+                onClick={closeMobileMenu}
               >
-                Return to landing
-              </Button>
+                Home
+              </Link>
+              <Link
+                href="/submit"
+                className={cn(
+                  'block rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                  pathname === '/submit' 
+                    ? 'bg-primary text-primary-foreground' 
+                    : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                )}
+                onClick={closeMobileMenu}
+              >
+                Submit
+              </Link>
+              {!checkingAuth && isAdmin && (
+                <Link
+                  href="/admin/dashboard"
+                  className={cn(
+                    'block rounded-lg px-4 py-2 text-sm font-medium transition-colors',
+                    pathname?.startsWith('/admin') 
+                      ? 'bg-primary text-primary-foreground' 
+                      : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                  )}
+                  onClick={closeMobileMenu}
+                >
+                  Admin
+                </Link>
+              )}
             </div>
           </div>
         )}

@@ -37,6 +37,14 @@ export async function POST(request: Request) {
 
       if (fetchError) throw fetchError;
 
+      // Check if already approved to prevent duplicates
+      if (submission.status === 'approved') {
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Submission already approved' 
+        });
+      }
+
       // If tip has a location, create a pin; otherwise just approve the tip
       if (submission.location || submission.location_v2) {
         const location = submission.location_v2 || submission.location;
@@ -77,6 +85,14 @@ export async function POST(request: Request) {
         .single();
 
       if (fetchError) throw fetchError;
+
+      // Check if already approved to prevent duplicates
+      if (submission.status === 'approved') {
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Submission already approved' 
+        });
+      }
 
       // Create the pin in the pins table
       const { error: insertError } = await supabase
@@ -122,6 +138,14 @@ export async function POST(request: Request) {
         .single();
 
       if (fetchError) throw fetchError;
+
+      // Check if already approved to prevent duplicates
+      if (submission.status === 'approved') {
+        return NextResponse.json({ 
+          success: true, 
+          message: 'Submission already approved' 
+        });
+      }
 
       // Create the zone in the zones table
       const { error: insertError } = await supabase

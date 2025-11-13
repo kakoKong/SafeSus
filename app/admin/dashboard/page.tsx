@@ -60,6 +60,9 @@ export default function AdminDashboard() {
     totalGuardians: 0,
   });
 
+  // Track items being processed to prevent double-clicks
+  const [processingItems, setProcessingItems] = useState<Set<string>>(new Set());
+
   useEffect(() => {
     checkAdminAccess();
   }, []);
@@ -122,6 +125,21 @@ export default function AdminDashboard() {
       toast({
         title: 'Access Denied',
         description: 'You must be signed in to access this page.',
+        variant: 'destructive',
+      });
+      router.push('/');
+      return;
+    }
+
+    // Check if user logged in with Google
+    const { data: { session } } = await supabase.auth.getSession();
+    const isGoogleLogin = session?.user?.app_metadata?.provider === 'google' || 
+                         session?.user?.identities?.some((identity: any) => identity.provider === 'google');
+
+    if (!isGoogleLogin) {
+      toast({
+        title: 'Access Denied',
+        description: 'Admin access requires Google sign-in.',
         variant: 'destructive',
       });
       router.push('/');
@@ -238,6 +256,31 @@ export default function AdminDashboard() {
   }
 
   async function handleApprove(type: 'tip' | 'pin' | 'zone', id: number) {
+    const itemKey = `${type}-${id}`;
+    
+    // Prevent double-clicks
+    if (processingItems.has(itemKey)) {
+      return;
+    }
+
+    // Mark as processing
+    setProcessingItems(prev => new Set(prev).add(itemKey));
+
+    // Optimistically update the UI
+    if (type === 'tip') {
+      setTipSubmissions(prev => prev.map(t => 
+        t.id === id ? { ...t, status: 'approved' as const } : t
+      ));
+    } else if (type === 'pin') {
+      setPinSubmissions(prev => prev.map(p => 
+        p.id === id ? { ...p, status: 'approved' as const } : p
+      ));
+    } else if (type === 'zone') {
+      setZoneSubmissions(prev => prev.map(z => 
+        z.id === id ? { ...z, status: 'approved' as const } : z
+      ));
+    }
+
     try {
       const response = await fetch('/api/admin/approve', {
         method: 'POST',
@@ -259,12 +302,36 @@ export default function AdminDashboard() {
           ? 'Tip approved and visible in community feed' 
           : `${type.charAt(0).toUpperCase() + type.slice(1)} approved and now visible on the map`,
       });
-      loadAllData();
+      
+      // Reload all data to get fresh state
+      await loadAllData();
     } catch (error: any) {
+      // Revert optimistic update on error
+      if (type === 'tip') {
+        setTipSubmissions(prev => prev.map(t => 
+          t.id === id ? { ...t, status: 'pending' as const } : t
+        ));
+      } else if (type === 'pin') {
+        setPinSubmissions(prev => prev.map(p => 
+          p.id === id ? { ...p, status: 'pending' as const } : p
+        ));
+      } else if (type === 'zone') {
+        setZoneSubmissions(prev => prev.map(z => 
+          z.id === id ? { ...z, status: 'pending' as const } : z
+        ));
+      }
+
       toast({
         title: 'Error',
         description: error.message || 'Failed to approve submission',
         variant: 'destructive',
+      });
+    } finally {
+      // Remove from processing set
+      setProcessingItems(prev => {
+        const next = new Set(prev);
+        next.delete(itemKey);
+        return next;
       });
     }
   }
@@ -333,9 +400,18 @@ export default function AdminDashboard() {
     <div className="container px-4 py-12 max-w-7xl mx-auto">
       {/* Header */}
       <div className="mb-8">
-        <div className="flex items-center gap-3 mb-2">
-          <Shield className="h-8 w-8 text-primary" />
-          <h1 className="text-3xl md:text-4xl font-bold">Admin Dashboard</h1>
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-3">
+            <Shield className="h-8 w-8 text-primary" />
+            <h1 className="text-3xl md:text-4xl font-bold">Admin Dashboard</h1>
+          </div>
+          <Button
+            onClick={() => router.push('/submit')}
+            variant="outline"
+            className="hidden md:flex"
+          >
+            Submit Tip/Zone
+          </Button>
         </div>
         <p className="text-muted-foreground">
           Comprehensive view of all submissions, reports, and users.
@@ -476,14 +552,16 @@ export default function AdminDashboard() {
                         onClick={() => handleApprove('tip', tip.id)}
                         size="sm"
                         className="bg-green-600 hover:bg-green-700"
+                        disabled={processingItems.has(`tip-${tip.id}`)}
                       >
                         <CheckCircle className="h-4 w-4 mr-2" />
-                        Approve
+                        {processingItems.has(`tip-${tip.id}`) ? 'Approving...' : 'Approve'}
                       </Button>
                       <Button
                         onClick={() => handleReject('tip', tip.id)}
                         size="sm"
                         variant="destructive"
+                        disabled={processingItems.has(`tip-${tip.id}`)}
                       >
                         <XCircle className="h-4 w-4 mr-2" />
                         Reject
@@ -578,14 +656,16 @@ export default function AdminDashboard() {
                           onClick={() => handleApprove('pin', pin.id)}
                           size="sm"
                           className="bg-green-600 hover:bg-green-700"
+                          disabled={processingItems.has(`pin-${pin.id}`)}
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
-                          Approve
+                          {processingItems.has(`pin-${pin.id}`) ? 'Approving...' : 'Approve'}
                         </Button>
                         <Button
                           onClick={() => handleReject('pin', pin.id)}
                           size="sm"
                           variant="destructive"
+                          disabled={processingItems.has(`pin-${pin.id}`)}
                         >
                           <XCircle className="h-4 w-4 mr-2" />
                           Reject
@@ -685,14 +765,16 @@ export default function AdminDashboard() {
                           onClick={() => handleApprove('zone', zone.id)}
                           size="sm"
                           className="bg-green-600 hover:bg-green-700"
+                          disabled={processingItems.has(`zone-${zone.id}`)}
                         >
                           <CheckCircle className="h-4 w-4 mr-2" />
-                          Approve
+                          {processingItems.has(`zone-${zone.id}`) ? 'Approving...' : 'Approve'}
                         </Button>
                         <Button
                           onClick={() => handleReject('zone', zone.id)}
                           size="sm"
                           variant="destructive"
+                          disabled={processingItems.has(`zone-${zone.id}`)}
                         >
                           <XCircle className="h-4 w-4 mr-2" />
                           Reject

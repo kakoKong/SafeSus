@@ -1,7 +1,14 @@
 import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
-const ALLOWED_PATHS = new Set(['/', '/favicon.ico', '/manifest.json']);
+const ALLOWED_PATHS = new Set([
+  '/',
+  '/favicon.ico',
+  '/manifest.json',
+  '/admin',
+  '/submit',
+  '/auth',
+]);
 
 export function middleware(request: NextRequest) {
   const { pathname } = request.nextUrl;
@@ -11,7 +18,10 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/api') ||
     pathname.startsWith('/_next') ||
     pathname.startsWith('/static') ||
-    pathname.startsWith('/images')
+    pathname.startsWith('/images') ||
+    pathname.startsWith('/admin') ||
+    pathname.startsWith('/submit') ||
+    pathname.startsWith('/auth')
   ) {
     return NextResponse.next();
   }

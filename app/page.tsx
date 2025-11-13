@@ -28,24 +28,24 @@ export default function Home() {
             <div className="space-y-4">
               <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
                 <Sparkles className="h-4 w-4" />
-                Private beta now forming
+                Coming soon
               </span>
               <h1 className="text-4xl font-bold leading-tight md:text-6xl">
-                A single control room for travel safety
+                Know which areas are safe before you go
               </h1>
               <p className="text-lg text-muted-foreground md:text-xl">
-                Safesus keeps travelers and community guardians aligned with context-aware alerts, SafeGroup check-ins, and zone intelligence you can actually trust.
+                Real-time safety maps and scam alerts from travelers who've been there. See safe zones, avoid risky areas, and share your location with people who care.
               </p>
             </div>
 
             <div className="flex flex-wrap items-center gap-4">
                 <div className="flex items-center gap-2 text-sm">
                   <Shield className="h-5 w-5 text-primary" />
-                <span>Guardian-reviewed intel</span>
+                <span>Verified by locals</span>
                 </div>
                 <div className="flex items-center gap-2 text-sm">
                   <Users className="h-5 w-5 text-primary" />
-                <span>Community-powered signals</span>
+                <span>Updated daily</span>
               </div>
             </div>
               
@@ -56,7 +56,7 @@ export default function Home() {
                   Request beta invite
                 </Button>
                 <p className="text-sm text-muted-foreground">
-                  Android, iOS, and web dashboards rolling out city by city.
+                  Launching in Bangkok first. More cities coming soon.
                 </p>
               </div>
             </div>
@@ -137,9 +137,9 @@ export default function Home() {
                     SafeMap
                   </span>
                   <div className="mx-auto max-w-3xl space-y-3 lg:mx-0">
-                    <h2 className="text-3xl font-bold md:text-4xl">Understand the city at a glance</h2>
+                    <h2 className="text-3xl font-bold md:text-4xl">See which areas are safe</h2>
                     <p className="text-base text-muted-foreground md:text-lg">
-                      Safesus translates real guardian reports into live zone intelligence so you always know what mode to be in—cruise, watch, or override.
+                      Color-coded zones show safe areas, places to watch, and spots to avoid—all based on real reports from travelers.
                     </p>
                   </div>
                 </div>
@@ -152,7 +152,7 @@ export default function Home() {
                         <span className="text-sm font-semibold uppercase tracking-wide">Cruise</span>
                       </div>
                       <p className="text-sm text-emerald-900 dark:text-emerald-100">
-                        Guardian-verified corridors with smooth traffic, open venues, and backups.
+                        Safe areas verified by locals. Relax and explore.
                       </p>
                     </div>
                     <div className="rounded-2xl border border-amber-300 bg-amber-100 p-4 text-center shadow-sm dark:border-amber-900/70 dark:bg-amber-900/40">
@@ -161,7 +161,7 @@ export default function Home() {
                         <span className="text-sm font-semibold uppercase tracking-wide">Watch</span>
                       </div>
                       <p className="text-sm text-amber-900 dark:text-amber-100">
-                        Great experiences with caveats—tout routes, pickpockets, or nightlife surges.
+                        Good spots, but stay alert. Watch for scams and crowds.
                       </p>
                     </div>
                     <div className="rounded-2xl border border-red-400 bg-red-100 p-4 text-center shadow-sm dark:border-red-900/70 dark:bg-red-900/40">
@@ -170,7 +170,7 @@ export default function Home() {
                         <span className="text-sm font-semibold uppercase tracking-wide">Override</span>
                       </div>
                       <p className="text-sm text-red-900 dark:text-red-100">
-                        High incident density or local advisories. We only paint zones red when signals stack.
+                        Multiple incidents reported. Best to avoid.
                       </p>
                     </div>
           </div>
@@ -259,8 +259,8 @@ export default function Home() {
                         </div>
                       ))}
                     </div>
-                  </div>
-
+          </div>
+          
                   <div className="space-y-6">
                     <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
                       <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
