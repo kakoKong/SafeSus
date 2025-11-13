@@ -17,6 +17,7 @@ import {
 import RecentTipsFeed from '@/components/shared/RecentTipsFeed';
 import InteractiveMapDemo from '@/components/shared/InteractiveMapDemo';
 import ModeSwitcher from '@/components/shared/ModeSwitcher';
+import SafeGroupMock from '@/components/shared/SafeGroupMock';
 
 export default function Home() {
   return (
@@ -242,11 +243,11 @@ export default function Home() {
                       {[
                         {
                           title: 'Location heartbeat',
-                          desc: 'Auto-check-ins with zone context so your people know you’re on track.',
+                          desc: 'Auto-check-ins with zone context so your people know you\'re on track.',
                         },
                         {
                           title: 'Zone drift alerts',
-                          desc: 'If you wander into yellow or red zones, they see what’s happening and why.',
+                          desc: 'If you wander into yellow or red zones, they see what\'s happening and why.',
                         },
                         {
                           title: 'Journey timeline',
@@ -262,29 +263,11 @@ export default function Home() {
           </div>
           
                   <div className="space-y-6">
-                    <div className="rounded-3xl border border-slate-200 bg-white/90 p-6 shadow-lg backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/70">
-                      <div className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-3 py-1 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-200">
-                        Built for
-                      </div>
-                      <h3 className="mt-4 text-lg font-semibold text-slate-900 dark:text-white">The people who keep you grounded</h3>
-                      <ul className="mt-5 space-y-3 text-sm text-slate-600 dark:text-slate-300">
-                        {[
-                          'Solo explorers finding their rhythm',
-                          'Backpackers bouncing between hostels',
-                          'Couples covering different cities',
-                          'Close friends syncing weekend plans',
-                          'Parents watching over kids abroad',
-                        ].map((item) => (
-                          <li key={item} className="flex items-center gap-3 rounded-2xl border border-slate-200 bg-white px-3 py-2 shadow-sm dark:border-slate-800 dark:bg-slate-950/40">
-                            <Users className="h-4 w-4 text-primary" />
-                            <span>{item}</span>
-                          </li>
-                        ))}
-                      </ul>
-                    </div>
+                    {/* SafeGroup Mock Map */}
+                    <SafeGroupMock />
 
                     <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 text-sm text-slate-600 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
-                      Whether it’s a Bangkok night run or a Chiang Mai hike, SafeGroup keeps everyone calm, connected, and informed—without hovering.
+                      Whether it's a Bangkok night run or a Chiang Mai hike, SafeGroup keeps everyone calm, connected, and informed—without hovering.
                     </div>
                   </div>
                 </div>

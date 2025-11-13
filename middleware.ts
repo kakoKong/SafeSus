@@ -8,6 +8,7 @@ const ALLOWED_PATHS = new Set([
   '/admin',
   '/submit',
   '/auth',
+  '/safegroup',
 ]);
 
 export function middleware(request: NextRequest) {
@@ -21,7 +22,8 @@ export function middleware(request: NextRequest) {
     pathname.startsWith('/images') ||
     pathname.startsWith('/admin') ||
     pathname.startsWith('/submit') ||
-    pathname.startsWith('/auth')
+    pathname.startsWith('/auth') ||
+    pathname.startsWith('/safegroup')
   ) {
     return NextResponse.next();
   }
