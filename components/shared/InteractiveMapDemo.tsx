@@ -3,10 +3,8 @@
 import { useEffect, useState, useMemo } from 'react';
 import MapView from '@/components/map/MapView';
 import MapFilters from '@/components/map/MapFilters';
-import { Button } from '@/components/ui/button';
 import { Badge } from '@/components/ui/badge';
-import { MapPin, ChevronRight } from 'lucide-react';
-import Link from 'next/link';
+import { MapPin } from 'lucide-react';
 import type { CityDetail } from '@/types';
 // Removed turf import - no longer needed for static demo map
 
@@ -15,7 +13,6 @@ export default function InteractiveMapDemo() {
   const [loading, setLoading] = useState(true);
   const [showZones, setShowZones] = useState(true);
   const [showTips, setShowTips] = useState(false);
-  const [hasInitializedPins, setHasInitializedPins] = useState(false);
 
   useEffect(() => {
     async function fetchDemoData() {
@@ -36,13 +33,6 @@ export default function InteractiveMapDemo() {
 
     fetchDemoData();
   }, []);
-
-  useEffect(() => {
-    if (!hasInitializedPins && cityData?.pins?.length) {
-      setShowTips(true);
-      setHasInitializedPins(true);
-    }
-  }, [cityData, hasInitializedPins]);
 
   // Memoize data so MapView receives stable references
   const filteredZones = useMemo(() => cityData?.zones ?? [], [cityData]);

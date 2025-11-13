@@ -902,12 +902,12 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
 
       // Remove existing listeners if any (cleanup previous handlers)
       try {
-        mapInstance.off('click', 'pins-clusters');
-        mapInstance.off('click', 'pins-unclustered');
-        mapInstance.off('mouseenter', 'pins-clusters');
-        mapInstance.off('mouseleave', 'pins-clusters');
-        mapInstance.off('mouseenter', 'pins-unclustered');
-        mapInstance.off('mouseleave', 'pins-unclustered');
+        (mapInstance as any).off('click', 'pins-clusters');
+        (mapInstance as any).off('click', 'pins-unclustered');
+        (mapInstance as any).off('mouseenter', 'pins-clusters');
+        (mapInstance as any).off('mouseleave', 'pins-clusters');
+        (mapInstance as any).off('mouseenter', 'pins-unclustered');
+        (mapInstance as any).off('mouseleave', 'pins-unclustered');
       } catch (e) {
         // Ignore
       }
@@ -941,12 +941,12 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       
       try {
         // Remove event listeners
-        mapInstance.off('click', 'pins-clusters');
-        mapInstance.off('click', 'pins-unclustered');
-        mapInstance.off('mouseenter', 'pins-clusters');
-        mapInstance.off('mouseleave', 'pins-clusters');
-        mapInstance.off('mouseenter', 'pins-unclustered');
-        mapInstance.off('mouseleave', 'pins-unclustered');
+        (mapInstance as any).off('click', 'pins-clusters');
+        (mapInstance as any).off('click', 'pins-unclustered');
+        (mapInstance as any).off('mouseenter', 'pins-clusters');
+        (mapInstance as any).off('mouseleave', 'pins-clusters');
+        (mapInstance as any).off('mouseenter', 'pins-unclustered');
+        (mapInstance as any).off('mouseleave', 'pins-unclustered');
         
         // Remove layers
         if (mapInstance.getLayer('pins-clusters')) {

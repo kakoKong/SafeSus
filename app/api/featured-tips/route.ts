@@ -67,7 +67,7 @@ export async function GET(request: Request) {
     if (tipsError) throw tipsError;
 
     // Get unique city IDs
-    const cityIds = [...new Set((tipsData || []).map(t => t.city_id).filter(Boolean))];
+    const cityIds = Array.from(new Set((tipsData || []).map(t => t.city_id).filter(Boolean)));
     
     // Fetch cities
     const { data: citiesData } = cityIds.length > 0
