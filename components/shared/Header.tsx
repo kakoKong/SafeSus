@@ -103,7 +103,7 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-hidden">
-        <div className="container grid grid-cols-3 h-18 items-center px-3 sm:px-4 max-w-7xl mx-auto">
+        <div className="container grid grid-cols-3 h-30 items-center px-3 sm:px-4 max-w-7xl mx-auto">
           {/* Left side - Logo */}
           <div className="flex items-center justify-start">
             <Link href="/" className="flex items-center flex-shrink-0">
