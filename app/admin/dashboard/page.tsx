@@ -90,15 +90,30 @@ export default function AdminDashboard() {
       return geom;
     }
     
-    // If it's a WKT string (e.g., "POINT(100.5 13.7)")
+    // If it's a WKT string (e.g., "POINT(100.5 13.7)" or "SRID=4326;POINT(100.5 13.7)")
     if (typeof geom === 'string') {
-      // Extract coordinates from WKT format
+      // Extract coordinates from WKT format (handles both with and without SRID)
+      // WKT format is POINT(lng lat) or SRID=4326;POINT(lng lat)
       const pointMatch = geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/i);
       if (pointMatch) {
-        return {
-          type: 'Point',
-          coordinates: [parseFloat(pointMatch[1]), parseFloat(pointMatch[2])]
-        };
+        const lng = parseFloat(pointMatch[1]);
+        const lat = parseFloat(pointMatch[2]);
+        // Validate coordinate ranges
+        if (lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
+          return {
+            type: 'Point',
+            coordinates: [lng, lat] // GeoJSON uses [longitude, latitude]
+          };
+        } else {
+          // If values are out of range, might be swapped - try swapping
+          if (lat >= -180 && lat <= 180 && lng >= -90 && lng <= 90) {
+            console.warn('Coordinates appear swapped, correcting:', { original: [lng, lat], corrected: [lat, lng] });
+            return {
+              type: 'Point',
+              coordinates: [lat, lng] // Swap them
+            };
+          }
+        }
       }
       
       const polygonMatch = geom.match(/POLYGON\(\((.*?)\)\)/i);
@@ -184,7 +199,23 @@ export default function AdminDashboard() {
         .select('*')
         .order('created_at', { ascending: false });
       
-      setPinSubmissions(pinData || []);
+      // Parse location geometry for pins
+      const parsedPins = pinData?.map(pin => {
+        if (pin.location) {
+          try {
+            const parsed = typeof pin.location === 'string' 
+              ? parsePostGISGeometry(pin.location)
+              : pin.location;
+            return { ...pin, location: parsed };
+          } catch (e) {
+            console.error('Error parsing pin location:', e);
+            return pin;
+          }
+        }
+        return pin;
+      }) || [];
+      
+      setPinSubmissions(parsedPins);
       
       // Load content flags (reports for moderation)
       const { data: flagsData } = await supabase
@@ -585,9 +616,36 @@ export default function AdminDashboard() {
             </Card>
           ) : (
             pinSubmissions.map((pin) => {
-              const hasValidLocation = pin.location?.type === 'Point' && 
-                                       Array.isArray(pin.location.coordinates) &&
-                                       pin.location.coordinates.length === 2;
+              // Parse location if it's a string
+              let parsedLocation = pin.location;
+              if (pin.location && typeof pin.location === 'string') {
+                parsedLocation = parsePostGISGeometry(pin.location);
+              }
+              
+              // Ensure location is properly formatted GeoJSON
+              if (parsedLocation && parsedLocation.type === 'Point' && Array.isArray(parsedLocation.coordinates)) {
+                const [lng, lat] = parsedLocation.coordinates;
+                // Validate and ensure correct order [lng, lat]
+                if (typeof lng === 'number' && typeof lat === 'number' &&
+                    lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
+                  parsedLocation = {
+                    type: 'Point',
+                    coordinates: [lng, lat]
+                  };
+                } else {
+                  parsedLocation = null;
+                }
+              }
+              
+              const hasValidLocation = parsedLocation?.type === 'Point' && 
+                                       Array.isArray(parsedLocation.coordinates) &&
+                                       parsedLocation.coordinates.length === 2 &&
+                                       typeof parsedLocation.coordinates[0] === 'number' &&
+                                       typeof parsedLocation.coordinates[1] === 'number' &&
+                                       parsedLocation.coordinates[0] >= -180 &&
+                                       parsedLocation.coordinates[0] <= 180 &&
+                                       parsedLocation.coordinates[1] >= -90 &&
+                                       parsedLocation.coordinates[1] <= 90;
               
               return (
                 <Card key={pin.id}>
@@ -616,7 +674,7 @@ export default function AdminDashboard() {
                   </CardHeader>
                   
                   {/* Map Display for Pin Location */}
-                  {hasValidLocation && (
+                  {hasValidLocation && parsedLocation && (
                     <CardContent>
                       <div className="mb-4">
                         <h4 className="text-sm font-semibold mb-2 flex items-center gap-2">
@@ -628,23 +686,34 @@ export default function AdminDashboard() {
                             zones={[]}
                             pins={[{
                               id: pin.id,
-                              city_id: pin.city_id,
+                              city_id: pin.city_id || 1,
                               type: pin.type,
                               title: pin.title,
                               summary: pin.summary,
-                              details: pin.details,
-                              location: pin.location,
-                              status: pin.status,
+                              details: pin.details || null,
+                              location: {
+                                type: 'Point',
+                                coordinates: [parsedLocation.coordinates[0], parsedLocation.coordinates[1]] as [number, number]
+                              },
+                              status: pin.status as 'approved' | 'pending' | 'rejected',
                               source: 'user' as const,
                               created_at: pin.created_at
                             }]}
-                            center={[pin.location.coordinates[0], pin.location.coordinates[1]]}
+                            center={[parsedLocation.coordinates[0], parsedLocation.coordinates[1]]}
                             className="h-64"
                           />
                         </div>
                         <p className="text-xs text-muted-foreground mt-1">
-                          Coordinates: {pin.location.coordinates[1].toFixed(5)}, {pin.location.coordinates[0].toFixed(5)}
+                          Coordinates: {parsedLocation.coordinates[1].toFixed(5)}, {parsedLocation.coordinates[0].toFixed(5)}
                         </p>
+                      </div>
+                    </CardContent>
+                  )}
+                  {!hasValidLocation && pin.location && (
+                    <CardContent>
+                      <div className="text-xs text-muted-foreground p-2 bg-yellow-50 dark:bg-yellow-900/20 rounded">
+                        <p>Location data: {typeof pin.location === 'string' ? pin.location : JSON.stringify(pin.location)}</p>
+                        <p>Parsed: {parsedLocation ? JSON.stringify(parsedLocation) : 'Failed to parse'}</p>
                       </div>
                     </CardContent>
                   )}
