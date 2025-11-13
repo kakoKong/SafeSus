@@ -27,7 +27,7 @@ interface GroupMember {
 const MOCK_GROUP_MEMBERS: GroupMember[] = [
   {
     id: '1',
-    name: 'Sarah Chen',
+    name: 'Luka',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
     location: { lng: 100.5320, lat: 13.7463 },
     area: 'Siam Paragon',
@@ -37,7 +37,7 @@ const MOCK_GROUP_MEMBERS: GroupMember[] = [
   },
   {
     id: '2',
-    name: 'Mike Johnson',
+    name: 'AD',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike',
     location: { lng: 100.5400, lat: 13.7500 },
     area: 'CentralWorld',
@@ -47,20 +47,20 @@ const MOCK_GROUP_MEMBERS: GroupMember[] = [
   },
   {
     id: '3',
-    name: 'Emma Wilson',
+    name: 'Austin',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
     location: { lng: 100.5250, lat: 13.7400 },
-    area: 'MBK Center',
+    area: 'Silom',
     status: 'idle',
     lastSeen: '5 min ago',
     battery: 45,
   },
   {
     id: '4',
-    name: 'David Kim',
+    name: 'Jane',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=David',
     location: { lng: 100.5450, lat: 13.7550 },
-    area: 'Erawan Shrine',
+    area: 'Asoke Intersection',
     status: 'active',
     lastSeen: 'Just now',
     battery: 78,

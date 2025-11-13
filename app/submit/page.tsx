@@ -10,7 +10,7 @@ import { Textarea } from '@/components/ui/textarea';
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from '@/components/ui/select';
 import { useToast } from '@/components/ui/use-toast';
 import LoginModal from '@/components/shared/LoginModal';
-import { CheckCircle, MapPin, AlertTriangle, MessageCircle, Map } from 'lucide-react';
+import { CheckCircle, AlertTriangle, Map } from 'lucide-react';
 import { trackEvent, Events } from '@/lib/analytics';
 import InteractiveMapDrawer from '@/components/map/InteractiveMapDrawer';
 
@@ -24,7 +24,7 @@ export default function SubmitTipPage() {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [submitted, setSubmitted] = useState(false);
   const [loading, setLoading] = useState(false);
-  const [submissionType, setSubmissionType] = useState<SubmissionType>('tip');
+  const [submissionType, setSubmissionType] = useState<SubmissionType>('scam');
   const [isGuestMode, setIsGuestMode] = useState(false);
   const [guestName, setGuestName] = useState('');
 
@@ -66,7 +66,7 @@ export default function SubmitTipPage() {
       }
       setIsGuestMode(true);
     } else if (!user) {
-      // For tips and zones, require login
+      // For zones, require login
       setShowLoginModal(true);
       return;
     } else {
@@ -105,8 +105,8 @@ export default function SubmitTipPage() {
     setLoading(true);
 
     try {
-      let endpoint = '/api/submit-tip';
-      let payload: any = { ...formData };
+      let endpoint = '';
+      let payload: any = {};
 
       if (submissionType === 'scam') {
         endpoint = '/api/submit-pin';
@@ -133,6 +133,14 @@ export default function SubmitTipPage() {
             coordinates: [zoneCoordinates!]
           }
         };
+      } else {
+        toast({
+          title: 'Error',
+          description: 'Invalid submission type',
+          variant: 'destructive',
+        });
+        setLoading(false);
+        return;
       }
 
       const res = await fetch(endpoint, {
@@ -171,7 +179,7 @@ export default function SubmitTipPage() {
         </div>
         <h1 className="text-3xl font-bold mb-4">Thank You!</h1>
         <p className="text-lg text-muted-foreground mb-8">
-          Your tip has been submitted and will be reviewed by our team before publication.
+          Your submission has been received and will be reviewed by our team before publication.
         </p>
         <div className="flex gap-4 justify-center">
           <Button onClick={() => router.push('/cities')}>Browse Cities</Button>
@@ -197,23 +205,7 @@ export default function SubmitTipPage() {
         </div>
 
         {/* Submission Type Selector */}
-        <div className="grid md:grid-cols-3 gap-4 mb-8">
-          <button
-            onClick={() => {
-              setSubmissionType('tip');
-              setIsGuestMode(false);
-            }}
-            className={`p-6 rounded-xl border-2 transition-all ${
-              submissionType === 'tip'
-                ? 'border-primary bg-primary/5'
-                : 'border-gray-200 dark:border-gray-800 hover:border-primary/50'
-            }`}
-          >
-            <MessageCircle className={`h-8 w-8 mb-3 ${submissionType === 'tip' ? 'text-primary' : 'text-muted-foreground'}`} />
-            <h3 className="font-semibold mb-1">Travel Tip</h3>
-            <p className="text-xs text-muted-foreground">Share do's & don'ts</p>
-          </button>
-
+        <div className="grid md:grid-cols-2 gap-4 mb-8">
           <button
             onClick={() => setSubmissionType('scam')}
             className={`p-6 rounded-xl border-2 transition-all ${
@@ -247,78 +239,16 @@ export default function SubmitTipPage() {
         <Card>
           <CardHeader>
             <CardTitle>
-              {submissionType === 'tip' && 'Share a Travel Tip'}
               {submissionType === 'scam' && 'Report a Scam or Incident'}
               {submissionType === 'zone' && 'Define a Safety Zone'}
             </CardTitle>
             <CardDescription>
-              {submissionType === 'tip' && 'Share your local knowledge and travel wisdom'}
               {submissionType === 'scam' && 'Help others avoid what happened to you'}
               {submissionType === 'zone' && 'Help map safe and unsafe neighborhoods'}
             </CardDescription>
           </CardHeader>
           <CardContent>
             <form onSubmit={handleSubmit} className="space-y-6">
-              {submissionType === 'tip' && (
-                <>
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Category <span className="text-destructive">*</span>
-                    </label>
-                    <Select
-                      value={formData.category}
-                      onValueChange={(value) => setFormData({ ...formData, category: value })}
-                    >
-                      <SelectTrigger>
-                        <SelectValue placeholder="Select a category" />
-                      </SelectTrigger>
-                      <SelectContent>
-                        <SelectItem value="do_dont">Do or Don't</SelectItem>
-                        <SelectItem value="stay">Where to Stay/Avoid</SelectItem>
-                        <SelectItem value="scam">Scam Awareness</SelectItem>
-                      </SelectContent>
-                    </Select>
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Headline <span className="text-destructive">*</span>
-                    </label>
-                    <Input
-                      placeholder="e.g., Always use Grab instead of street taxis"
-                      value={formData.title}
-                      onChange={(e) => setFormData({ ...formData, title: e.target.value })}
-                      required
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Summary <span className="text-destructive">*</span>
-                    </label>
-                    <Textarea
-                      placeholder="Brief explanation of the tip"
-                      value={formData.summary}
-                      onChange={(e) => setFormData({ ...formData, summary: e.target.value })}
-                      required
-                      rows={3}
-                    />
-                  </div>
-
-                  <div>
-                    <label className="text-sm font-medium mb-2 block">
-                      Details (optional)
-                    </label>
-                    <Textarea
-                      placeholder="Additional context, examples, or advice"
-                      value={formData.details}
-                      onChange={(e) => setFormData({ ...formData, details: e.target.value })}
-                      rows={5}
-                    />
-                  </div>
-                </>
-              )}
-
               {submissionType === 'scam' && (
                 <>
                   {!isAuthenticated && (
@@ -505,7 +435,7 @@ export default function SubmitTipPage() {
               <li>• Be specific and factual</li>
               <li>• Avoid naming individuals or businesses unless reporting scams</li>
               <li>• No profanity or offensive language</li>
-              <li>• Tips are moderated before publication</li>
+              <li>• All submissions are moderated before publication</li>
             </ul>
           </CardContent>
         </Card>

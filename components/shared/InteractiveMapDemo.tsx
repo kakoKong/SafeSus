@@ -39,6 +39,7 @@ export default function InteractiveMapDemo() {
   const [showZones, setShowZones] = useState(true);
   const [showTips, setShowTips] = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
+  const [isInteractive, setIsInteractive] = useState(false);
 
   useEffect(() => {
     async function fetchDemoData() {
@@ -104,7 +105,7 @@ export default function InteractiveMapDemo() {
           pins={pinsToShow}
           center={[100.5320, 13.7463]}
           className="w-full h-full"
-          disableZoom={false}
+          disableZoom={!isInteractive}
           maxBounds={bangkokBounds}
           onPinClick={(pin) => setSelectedPin(pin)}
         />
@@ -120,9 +121,9 @@ export default function InteractiveMapDemo() {
                 Bangkok Safety Map
               </h3>
               <p className="text-slate-300 text-xs sm:text-sm md:text-base mb-3 sm:mb-4">
-                Pan and zoom to explore
+                {isInteractive ? 'Pan and zoom to explore' : 'Click "Try it now" to interact with the map'}
               </p>
-              <div className="flex flex-wrap gap-2 mb-2 sm:mb-4">
+              <div className="flex flex-wrap items-center gap-2 mb-2 sm:mb-4">
                 <Badge variant="secondary" className="bg-green-500/20 text-green-300 border-green-500/30 text-xs">
                   <MapPin className="h-3 w-3 mr-1" />
                   {filteredZones.filter((z: any) => z.level === 'recommended').length} Safe
@@ -135,6 +136,16 @@ export default function InteractiveMapDemo() {
                   <MapPin className="h-3 w-3 mr-1" />
                   {filteredPins.filter((p: any) => p.type === 'scam').length} Alerts
                 </Badge>
+                {!isInteractive && (
+                  <Button
+                    onClick={() => setIsInteractive(true)}
+                    size="sm"
+                    variant="outline"
+                    className="ml-auto bg-slate-900/50 backdrop-blur-sm border-slate-700 text-white hover:bg-slate-800/70 hover:border-slate-600"
+                  >
+                    Try it now
+                  </Button>
+                )}
               </div>
             </div>
           </div>

@@ -25,7 +25,7 @@ interface GroupMember {
 const MOCK_MEMBERS: GroupMember[] = [
   {
     id: '1',
-    name: 'Sarah Chen',
+    name: 'Luka',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Sarah',
     location: { lng: 100.5320, lat: 13.7463 },
     area: 'Siam Paragon',
@@ -33,7 +33,7 @@ const MOCK_MEMBERS: GroupMember[] = [
   },
   {
     id: '2',
-    name: 'Mike Johnson',
+    name: 'AD',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Mike',
     location: { lng: 100.5400, lat: 13.7500 },
     area: 'CentralWorld',
@@ -41,18 +41,18 @@ const MOCK_MEMBERS: GroupMember[] = [
   },
   {
     id: '3',
-    name: 'Emma Wilson',
+    name: 'Austin',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=Emma',
     location: { lng: 100.5250, lat: 13.7400 },
-    area: 'MBK Center',
+    area: 'Silom',
     status: 'idle',
   },
   {
     id: '4',
-    name: 'David Kim',
+    name: 'Lebron',
     avatar: 'https://api.dicebear.com/7.x/avataaars/svg?seed=David',
     location: { lng: 100.5450, lat: 13.7550 },
-    area: 'Erawan Shrine',
+    area: 'One Bangkok',
     status: 'active',
   },
 ];
@@ -88,7 +88,7 @@ export default function SafeGroupMock() {
       container: mapContainer.current,
       style: 'mapbox://styles/mapbox/light-v11',
       center: [avgLng, avgLat],
-      zoom: 13,
+      zoom: 12,
       interactive: false, // Disable interaction for mock
     });
 

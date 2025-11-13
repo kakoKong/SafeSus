@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import Image from 'next/image';
+import logo from '@/public/icons/logo.png';
 import { usePathname, useRouter } from 'next/navigation';
 import { useState, useEffect } from 'react';
 import { Button } from '@/components/ui/button';
@@ -101,14 +103,23 @@ export default function Header() {
   return (
     <>
       <header className="sticky top-0 z-40 w-full border-b bg-background/95 backdrop-blur supports-[backdrop-filter]:bg-background/60 overflow-hidden">
-        <div className="container flex h-16 items-center justify-between px-3 sm:px-4 max-w-7xl mx-auto">
-          {/* Logo */}
-          <Link href="/" className="flex items-center space-x-2 font-bold text-lg sm:text-xl flex-shrink-0">
-            Safesus
+        <div className="container grid grid-cols-3 h-18 items-center px-3 sm:px-4 max-w-7xl mx-auto">
+          {/* Left side - Logo */}
+          <div className="flex items-center justify-start">
+            <Link href="/" className="flex items-center flex-shrink-0">
+            <Image
+              src={logo}
+              alt="Safesus"
+              width={150}
+              // height={48}
+              // className="h-10 sm:h-12 w-[280px] sm:w-[350px] object-contain"
+              priority
+            />
           </Link>
+          </div>
 
-          {/* Desktop Navigation */}
-          <nav className="hidden flex-1 items-center justify-center gap-6 md:flex">
+          {/* Center - Desktop Navigation */}
+          <nav className="hidden md:flex items-center justify-center gap-6">
             <Link
               href="/"
               className={cn(
@@ -118,6 +129,54 @@ export default function Header() {
             >
               Home
             </Link>
+            <a
+              href="/#features"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary cursor-pointer',
+                'text-muted-foreground'
+              )}
+              onClick={(e) => {
+                if (pathname === '/') {
+                  e.preventDefault();
+                  const element = document.getElementById('features');
+                  if (element) {
+                    const headerOffset = 80;
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    window.scrollTo({
+                      top: offsetPosition,
+                      behavior: 'smooth'
+                    });
+                  }
+                }
+              }}
+            >
+              Features
+            </a>
+            <a
+              href="/#about"
+              className={cn(
+                'text-sm font-medium transition-colors hover:text-primary cursor-pointer',
+                'text-muted-foreground'
+              )}
+              onClick={(e) => {
+                if (pathname === '/') {
+                  e.preventDefault();
+                  const element = document.getElementById('about');
+                  if (element) {
+                    const headerOffset = 80;
+                    const elementPosition = element.getBoundingClientRect().top;
+                    const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                    window.scrollTo({
+                      top: offsetPosition,
+                      behavior: 'smooth'
+                    });
+                  }
+                }
+              }}
+            >
+              About Us
+            </a>
             <Link
               href="/submit"
               className={cn(
@@ -127,21 +186,10 @@ export default function Header() {
             >
               Submit
             </Link>
-            {!checkingAuth && isAdmin && (
-              <Link
-                href="/admin/dashboard"
-                className={cn(
-                  'text-sm font-medium transition-colors hover:text-primary',
-                  pathname?.startsWith('/admin') ? 'text-primary' : 'text-muted-foreground'
-                )}
-              >
-                Admin
-              </Link>
-            )}
           </nav>
 
           {/* Right side */}
-          <div className="flex items-center gap-2">
+          <div className="flex items-center justify-end gap-2">
             {!checkingAuth && user && (
               <DropdownMenu>
                 <DropdownMenuTrigger asChild>
@@ -244,6 +292,60 @@ export default function Header() {
               >
                 Home
               </Link>
+              <a
+                href="/#features"
+                className={cn(
+                  'block rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer',
+                  'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  closeMobileMenu();
+                  if (pathname === '/') {
+                    const element = document.getElementById('features');
+                    if (element) {
+                      const headerOffset = 80;
+                      const elementPosition = element.getBoundingClientRect().top;
+                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                      window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                      });
+                    }
+                  } else {
+                    router.push('/#features');
+                  }
+                }}
+              >
+                Features
+              </a>
+              <a
+                href="/#about"
+                className={cn(
+                  'block rounded-lg px-4 py-2 text-sm font-medium transition-colors cursor-pointer',
+                  'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                )}
+                onClick={(e) => {
+                  e.preventDefault();
+                  closeMobileMenu();
+                  if (pathname === '/') {
+                    const element = document.getElementById('about');
+                    if (element) {
+                      const headerOffset = 80;
+                      const elementPosition = element.getBoundingClientRect().top;
+                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                      window.scrollTo({
+                        top: offsetPosition,
+                        behavior: 'smooth'
+                      });
+                    }
+                  } else {
+                    router.push('/#about');
+                  }
+                }}
+              >
+                About Us
+              </a>
               <Link
                 href="/submit"
                 className={cn(
@@ -256,20 +358,6 @@ export default function Header() {
               >
                 Submit
               </Link>
-              {!checkingAuth && isAdmin && (
-                <Link
-                  href="/admin/dashboard"
-                  className={cn(
-                    'block rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-                    pathname?.startsWith('/admin') 
-                      ? 'bg-primary text-primary-foreground' 
-                      : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
-                  )}
-                  onClick={closeMobileMenu}
-                >
-                  Admin
-                </Link>
-              )}
               {!checkingAuth && user && (
                 <>
                   <Link

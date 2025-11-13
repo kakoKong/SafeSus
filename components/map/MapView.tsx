@@ -116,17 +116,23 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       center: center,
       zoom: 12,
       ...(maxBounds && { maxBounds }),
-      ...(disableZoom && {
-        interactive: false,
-        scrollZoom: false,
-        boxZoom: false,
-        dragRotate: false,
-        dragPan: false,
-        keyboard: false,
-        doubleClickZoom: false,
-        touchZoomRotate: false,
-      }),
+      // Always initialize as interactive, but we'll disable handlers if needed
+      dragRotate: false, // Always disable rotation
     });
+
+    // Disable interactions after map creation if disableZoom is true
+    if (disableZoom) {
+      map.current.once('load', () => {
+        if (map.current) {
+          map.current.boxZoom.disable();
+          map.current.scrollZoom.disable();
+          map.current.dragPan.disable();
+          map.current.keyboard.disable();
+          map.current.doubleClickZoom.disable();
+          map.current.touchZoomRotate.disable();
+        }
+      });
+    }
 
     map.current.on('load', () => {
       setMapLoaded(true);
@@ -185,6 +191,31 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       (map.current.setMaxBounds as any)(null);
     }
   }, [mapLoaded, maxBounds]);
+
+  // Update interactivity when disableZoom changes
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    if (disableZoom) {
+      // Disable all interactions
+      map.current.boxZoom.disable();
+      map.current.scrollZoom.disable();
+      map.current.dragPan.disable();
+      map.current.dragRotate.disable();
+      map.current.keyboard.disable();
+      map.current.doubleClickZoom.disable();
+      map.current.touchZoomRotate.disable();
+    } else {
+      // Enable all interactions
+      map.current.boxZoom.enable();
+      map.current.scrollZoom.enable();
+      map.current.dragPan.enable();
+      map.current.dragRotate.disable(); // Keep rotation disabled as per default
+      map.current.keyboard.enable();
+      map.current.doubleClickZoom.enable();
+      map.current.touchZoomRotate.enable();
+    }
+  }, [mapLoaded, disableZoom]);
 
   // Add zones layer
   useEffect(() => {
