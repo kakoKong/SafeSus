@@ -11,60 +11,41 @@ import {
   Sparkles,
   CheckCircle,
   MapPin,
-  Satellite,
-  AlarmCheck,
-  Smartphone,
   ShieldAlert,
   TrendingUp,
   MessageSquare,
 } from 'lucide-react';
 import RecentTipsFeed from '@/components/shared/RecentTipsFeed';
 import InteractiveMapDemo from '@/components/shared/InteractiveMapDemo';
-import ModeSwitcher from '@/components/shared/ModeSwitcher';
 import SafeGroupMock from '@/components/shared/SafeGroupMock';
 
 export default function Home() {
   return (
     <div className="flex flex-col overflow-hidden">
       {/* Hero Section */}
-      <section className="relative bg-white py-12 dark:bg-slate-950 md:py-20 lg:py-24">
-        <div className="container mx-auto grid max-w-7xl gap-12 px-4 lg:grid-cols-[1.1fr,0.9fr] lg:items-center">
-          <div className="space-y-8">
-            <div className="space-y-4">
-              <div className="space-y-3">
-                <p className="text-2xl md:text-3xl font-bold text-primary tracking-tight">
-                  Travel Safe, Travel Sus
-                </p>
-              <span className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-2 text-sm font-semibold text-primary">
-                <Sparkles className="h-4 w-4" />
+      <section className="relative bg-gradient-to-b from-white via-slate-50 to-white py-12 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:py-16 lg:py-20">
+        <div className="container mx-auto max-w-6xl px-4">
+          <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
+            {/* Left: Content */}
+            <div className="space-y-6 text-center lg:text-left">
+              <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary">
+                <Sparkles className="h-3.5 w-3.5" />
                 Coming soon
-              </span>
               </div>
-              <h1 className="text-4xl font-bold leading-tight md:text-6xl">
-                See the safe zones. Skip the sketchy ones.
+              
+              <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl lg:text-5xl xl:text-6xl">
+                Know where it's <span className="text-primary">safe</span>.<br />
+                Skip the <span className="text-red-500">sketchy</span>.
               </h1>
-              <p className="text-lg text-muted-foreground md:text-xl">
-                Real-time safety maps showing which areas are safe, which to watch out for, and where your friends can see you. No BS, just people who've been there.
+              
+              <p className="text-lg text-muted-foreground md:text-lg lg:text-xl max-w-xl mx-auto lg:mx-0">
+                Real-time safety maps. No BS. Just real travelers keeping it real.
               </p>
-            </div>
 
-            <div className="flex flex-wrap items-center gap-4">
-              <div className="flex items-center gap-2 text-sm">
-                <Shield className="h-5 w-5 text-primary" />
-                <span>Real locals, real intel</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <Users className="h-5 w-5 text-primary" />
-                <span>Updated by travelers like you</span>
-              </div>
-            </div>
-
-            <div className="space-y-4">
-              <ModeSwitcher />
-              <div className="flex flex-col gap-3 sm:flex-row sm:items-center">
+              <div className="flex flex-col gap-4 sm:flex-row sm:items-center justify-center lg:justify-start">
                 <Button 
                   size="lg" 
-                  className="w-full sm:w-auto" 
+                  className="w-full sm:w-auto text-base px-8 py-6" 
                   asChild
                 >
                   <a 
@@ -72,150 +53,283 @@ export default function Home() {
                     target="_blank" 
                     rel="noopener noreferrer"
                   >
-                    Get on the waitlist
+                    Join waitlist
                   </a>
                 </Button>
                 <p className="text-sm text-muted-foreground">
-                  Starting in Bangkok. More cities when we're ready.
+                  Starting in Bangkok
                 </p>
-              </div>
             </div>
           </div>
 
-          <div className="relative">
-            <div className="rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-900 via-slate-900 to-slate-800 p-8 text-white shadow-xl dark:border-slate-800">
-              <div className="space-y-6">
-                <div>
-                  <span className="inline-flex items-center gap-2 rounded-full bg-white/10 px-3 py-1 text-xs font-medium uppercase tracking-wide">
-                    Live demo stream
-                  </span>
-                  <h3 className="mt-4 text-2xl font-semibold">Bangkok signal summary</h3>
+            {/* Right: Traveler Illustration */}
+            <div className="relative flex items-center justify-center">
+              <div className="relative w-full max-w-lg">
+                {/* Background gradient blobs */}
+                <div className="absolute inset-0 -z-10">
+                  <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-primary/20 blur-3xl" />
+                  <div className="absolute bottom-0 left-0 h-80 w-80 rounded-full bg-emerald-500/15 blur-3xl" />
+                  <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 h-64 w-64 rounded-full bg-amber-500/10 blur-3xl" />
                 </div>
 
-                <div className="space-y-4 text-sm text-slate-300">
-                  <div className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-5 w-5 text-green-400" />
-                      <div>
-                        <p className="font-semibold text-white">Phrom Phong</p>
-                        <p className="text-xs text-slate-400">Lifestyle corridor • SafeGroup: 3 members</p>
-                      </div>
-                    </div>
-                    <AlarmCheck className="h-5 w-5 text-green-400" />
-                  </div>
-
-                  <div className="flex items-center justify-between rounded-2xl bg-white/5 px-4 py-3">
-                    <div className="flex items-center gap-3">
-                      <MapPin className="h-5 w-5 text-yellow-300" />
-                      <div>
-                        <p className="font-semibold text-white">Chatuchak Market</p>
-                        <p className="text-xs text-slate-400">Crowded hours • Safety warnings active</p>
-                      </div>
-                    </div>
-                    <ShieldAlert className="h-5 w-5 text-yellow-300" />
-                  </div>
-
-                  <div className="rounded-2xl border border-white/10 bg-black/30 p-4">
-                    <p className="text-xs font-semibold uppercase tracking-wide text-slate-400">Next check-in</p>
-                    <div className="mt-2 flex items-center justify-between">
-                      <div>
-                        <p className="font-semibold text-white">SafeGroup sync</p>
-                        <p className="text-xs text-slate-400">Auto-check in at landing • 12m</p>
-                      </div>
-                      <div className="flex items-center gap-2 text-xs text-white">
-                        <div className="h-2 w-2 rounded-full bg-green-400" />
-                        Live
-                      </div>
-                    </div>
-                  </div>
-
-                  <div className="grid gap-3 sm:grid-cols-2">
-                    <div className="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3">
-                      <Satellite className="h-5 w-5 text-cyan-300" />
-                      <span className="text-xs uppercase tracking-wide text-slate-400">Geo-fenced alerts</span>
-                    </div>
-                    <div className="flex items-center gap-3 rounded-2xl bg-white/5 px-4 py-3">
-                      <Smartphone className="h-5 w-5 text-purple-300" />
-                      <span className="text-xs uppercase tracking-wide text-slate-400">No extra hardware</span>
-                    </div>
-                  </div>
-                </div>
+                {/* Traveler with Map Illustration */}
+                <svg
+                  viewBox="0 0 500 500"
+                  className="w-full h-auto"
+                  fill="none"
+                  xmlns="http://www.w3.org/2000/svg"
+                >
+                    <defs>
+                      <pattern id="dots" x="0" y="0" width="20" height="20" patternUnits="userSpaceOnUse">
+                        <circle cx="2" cy="2" r="1" fill="currentColor" opacity="0.1" />
+                      </pattern>
+                      <filter id="glow">
+                        <feGaussianBlur stdDeviation="3" result="coloredBlur"/>
+                        <feMerge>
+                          <feMergeNode in="coloredBlur"/>
+                          <feMergeNode in="SourceGraphic"/>
+                        </feMerge>
+                      </filter>
+                      <linearGradient id="safeGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#10b981" />
+                        <stop offset="50%" stopColor="#34d399" />
+                        <stop offset="100%" stopColor="#6ee7b7" />
+                      </linearGradient>
+                      <linearGradient id="watchGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#f59e0b" />
+                        <stop offset="50%" stopColor="#fbbf24" />
+                        <stop offset="100%" stopColor="#fcd34d" />
+                      </linearGradient>
+                      <linearGradient id="avoidGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#ef4444" />
+                        <stop offset="50%" stopColor="#f87171" />
+                        <stop offset="100%" stopColor="#fca5a5" />
+                      </linearGradient>
+                      <linearGradient id="primaryGradient" x1="0%" y1="0%" x2="100%" y2="100%">
+                        <stop offset="0%" stopColor="#5271ff" />
+                        <stop offset="100%" stopColor="#5271ff" />
+                      </linearGradient>
+                    </defs>
+                    
+                    {/* Background with subtle texture */}
+                    <rect width="500" height="500" fill="url(#dots)" className="text-slate-400" />
+                    
+                    {/* Map background - simplified city streets */}
+                    <g opacity="0.3">
+                      {/* Horizontal streets */}
+                      <line x1="50" y1="150" x2="450" y2="150" stroke="currentColor" strokeWidth="2" className="text-slate-300" />
+                      <line x1="50" y1="250" x2="450" y2="250" stroke="currentColor" strokeWidth="2" className="text-slate-300" />
+                      <line x1="50" y1="350" x2="450" y2="350" stroke="currentColor" strokeWidth="2" className="text-slate-300" />
+                      {/* Vertical streets */}
+                      <line x1="150" y1="50" x2="150" y2="450" stroke="currentColor" strokeWidth="2" className="text-slate-300" />
+                      <line x1="250" y1="50" x2="250" y2="450" stroke="currentColor" strokeWidth="2" className="text-slate-300" />
+                      <line x1="350" y1="50" x2="350" y2="450" stroke="currentColor" strokeWidth="2" className="text-slate-300" />
+                    </g>
+                    
+                    {/* Safety zones on the map */}
+                    {/* Safe zone - green area around traveler */}
+                    <circle cx="250" cy="250" r="120" fill="url(#safeGradient)" opacity="0.25" filter="url(#glow)" />
+                    {/* Watch zone - amber area */}
+                    <ellipse cx="350" cy="200" rx="80" ry="60" fill="url(#watchGradient)" opacity="0.3" filter="url(#glow)" />
+                    {/* Avoid zone - red area */}
+                    <path
+                      d="M 380 320 Q 400 300, 420 320 Q 440 340, 420 360 Q 400 380, 380 360 Q 360 340, 380 320 Z"
+                      fill="url(#avoidGradient)"
+                      opacity="0.4"
+                      filter="url(#glow)"
+                    />
+                    
+                    {/* Solo Traveler - centered */}
+                    <g transform="translate(250, 250)">
+                      {/* Traveler's body */}
+                      <circle cx="0" cy="20" r="25" fill="#5271ff" opacity="0.9" />
+                      
+                      {/* Backpack */}
+                      <rect x="-15" y="25" width="30" height="40" rx="4" fill="#3d5ae6" />
+                      <rect x="-12" y="28" width="24" height="30" rx="2" fill="#5271ff" />
+                      <line x1="-8" y1="35" x2="8" y2="35" stroke="white" strokeWidth="1.5" opacity="0.6" />
+                      <line x1="-8" y1="45" x2="8" y2="45" stroke="white" strokeWidth="1.5" opacity="0.6" />
+                      
+                      {/* Head */}
+                      <circle cx="0" cy="-15" r="18" fill="#fbbf24" />
+                      <circle cx="-5" cy="-18" r="3" fill="#1f2937" />
+                      <circle cx="5" cy="-18" r="3" fill="#1f2937" />
+                      <path d="M -6 -12 Q 0 -8 6 -12" stroke="#1f2937" strokeWidth="2" fill="none" strokeLinecap="round" />
+                      
+                      {/* Hair */}
+                      <path d="M -12 -25 Q -8 -30, -4 -28 Q 0 -30, 4 -28 Q 8 -30, 12 -25" stroke="#1f2937" strokeWidth="3" fill="none" strokeLinecap="round" />
+                      
+                      {/* Arms holding phone */}
+                      <ellipse cx="-30" cy="15" rx="8" ry="25" fill="#fbbf24" transform="rotate(-20 -30 15)" />
+                      <ellipse cx="30" cy="15" rx="8" ry="25" fill="#fbbf24" transform="rotate(20 30 15)" />
+                      
+                      {/* Phone/Map device in hands */}
+                      <rect x="-12" y="5" width="24" height="35" rx="3" fill="#1e293b" />
+                      <rect x="-10" y="8" width="20" height="28" rx="2" fill="#0f172a" />
+                      {/* Phone screen showing map */}
+                      <rect x="-8" y="12" width="16" height="20" rx="1" fill="#10b981" opacity="0.4" />
+                      {/* Map pins on phone */}
+                      <circle cx="-4" cy="18" r="2" fill="#10b981" />
+                      <circle cx="4" cy="25" r="2" fill="#f59e0b" />
+                      <circle cx="0" cy="28" r="2" fill="#ef4444" />
+                      
+                      {/* Legs */}
+                      <rect x="-12" y="65" width="10" height="35" rx="5" fill="#5271ff" />
+                      <rect x="2" y="65" width="10" height="35" rx="5" fill="#5271ff" />
+                      
+                      {/* Shoes */}
+                      <ellipse cx="-7" cy="102" rx="8" ry="5" fill="#1e293b" />
+                      <ellipse cx="7" cy="102" rx="8" ry="5" fill="#1e293b" />
+                    </g>
+                    
+                    {/* Safety pins around the map */}
+                    <g filter="url(#glow)">
+                      {/* Safe pin */}
+                      <circle cx="180" cy="200" r="10" fill="#10b981" />
+                      <circle cx="180" cy="200" r="18" fill="#10b981" opacity="0.2" />
+                      <path d="M 180 200 L 180 225 L 170 215 L 180 225 L 190 215 Z" fill="#10b981" />
+                      <circle cx="180" cy="200" r="3" fill="white" />
+                    </g>
+                    
+                    <g filter="url(#glow)">
+                      {/* Watch pin */}
+                      <circle cx="320" cy="180" r="10" fill="#f59e0b" />
+                      <circle cx="320" cy="180" r="18" fill="#f59e0b" opacity="0.2" />
+                      <path d="M 320 180 L 320 205 L 310 195 L 320 205 L 330 195 Z" fill="#f59e0b" />
+                      <circle cx="320" cy="180" r="3" fill="white" />
+                    </g>
+                    
+                    <g filter="url(#glow)">
+                      {/* Avoid pin */}
+                      <circle cx="400" cy="330" r="10" fill="#ef4444" />
+                      <circle cx="400" cy="330" r="18" fill="#ef4444" opacity="0.2" />
+                      <path d="M 400 330 L 400 355 L 390 345 L 400 355 L 410 345 Z" fill="#ef4444" />
+                      <circle cx="400" cy="330" r="3" fill="white" />
+                    </g>
+                    
+                    {/* Direction indicator - showing traveler is exploring */}
+                    <g transform="translate(250, 250)">
+                      <path
+                        d="M 0 -80 L -15 -100 L 0 -90 L 15 -100 Z"
+                        fill="#5271ff"
+                        opacity="0.6"
+                      />
+                      <circle cx="0" cy="-85" r="3" fill="#5271ff" />
+                    </g>
+                    
+                    {/* Decorative elements */}
+                    <circle cx="120" cy="120" r="3" fill="#10b981" opacity="0.6" />
+                    <circle cx="400" cy="150" r="3" fill="#f59e0b" opacity="0.6" />
+                    <circle cx="150" cy="350" r="3" fill="#10b981" opacity="0.6" />
+                    <circle cx="450" cy="280" r="3" fill="#ef4444" opacity="0.6" />
+                  </svg>
+                  
+                  {/* Floating decorative elements */}
+                  <div className="absolute top-8 right-8 w-20 h-20 rounded-full bg-emerald-500/15 blur-2xl animate-pulse" />
+                  <div className="absolute bottom-12 left-8 w-24 h-24 rounded-full bg-amber-500/15 blur-2xl animate-pulse" style={{ animationDelay: '1.5s' }} />
+                  <div className="absolute top-1/2 right-4 w-16 h-16 rounded-full bg-red-500/10 blur-2xl animate-pulse" style={{ animationDelay: '0.5s' }} />
               </div>
             </div>
           </div>
         </div>
       </section>
 
-      <div className="space-y-16 px-4 py-16 md:space-y-24 md:py-20">
+      <div className="space-y-24 md:space-y-32 px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* SafeMap Overview */}
         <section id="features" className="scroll-mt-20">
           <div className="container mx-auto max-w-7xl">
-            <div className="rounded-3xl border border-slate-200 bg-white shadow-sm dark:border-slate-800 dark:bg-slate-950">
-              <div className="space-y-12 p-8 md:p-12">
-                <div className="space-y-4 text-center lg:text-left">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-600 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+            <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 md:p-12">
+              <div className="space-y-12 md:space-y-16">
+                {/* Header */}
+                <div className="space-y-4 max-w-3xl">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300">
+                    <Sparkles className="h-3.5 w-3.5" />
                     SafeMap
-                  </span>
-                  <div className="mx-auto max-w-3xl space-y-3 lg:mx-0">
-                    <h2 className="text-3xl font-bold md:text-4xl">See what's actually safe (and what's sus)</h2>
-                    <p className="text-base text-muted-foreground md:text-lg">
-                      Color-coded maps showing where it's chill, where to watch your back, and where to just avoid. All from people who've been there, done that.
+                  </div>
+                  <div className="space-y-3">
+                    <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-[1.1] tracking-tight">
+                      See what's <span className="text-emerald-600 dark:text-emerald-400">safe</span>.<br />
+                      <span className="text-slate-400">Skip the </span><span className="text-red-600 dark:text-red-400">sketchy</span>.
+                    </h2>
+                    <p className="text-base sm:text-lg md:text-lg lg:text-xl text-muted-foreground leading-relaxed">
+                      Color-coded maps. Real intel. No cap.
                     </p>
                   </div>
                 </div>
 
-                <div className="space-y-6">
-                  <div className="grid gap-4 sm:grid-cols-3">
-                    <div className="rounded-2xl border border-emerald-300 bg-emerald-100 p-4 text-center shadow-sm dark:border-emerald-900/70 dark:bg-emerald-900/40">
-                      <div className="mb-2 flex items-center justify-center gap-2 text-emerald-700 dark:text-emerald-100">
-                        <Shield className="h-5 w-5" />
-                        <span className="text-sm font-semibold uppercase tracking-wide">Safe</span>
+                {/* Zone Cards */}
+                <div className="grid gap-6 md:grid-cols-3">
+                  <div className="group relative rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-6 sm:p-8 transition-all hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-10 -mt-10 blur-2xl" />
+                    <div className="relative">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="rounded-xl bg-emerald-500 p-3 shadow-lg">
+                          <Shield className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Safe</h3>
                       </div>
-                      <p className="text-sm text-emerald-900 dark:text-emerald-100">
-                        Actually safe. Verified by locals. You're good.
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-amber-300 bg-amber-100 p-4 text-center shadow-sm dark:border-amber-900/70 dark:bg-amber-900/40">
-                      <div className="mb-2 flex items-center justify-center gap-2 text-amber-700 dark:text-amber-100">
-                        <AlertTriangle className="h-5 w-5" />
-                        <span className="text-sm font-semibold uppercase tracking-wide">Watch</span>
-                      </div>
-                      <p className="text-sm text-amber-900 dark:text-amber-100">
-                        Fine, but stay alert. Watch your back here.
-                      </p>
-                    </div>
-                    <div className="rounded-2xl border border-red-400 bg-red-100 p-4 text-center shadow-sm dark:border-red-900/70 dark:bg-red-900/40">
-                      <div className="mb-2 flex items-center justify-center gap-2 text-red-700 dark:text-red-100">
-                        <ShieldAlert className="h-5 w-5" />
-                        <span className="text-sm font-semibold uppercase tracking-wide">Avoid</span>
-                      </div>
-                      <p className="text-sm text-red-900 dark:text-red-100">
-                        Multiple incidents. Just don't go here.
+                      <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Actually safe. Verified. You're good.
                       </p>
                     </div>
                   </div>
 
-                  {/* <div className="rounded-3xl bg-gradient-to-br from-slate-100 via-white to-white p-4 shadow-md dark:from-slate-900 dark:via-slate-950 dark:to-slate-900"> */}
-                      <InteractiveMapDemo />
-                  {/* </div> */}
-                  {/* Community Submission Section */}
-                  <div className="rounded-2xl border border-slate-200 bg-white/80 p-4 shadow-sm backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/60">
-                    <div className="flex items-center gap-3">
-                      <div className="p-2 rounded-lg bg-primary/10">
-                        <MessageSquare className="h-4 w-4 text-primary" />
+                  <div className="group relative rounded-2xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-6 sm:p-8 transition-all hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1 md:mt-12">
+                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-amber-500/10 rounded-full -ml-10 -mb-10 blur-2xl" />
+                    <div className="relative">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="rounded-xl bg-amber-500 p-3 shadow-lg">
+                          <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Watch</h3>
                       </div>
-                      <div className="flex-1 min-w-0">
-                        <p className="text-xs font-semibold text-slate-900 dark:text-white">
+                      <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Fine, but stay alert. Watch your back.
+                      </p>
+                    </div>
+                  </div>
+
+                  <div className="group relative rounded-2xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-6 sm:p-8 transition-all hover:shadow-xl hover:shadow-red-500/10 hover:-translate-y-1">
+                    <div className="absolute top-1/2 right-0 w-20 h-20 bg-red-500/10 rounded-full -mr-10 blur-2xl" />
+                    <div className="relative">
+                      <div className="flex items-center gap-3 mb-4">
+                        <div className="rounded-xl bg-red-500 p-3 shadow-lg">
+                          <ShieldAlert className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                        </div>
+                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Avoid</h3>
+                      </div>
+                      <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                        Multiple incidents. Just don't go.
+                      </p>
+                    </div>
+                  </div>
+                </div>
+
+                {/* Map Demo */}
+                <div>
+                  <InteractiveMapDemo />
+                </div>
+
+                {/* Community CTA */}
+                <div className="relative rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-slate-50 dark:from-primary/10 dark:via-slate-900 dark:to-slate-950 p-6 sm:p-8 overflow-hidden">
+                  <div className="absolute top-0 right-0 w-40 h-40 bg-primary/10 rounded-full -mr-20 -mt-20 blur-3xl" />
+                  <div className="relative flex flex-col sm:flex-row items-start sm:items-center justify-between gap-4 sm:gap-6">
+                    <div className="flex items-start sm:items-center gap-4 flex-1">
+                      <div className="rounded-xl bg-primary p-3 flex-shrink-0 shadow-lg">
+                        <MessageSquare className="h-5 w-5 sm:h-6 sm:w-6 text-white" />
+                      </div>
+                      <div>
+                        <p className="text-base sm:text-lg font-bold text-slate-900 dark:text-white mb-1">
                           Got the tea? Drop it.
                         </p>
-                        <p className="text-xs text-slate-600 dark:text-slate-300 mt-0.5">
+                        <p className="text-sm text-muted-foreground">
                           Share what you know, help others stay safe
                         </p>
                       </div>
-                      <Button size="sm" variant="outline" className="text-xs" asChild>
-                        <Link href="/submit">Submit</Link>
-                      </Button>
                     </div>
+                    <Button size="lg" className="w-full sm:w-auto shadow-lg" asChild>
+                      <Link href="/submit">Submit Tip</Link>
+                    </Button>
                   </div>
                 </div>
               </div>
@@ -226,16 +340,21 @@ export default function Home() {
         {/* SafeAlert Feed */}
         <section className="scroll-mt-12">
           <div className="container mx-auto max-w-7xl">
-            <div className="rounded-3xl border border-slate-200 bg-white shadow-lg dark:border-slate-800 dark:bg-slate-950">
-              <div className="space-y-10 p-8 md:p-12">
-                <div className="space-y-4 text-center lg:text-left">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-slate-50 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700 dark:border-slate-700 dark:bg-slate-900 dark:text-slate-300">
+            <div className="relative rounded-2xl border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 via-white to-white dark:from-orange-950/30 dark:via-slate-900 dark:to-slate-950 p-6 sm:p-8 md:p-12 overflow-hidden">
+              <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
+              <div className="relative space-y-8 md:space-y-12">
+                <div className="space-y-4 max-w-3xl">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-orange-100 dark:bg-orange-900/50 border border-orange-200 dark:border-orange-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-orange-700 dark:text-orange-300">
+                    <AlertTriangle className="h-3.5 w-3.5" />
                     SafeAlert
-                  </span>
-                  <div className="mx-auto max-w-3xl space-y-3 lg:mx-0">
-                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">Real-time warnings from travelers</h2>
-                    <p className="text-base text-slate-600 dark:text-slate-300 md:text-lg">
-                      Safety alerts, safe spots, and warnings as they happen. No filters, no corporate BS. Just travelers looking out for each other.
+                  </div>
+                  <div className="space-y-3">
+                    <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-[1.1] tracking-tight">
+                      Real-time warnings.<br />
+                      <span className="text-orange-600 dark:text-orange-400">As they happen.</span>
+                    </h2>
+                    <p className="text-base sm:text-lg md:text-lg lg:text-xl text-muted-foreground leading-relaxed">
+                      Safety alerts, safe spots, warnings. No filters, no BS. Just travelers looking out.
                     </p>
                   </div>
                 </div>
@@ -249,61 +368,82 @@ export default function Home() {
         {/* SafeGroup Feature */}
         <section className="scroll-mt-12">
           <div className="container mx-auto max-w-7xl">
-            <div className="relative overflow-hidden rounded-3xl border border-slate-200 bg-gradient-to-br from-slate-50 via-white to-slate-100 shadow-xl dark:border-slate-800 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950">
-              <div className="absolute inset-0 pointer-events-none">
-                <div className="absolute top-10 right-16 h-56 w-56 rounded-full bg-primary/10 blur-3xl" />
-                <div className="absolute bottom-0 left-10 h-48 w-48 rounded-full bg-sky-500/10 blur-3xl" />
-                <div className="absolute inset-0 bg-grid-slate-200/40 [mask-image:linear-gradient(to_bottom,white,transparent)] dark:bg-grid-slate-800/40" />
-              </div>
-              <div className="relative space-y-12 p-8 md:p-12">
-                <div className="space-y-4 text-center lg:text-left">
-                  <span className="inline-flex items-center gap-2 rounded-full border border-slate-200 bg-white/80 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-slate-700 shadow-sm backdrop-blur-sm dark:border-slate-700 dark:bg-slate-900/60 dark:text-slate-200">
+            <div className="relative rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-slate-50 dark:from-primary/10 dark:via-slate-900 dark:to-slate-950 p-6 sm:p-8 md:p-12 overflow-hidden">
+              <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full -ml-32 -mb-32 blur-3xl" />
+              <div className="relative space-y-12 md:space-y-16">
+                <div className="space-y-4 max-w-3xl">
+                  <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+                    <Users className="h-3.5 w-3.5" />
                     SafeGroup
-                  </span>
-                  <div className="mx-auto max-w-3xl space-y-3 lg:mx-0">
-                    <h2 className="text-3xl font-bold text-slate-900 dark:text-white md:text-4xl">Let your people know you're good (or not)</h2>
-                    <p className="text-base text-slate-600 dark:text-slate-300 md:text-lg">
-                      Share your location with your crew without spamming them. They see where you are, if you're safe, and if something's off. No annoying texts, just peace of mind.
+                  </div>
+                  <div className="space-y-3">
+                    <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-[1.1] tracking-tight">
+                      Let your crew know<br />
+                      <span className="text-primary">you're good.</span>
+                    </h2>
+                    <p className="text-base sm:text-lg md:text-lg lg:text-xl text-muted-foreground leading-relaxed">
+                      Share location without spamming. They see where you are, if you're safe. No annoying texts.
                     </p>
                   </div>
                 </div>
 
-                <div className="grid gap-6 lg:grid-cols-2">
-                  <div className="rounded-3xl border border-slate-200 bg-white/95 p-6 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-950/70">
-                    <div className="flex items-center gap-3 rounded-full border border-primary/20 bg-primary/5 px-4 py-2 text-xs font-semibold uppercase tracking-wide text-primary dark:border-primary/30 dark:bg-primary/10 dark:text-primary-foreground">
+                <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
+                  <div className="space-y-6">
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6 sm:p-8">
+                      <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 dark:bg-primary/20 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary mb-6">
                       Live feed
                     </div>
-                    <h3 className="mt-6 text-2xl font-semibold text-slate-900 dark:text-white lg:text-[26px]">What your people see in real time</h3>
+                      <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-8">What they see</h3>
 
-                    <div className="mt-8 space-y-4">
+                      <div className="space-y-4">
                       {[
                         {
                           title: 'Location updates',
-                          desc: 'Auto-check-ins so your crew knows you\'re safe. No need to text "I\'m here" every 5 minutes.',
+                            desc: 'Auto-check-ins. No need to text "I\'m here" every 5 min.',
+                            icon: MapPin,
+                            bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+                            iconColor: 'text-emerald-600 dark:text-emerald-400'
                         },
                         {
                           title: 'Warning alerts',
-                          desc: 'If you end up in a sketchy area, they get notified. So someone knows if you need help.',
+                            desc: 'Sketchy area? They get notified. Someone knows if you need help.',
+                            icon: AlertTriangle,
+                            bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+                            iconColor: 'text-amber-600 dark:text-amber-400'
                         },
                         {
                           title: 'Where you\'ve been',
-                          desc: 'A simple timeline showing where you went. Nothing creepy, just basic info for peace of mind.',
-                        },
-                      ].map((item) => (
-                        <div key={item.title} className="rounded-2xl border border-slate-200 bg-white p-4 shadow-sm dark:border-slate-800 dark:bg-slate-950/60">
-                          <h4 className="text-sm font-semibold uppercase tracking-wide text-slate-900 dark:text-white">{item.title}</h4>
-                          <p className="mt-2 text-sm text-slate-600 dark:text-slate-300">{item.desc}</p>
+                            desc: 'Simple timeline. Nothing creepy, just peace of mind.',
+                            icon: Map,
+                            bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+                            iconColor: 'text-blue-600 dark:text-blue-400'
+                          },
+                        ].map((item, i) => {
+                          const Icon = item.icon;
+                          return (
+                            <div key={item.title} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 transition-all hover:shadow-md">
+                              <div className="flex items-start gap-4">
+                                <div className={`rounded-lg ${item.bgColor} p-2.5 flex-shrink-0`}>
+                                  <Icon className={`h-5 w-5 ${item.iconColor}`} />
+                                </div>
+                                <div className="flex-1 min-w-0">
+                                  <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white mb-1.5">{item.title}</h4>
+                                  <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
+                                </div>
+                              </div>
+                            </div>
+                          );
+                        })}
                         </div>
-                      ))}
                     </div>
                   </div>
 
                   <div className="space-y-6">
-                    {/* SafeGroup Mock Map */}
                     <SafeGroupMock />
-
-                    <div className="rounded-3xl border border-slate-200 bg-white/80 p-6 text-sm text-slate-600 shadow-lg backdrop-blur-sm dark:border-slate-800 dark:bg-slate-900/60 dark:text-slate-200">
-                      Whether you're exploring Bangkok at 2am or hiking in Chiang Mai, your people know you're good. No hovering, no spam—just letting them know you're safe.
+                    <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6">
+                      <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
+                        Exploring Bangkok at 2am? Hiking in Chiang Mai? Your people know you're good. No hovering, no spam—just peace of mind.
+                      </p>
                     </div>
                   </div>
                 </div>
@@ -313,37 +453,35 @@ export default function Home() {
         </section>
       </div>
 
-      {/* Cities Section - MOVED UP to show what's available */}
-      <section className="py-12 px-4 bg-slate-950 text-white">
-        <div className="container px-4 max-w-7xl mx-auto">
-          <div className="max-w-2xl mb-8">
-            <h2 className="text-2xl md:text-3xl font-bold mb-3">
-              Where We're Live
+      {/* Cities Section */}
+      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 text-white">
+        <div className="container max-w-7xl mx-auto">
+          <div className="max-w-2xl mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-300 mb-6">
+              <MapPin className="h-3.5 w-3.5" />
+              Cities
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-bold mb-4 leading-[1.1] tracking-tight">
+              Where we're live
             </h2>
-            <p className="text-base text-slate-400">
-              Starting with Bangkok. More cities when we're ready. No rush, we're doing this right.
+            <p className="text-base sm:text-lg md:text-lg lg:text-lg text-slate-400 leading-relaxed">
+              Starting with Bangkok. More cities when we're ready. No rush.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-4 max-w-4xl">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 max-w-5xl">
             {/* Bangkok - Featured Large */}
-            <div className="relative h-[200px] overflow-hidden rounded-xl border border-slate-800 bg-slate-900 p-6 md:col-span-2">
-              <div className="flex h-full flex-col justify-between">
-                <div className="space-y-3">
-                  <span className="inline-block rounded-full border border-green-500/30 bg-green-500/20 px-2.5 py-0.5 text-xs font-semibold text-green-400">
+            <div className="group relative rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-slate-900 p-6 sm:p-8 md:col-span-2 transition-all hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10">
+              <div className="space-y-4">
+                <div className="flex items-center gap-3">
+                  <span className="inline-block rounded-full bg-emerald-500/20 border border-emerald-500/30 px-3 py-1 text-xs font-semibold text-emerald-300">
                     ALPHA COHORT
                   </span>
-                  <h3 className="text-2xl md:text-3xl font-bold">Bangkok</h3>
-                  <p className="text-sm text-slate-400">
-                    Full coverage for Sukhumvit, Khao San, and Rattanakosin. More areas coming.
-                  </p>
                 </div>
-                <div className="flex items-center justify-between text-xs text-slate-400">
-                  <span>Get on the waitlist for Bangkok</span>
-                  <span className="rounded-full bg-slate-800 px-2.5 py-1 text-xs uppercase tracking-wide text-slate-300">
-                    Coming soon
-                  </span>
-                </div>
+                <h3 className="text-3xl sm:text-4xl md:text-5xl font-bold">Bangkok</h3>
+                <p className="text-base sm:text-lg text-slate-300 leading-relaxed max-w-xl">
+                  Full coverage: Sukhumvit, Khao San, Rattanakosin. More areas coming.
+                </p>
               </div>
             </div>
 
@@ -352,16 +490,15 @@ export default function Home() {
               { name: 'Phuket', desc: 'Beaches & nightlife safety' },
               { name: 'Chiang Mai', desc: 'Old city & digital nomad areas' }
             ].map((city) => (
-              <div key={city.name} className="relative overflow-hidden rounded-xl bg-slate-900 border border-slate-800 p-6 h-[140px] group hover:border-slate-700 transition-all">
-
-                <div className="relative h-full flex flex-col justify-between">
-                  <div>
-                    <span className="inline-block px-2.5 py-0.5 bg-slate-800 border border-slate-700 rounded-full text-xs font-semibold text-slate-400 mb-2">
+              <div key={city.name} className="group relative rounded-2xl border-2 border-slate-800 bg-slate-900 p-6 transition-all hover:border-primary/50 hover:shadow-xl hover:-translate-y-1">
+                <div className="space-y-4">
+                  <div className="flex items-center gap-3">
+                    <span className="px-3 py-1 bg-slate-800 border border-slate-700 rounded-full text-xs font-semibold text-slate-400">
                       COMING SOON
                     </span>
-                    <h3 className="text-xl font-bold mb-1.5">{city.name}</h3>
-                    <p className="text-slate-500 text-xs">{city.desc}</p>
                   </div>
+                  <h3 className="text-xl sm:text-2xl font-bold">{city.name}</h3>
+                  <p className="text-sm sm:text-base text-slate-400 leading-relaxed">{city.desc}</p>
                 </div>
               </div>
             ))}
@@ -370,93 +507,115 @@ export default function Home() {
       </section>
 
       {/* About Section */}
-      <section id="about" className="py-20 px-4 bg-white dark:bg-slate-950 scroll-mt-20">
-        <div className="container px-4 max-w-4xl mx-auto">
-          <div className="text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              About Safesus
+      <section id="about" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-950 scroll-mt-20">
+        <div className="container max-w-4xl mx-auto">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-6">
+              About
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-bold mb-5 leading-[1.1] tracking-tight">
+              Why we built this
             </h2>
-            <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
-              Travel safety info is everywhere—but it's usually outdated, scattered, or useless. So we made this.
+            <p className="text-base sm:text-lg md:text-lg lg:text-xl text-muted-foreground max-w-2xl mx-auto leading-relaxed">
+              Random Reddit posts from 2015. Sketchy forums. Outdated guides. It's everywhere but scattered, old, and useless when you need it.
             </p>
           </div>
-          <div className="prose prose-slate dark:prose-invert max-w-none">
-            <p className="text-lg text-muted-foreground leading-relaxed mb-4 text-center">
-              Random Reddit posts from 2015, sketchy forums, outdated guides. It's everywhere but it's scattered, it's old, and half the time it's useless when you actually need it.
-            </p>
-            <p className="text-lg text-muted-foreground leading-relaxed text-center">
-              So we built this. Real-time safety maps showing which zones are safe, which to watch out for, and what you need to know. All from travelers like you who've been there. No corporate BS, no paid reviews. Just honest info from people who know.
+          
+          <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6 sm:p-8 md:p-12">
+            <p className="text-base sm:text-lg md:text-xl text-muted-foreground leading-relaxed text-center">
+              So we built this. <span className="font-semibold text-slate-900 dark:text-white">Real-time safety maps</span> showing which zones are safe, which to watch out for, and what you need to know. All from travelers like you who've been there. <span className="font-semibold text-slate-900 dark:text-white">No corporate BS, no paid reviews.</span> Just honest info from people who know.
             </p>
           </div>
         </div>
       </section>
 
       {/* How It Works */}
-      <section className="py-20 px-4 bg-white dark:bg-slate-950">
+      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-950">
         <div className="container max-w-6xl mx-auto">
-          <div className="max-w-3xl mx-auto text-center mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
-              How This Actually Helps
+          <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-6">
+              <Sparkles className="h-3.5 w-3.5" />
+              How it works
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-bold mb-5 leading-[1.1] tracking-tight">
+              How this actually helps
             </h2>
-            <p className="text-lg text-muted-foreground">
-              Real info from travelers who've been there. Not travel blogs, not outdated guides—just people like you.
+            <p className="text-base sm:text-lg md:text-lg lg:text-xl text-muted-foreground leading-relaxed">
+              Real info from travelers. Not blogs, not outdated guides—just people like you.
             </p>
           </div>
 
-          <div className="grid md:grid-cols-2 gap-6 max-w-5xl mx-auto">
-            <Card className="p-8">
-              <Map className="h-10 w-10 text-primary mb-4" />
-              <h3 className="text-xl font-bold mb-3">Safety Maps</h3>
-              <p className="text-muted-foreground mb-4">
-                See what's safe, what's sketchy, and what to avoid. Color-coded and simple—no overthinking it.
-              </p>
+          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+            {[
+              {
+                icon: Map,
+                title: 'Safety Maps',
+                desc: 'See what\'s safe, what\'s sketchy, and what to avoid. Color-coded and simple—no overthinking it.',
+                tags: ['Safe', 'Watch', 'Avoid'],
+                bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+                iconColor: 'text-blue-600 dark:text-blue-400'
+              },
+              {
+                icon: Users,
+                title: 'Real Locals',
+                desc: 'Tips from people who actually live there or travel there regularly. Not random comments from 2018.',
+                bgColor: 'bg-purple-100 dark:bg-purple-900/30',
+                iconColor: 'text-purple-600 dark:text-purple-400'
+              },
+              {
+                icon: TrendingUp,
+                title: 'Always Updated',
+                desc: 'New safety alerts and updates daily. Because what was safe last month might not be safe today.',
+                bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+                iconColor: 'text-emerald-600 dark:text-emerald-400'
+              },
+              {
+                icon: AlertTriangle,
+                title: 'Safety Alerts',
+                desc: 'Know what to watch out for before you go. Exact locations, what happened, and how to stay safe.',
+                bgColor: 'bg-orange-100 dark:bg-orange-900/30',
+                iconColor: 'text-orange-600 dark:text-orange-400'
+              },
+            ].map((item, i) => {
+              const Icon = item.icon;
+              return (
+                <div key={item.title} className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 transition-all hover:shadow-lg hover:border-slate-300 dark:hover:border-slate-700">
+                  <div className={`inline-flex items-center justify-center w-12 h-12 sm:w-14 sm:h-14 rounded-xl ${item.bgColor} mb-6`}>
+                    <Icon className={`h-6 w-6 sm:h-7 sm:w-7 ${item.iconColor}`} />
+                  </div>
+                  <h3 className="text-xl sm:text-2xl font-bold mb-3 text-slate-900 dark:text-white">{item.title}</h3>
+                  <p className="text-sm sm:text-base text-muted-foreground mb-4 leading-relaxed">
+                    {item.desc}
+                  </p>
+                  {item.tags && (
               <div className="flex gap-2 flex-wrap">
-                <span className="px-3 py-1 bg-green-500/10 text-green-700 dark:text-green-400 rounded-full text-xs font-medium">Safe</span>
-                <span className="px-3 py-1 bg-yellow-500/10 text-yellow-700 dark:text-yellow-400 rounded-full text-xs font-medium">Watch</span>
-                <span className="px-3 py-1 bg-red-500/10 text-red-700 dark:text-red-400 rounded-full text-xs font-medium">Avoid</span>
+                      {item.tags.map((tag) => (
+                        <span key={tag} className="px-2.5 py-1 bg-slate-100 dark:bg-slate-800 text-slate-700 dark:text-slate-300 rounded-full text-xs font-medium">
+                          {tag}
+                        </span>
+                      ))}
+                    </div>
+                  )}
               </div>
-            </Card>
-
-            <Card className="p-8">
-              <Users className="h-10 w-10 text-purple-500 mb-4" />
-              <h3 className="text-xl font-bold mb-3">Real Locals</h3>
-              <p className="text-muted-foreground">
-                Tips from people who actually live there or travel there regularly. Not random comments from someone who visited once in 2018.
-              </p>
-            </Card>
-
-            <Card className="p-8">
-              <TrendingUp className="h-10 w-10 text-blue-500 mb-4" />
-              <h3 className="text-xl font-bold mb-3">Always Updated</h3>
-              <p className="text-muted-foreground">
-                New safety alerts and updates daily. Because what was safe last month might not be safe today.
-              </p>
-            </Card>
-
-            <Card className="p-8">
-              <AlertTriangle className="h-10 w-10 text-orange-500 mb-4" />
-              <h3 className="text-xl font-bold mb-3">Safety Alerts</h3>
-              <p className="text-muted-foreground">
-                Know what to watch out for before you go. Exact locations, what happened, and how to stay safe. Learn from other people's experiences.
-              </p>
-            </Card>
+              );
+            })}
           </div>
         </div>
       </section>
 
       {/* FAQ */}
-      <section className="py-20 px-4 bg-slate-50 dark:bg-slate-900">
-        <div className="container px-4 max-w-3xl mx-auto">
-          <div className="mb-12">
-            <h2 className="text-3xl md:text-4xl font-bold mb-4">
+      <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-900">
+        <div className="container max-w-4xl mx-auto">
+          <div className="text-center mb-12 md:mb-16">
+            <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-6">
               FAQ
-            </h2>
-            <p className="text-lg text-muted-foreground">
+            </div>
+            <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-bold mb-4 leading-[1.1] tracking-tight">
               Stuff people actually ask
-            </p>
+            </h2>
           </div>
 
-          <div className="space-y-1">
+          <div className="space-y-3 sm:space-y-4">
             {[
               {
                 q: "How do you know this is legit?",
@@ -479,15 +638,15 @@ export default function Home() {
                 a: "Yes! Share what you know, report safety issues you've seen, or become a guardian to verify tips. Help others stay safe. It's that simple."
               }
             ].map((faq, i) => (
-              <details key={i} className="group border-b border-slate-200 dark:border-slate-800">
-                <summary className="flex items-center justify-between cursor-pointer py-6 hover:text-primary transition-colors">
-                  <span className="text-lg font-semibold pr-4">{faq.q}</span>
-                  <svg className="w-5 h-5 flex-shrink-0 transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
-                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2} d="M19 9l-7 7-7-7" />
+              <details key={i} className="group rounded-xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 transition-all hover:border-primary/50 hover:shadow-lg">
+                <summary className="flex items-center justify-between cursor-pointer p-4 sm:p-6 hover:bg-slate-50 dark:hover:bg-slate-800/50 transition-colors">
+                  <span className="text-base sm:text-lg font-semibold text-slate-900 dark:text-white pr-4">{faq.q}</span>
+                  <svg className="w-5 h-5 sm:w-6 sm:h-6 flex-shrink-0 text-primary transition-transform group-open:rotate-180" fill="none" stroke="currentColor" viewBox="0 0 24 24">
+                    <path strokeLinecap="round" strokeLinejoin="round" strokeWidth={2.5} d="M19 9l-7 7-7-7" />
                   </svg>
                 </summary>
-                <div className="pb-6 pt-2">
-                  <p className="text-muted-foreground leading-relaxed">{faq.a}</p>
+                <div className="px-4 sm:px-6 pb-4 sm:pb-6 pt-2">
+                  <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">{faq.a}</p>
                 </div>
               </details>
             ))}
@@ -496,34 +655,31 @@ export default function Home() {
       </section>
 
       {/* CTA */}
-      <section className="py-20 px-4 bg-slate-950">
-        <div className="container px-4 max-w-4xl mx-auto text-center">
-          <h2 className="text-3xl md:text-5xl font-bold mb-6 text-white">
-            See the Safe Zones. Skip the Sketchy Ones.
+      <section className="relative py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-gradient-to-b from-slate-950 via-slate-900 to-slate-950 text-white overflow-hidden">
+        <div className="absolute top-0 left-1/2 -translate-x-1/2 w-96 h-96 bg-primary/20 rounded-full blur-3xl" />
+        <div className="container max-w-4xl mx-auto text-center relative z-10">
+          <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl xl:text-6xl font-bold mb-5 sm:mb-6 text-white leading-[1.1] tracking-tight">
+            Know where it's safe.<br />
+            <span className="text-primary">Skip the sketchy.</span>
           </h2>
 
-          <p className="text-lg md:text-xl text-slate-400 mb-10 max-w-2xl mx-auto">
-            Join other travelers who actually want to stay safe. No BS, just honest info from people who've been there.
+          <p className="text-base sm:text-lg md:text-lg lg:text-xl text-slate-400 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
+            Join travelers who actually want to stay safe. No BS, just real info.
           </p>
 
-          <div className="flex flex-wrap gap-4 justify-center">
-
-            <Button 
-              size="lg" 
-              variant="outline" 
-              className="border-slate-700 bg-gray-900 text-white hover:bg-slate-900 hover:text-gray-300"
-              asChild
+          <Button 
+            size="lg" 
+            className="bg-primary hover:bg-primary/90 text-white text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full shadow-2xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:scale-105"
+            asChild
+          >
+            <a 
+              href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form" 
+              target="_blank" 
+              rel="noopener noreferrer"
             >
-              <a 
-                href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form" 
-                target="_blank" 
-                rel="noopener noreferrer"
-              >
-                Get on the waitlist
-              </a>
-            </Button>
-          </div>
-
+              Sign Up for Bangkok Safety Map
+            </a>
+          </Button>
         </div>
       </section>
 
@@ -590,6 +746,16 @@ export default function Home() {
                       className="text-muted-foreground hover:text-primary transition-colors"
                     >
                       X (Twitter)
+                    </Link>
+                  </li>
+                  <li>
+                    <Link 
+                      href="https://www.instagram.com/safesus.app/" 
+                      target="_blank" 
+                      rel="noopener noreferrer"
+                      className="text-muted-foreground hover:text-primary transition-colors"
+                    >
+                      Instagram
                     </Link>
                   </li>
                   <li>

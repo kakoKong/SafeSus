@@ -12,19 +12,19 @@
     --popover: 0 0% 100%;
     --popover-foreground: 222.2 84% 4.9%;
     /* SafeSus Brand Color - Vibrant Blue: Trust + Adventure */
-    --primary: 219 100% 57%;
+    --primary: 229 100% 66%;
     --primary-foreground: 0 0% 100%;
     --secondary: 220 14% 90%;
     --secondary-foreground: 222.2 47.4% 11.2%;
     --muted: 220 14% 93%;
     --muted-foreground: 215.4 16.3% 42%;
-    --accent: 219 100% 95%;
-    --accent-foreground: 219 100% 57%;
+    --accent: 229 100% 95%;
+    --accent-foreground: 229 100% 66%;
     --destructive: 0 84.2% 60.2%;
     --destructive-foreground: 210 40% 98%;
     --border: 220 13% 88%;
     --input: 220 13% 91%;
-    --ring: 219 100% 57%;
+    --ring: 229 100% 66%;
     --radius: 0.5rem;
   }
 
@@ -36,19 +36,19 @@
     --popover: 222.2 47% 11%;
     --popover-foreground: 210 40% 98%;
     /* SafeSus Brand Color - Lighter in dark mode for better visibility */
-    --primary: 219 100% 65%;
+    --primary: 229 100% 70%;
     --primary-foreground: 0 0% 100%;
     --secondary: 217.2 32.6% 17.5%;
     --secondary-foreground: 210 40% 98%;
     --muted: 217.2 32.6% 17.5%;
     --muted-foreground: 215 20.2% 65.1%;
-    --accent: 219 80% 20%;
-    --accent-foreground: 219 100% 65%;
+    --accent: 229 80% 20%;
+    --accent-foreground: 229 100% 70%;
     --destructive: 0 62.8% 30.6%;
     --destructive-foreground: 210 40% 98%;
     --border: 217.2 32.6% 17.5%;
     --input: 217.2 32.6% 17.5%;
-    --ring: 219 100% 65%;
+    --ring: 229 100% 70%;
   }
 }
 

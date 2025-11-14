@@ -111,18 +111,18 @@ export default function Header() {
                 src={logo}
                 alt="Safesus"
                 width={150}
-                className="w-24 sm:w-[120px] md:w-[150px] h-auto object-contain"
+                className="w-24 sm:w-[120px] md:w-[130px] xl:w-[150px] h-auto object-contain"
                 priority
               />
             </Link>
           </div>
 
           {/* Center - Desktop Navigation */}
-          <nav className="hidden md:flex items-center justify-center gap-6">
+          <nav className="hidden md:flex items-center justify-center gap-4 xl:gap-6">
             <Link
               href="/"
               className={cn(
-                'text-sm font-medium transition-colors hover:text-primary',
+                'text-xs xl:text-sm font-medium transition-colors hover:text-primary',
                 pathname === '/' ? 'text-primary' : 'text-muted-foreground'
               )}
             >
@@ -131,7 +131,7 @@ export default function Header() {
             <a
               href="/#features"
               className={cn(
-                'text-sm font-medium transition-colors hover:text-primary cursor-pointer',
+                'text-xs xl:text-sm font-medium transition-colors hover:text-primary cursor-pointer',
                 'text-muted-foreground'
               )}
               onClick={(e) => {
@@ -155,7 +155,7 @@ export default function Header() {
             <a
               href="/#about"
               className={cn(
-                'text-sm font-medium transition-colors hover:text-primary cursor-pointer',
+                'text-xs xl:text-sm font-medium transition-colors hover:text-primary cursor-pointer',
                 'text-muted-foreground'
               )}
               onClick={(e) => {
@@ -179,7 +179,7 @@ export default function Header() {
             <Link
               href="/submit"
               className={cn(
-                'text-sm font-medium transition-colors hover:text-primary',
+                'text-xs xl:text-sm font-medium transition-colors hover:text-primary',
                 pathname === '/submit' ? 'text-primary' : 'text-muted-foreground'
               )}
             >
