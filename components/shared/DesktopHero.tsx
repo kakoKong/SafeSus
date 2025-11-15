@@ -1,8 +1,8 @@
 'use client';
 
-import { Button } from '@/components/ui/button';
 import { Sparkles } from 'lucide-react';
 import WaitlistCount from '@/components/shared/WaitlistCount';
+import WaitlistButton from '@/components/shared/WaitlistButton';
 import HeroImage from '@/components/shared/HeroImage';
 
 export default function DesktopHero() {
@@ -29,19 +29,12 @@ export default function DesktopHero() {
 
         {/* Button */}
         <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center justify-start animate-fade-in-up" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
-          <Button
-            size="lg"
+          <WaitlistButton
+            href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form"
             className="w-full sm:w-auto text-sm sm:text-base px-6 sm:px-8 py-4 sm:py-6 rounded-full font-semibold animate-scale-in hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl bg-primary hover:bg-primary/90"
-            asChild
           >
-            <a
-              href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form"
-              target="_blank"
-              rel="noopener noreferrer"
-            >
-              Join waitlist - Bangkok
-            </a>
-          </Button>
+            Join waitlist - Bangkok
+          </WaitlistButton>
           <WaitlistCount />
         </div>
       </div>

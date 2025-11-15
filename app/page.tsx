@@ -20,6 +20,7 @@ import InteractiveMapDemo from '@/components/shared/InteractiveMapDemo';
 import SafeGroupMock from '@/components/shared/SafeGroupMock';
 import ResponsiveHero from '@/components/shared/ResponsiveHero';
 import WaitlistCount from '@/components/shared/WaitlistCount';
+import WaitlistButton from '@/components/shared/WaitlistButton';
 
 export default function Home() {
   return (
@@ -482,19 +483,12 @@ export default function Home() {
           </p>
 
           <div className="flex flex-col items-center gap-4 mb-8 sm:mb-10">
-            <Button
-              size="lg"
+            <WaitlistButton
+              href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form"
               className="bg-primary hover:bg-primary/90 text-white text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full shadow-2xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:scale-105"
-              asChild
             >
-              <a
-                href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form"
-                target="_blank"
-                rel="noopener noreferrer"
-              >
-                Sign Up for Bangkok Safety Map
-              </a>
-            </Button>
+              Sign Up for Bangkok Safety Map
+            </WaitlistButton>
             <div className="text-slate-400">
               <WaitlistCount />
             </div>
