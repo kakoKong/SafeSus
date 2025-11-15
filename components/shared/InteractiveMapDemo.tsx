@@ -5,7 +5,7 @@ import MapView from '@/components/map/MapView';
 import MapFilters from '@/components/map/MapFilters';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, X, AlertTriangle, Eye, EyeOff } from 'lucide-react';
+import { MapPin, X, AlertTriangle } from 'lucide-react';
 import type { CityDetail, Pin, PinType, Zone } from '@/types';
 import { getZoneBadgeClasses } from '@/lib/utils';
 
@@ -34,14 +34,33 @@ function getPinImage(type: PinType, seed?: number): string {
   return typeImages[index];
 }
 
-export default function InteractiveMapDemo() {
+interface InteractiveMapDemoProps {
+  showZones?: boolean;
+  showTips?: boolean;
+  onToggleZones?: () => void;
+  onToggleTips?: () => void;
+  onDataLoad?: (data: CityDetail) => void;
+}
+
+export default function InteractiveMapDemo({
+  showZones = true,
+  showTips = false,
+  onToggleZones,
+  onToggleTips,
+  onDataLoad,
+}: InteractiveMapDemoProps) {
   const [cityData, setCityData] = useState<CityDetail | null>(null);
   const [loading, setLoading] = useState(true);
-  const [showZones, setShowZones] = useState(true);
-  const [showTips, setShowTips] = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
   const [isInteractive, setIsInteractive] = useState(false);
+  
+  // Internal state if no props provided (for backward compatibility)
+  const [internalShowZones, setInternalShowZones] = useState(true);
+  const [internalShowTips, setInternalShowTips] = useState(false);
+  
+  const finalShowZones = onToggleZones !== undefined ? showZones : internalShowZones;
+  const finalShowTips = onToggleTips !== undefined ? showTips : internalShowTips;
 
   useEffect(() => {
     async function fetchDemoData() {
@@ -52,6 +71,7 @@ export default function InteractiveMapDemo() {
 
         if (data.city) {
           setCityData(data.city);
+          onDataLoad?.(data.city);
         }
       } catch (error) {
         console.error('Failed to fetch demo city data:', error);
@@ -68,13 +88,13 @@ export default function InteractiveMapDemo() {
   const filteredPins = useMemo(() => cityData?.pins ?? [], [cityData]);
 
   const zonesToShow = useMemo(
-    () => (showZones ? [...filteredZones] : []),
-    [filteredZones, showZones]
+    () => (finalShowZones ? [...filteredZones] : []),
+    [filteredZones, finalShowZones]
   );
 
   const pinsToShow = useMemo(
-    () => (showTips ? [...filteredPins] : []),
-    [filteredPins, showTips]
+    () => (finalShowTips ? [...filteredPins] : []),
+    [filteredPins, finalShowTips]
   );
 
   if (loading) {
@@ -145,37 +165,50 @@ export default function InteractiveMapDemo() {
                   <MapPin className="h-3 w-3 mr-1" />
                   {filteredPins.filter((p: any) => p.type === 'scam').length} Alerts
                 </Badge>
-                {!isInteractive && (
-                  <Button
-                    onClick={() => setIsInteractive(true)}
-                    size="sm"
-                    variant="outline"
-                    className="ml-auto bg-slate-900/50 backdrop-blur-sm border-slate-700 text-white hover:bg-slate-800/70 hover:border-slate-600"
-                  >
-                    Try it now
-                  </Button>
-                )}
               </div>
             </div>
           </div>
         </div>
 
+        {/* Filter/Try it now button - Top right */}
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 pointer-events-auto z-20">
+          {!isInteractive ? (
+            <Button
+              onClick={() => setIsInteractive(true)}
+              size="sm"
+              variant="outline"
+              className="bg-slate-900/50 backdrop-blur-sm border-slate-700 text-white hover:bg-slate-800/70 hover:border-slate-600"
+            >
+              Try it now
+            </Button>
+          ) : (
+            cityData && (
+              <MapFilters
+                showZones={finalShowZones}
+                showTips={finalShowTips}
+                onToggleZones={() => {
+                  if (onToggleZones) {
+                    onToggleZones();
+                  } else {
+                    setInternalShowZones(!internalShowZones);
+                  }
+                }}
+                onToggleTips={() => {
+                  if (onToggleTips) {
+                    onToggleTips();
+                  } else {
+                    setInternalShowTips(!internalShowTips);
+                  }
+                }}
+                zoneCount={cityData.zones.length}
+                tipCount={cityData.pins.length}
+              />
+            )
+          )}
+        </div>
+
         {/* Spacer to push controls down - allows map interaction */}
         <div className="flex-1 pointer-events-none" />
-
-        {/* Map Filters */}
-        <div className="p-3 sm:p-4 pointer-events-auto">
-          <div className="flex justify-end">
-            <MapFilters
-              showZones={showZones}
-              showTips={showTips}
-              onToggleZones={() => setShowZones(!showZones)}
-              onToggleTips={() => setShowTips(!showTips)}
-              zoneCount={cityData.zones.length}
-              tipCount={cityData.pins.length}
-            />
-          </div>
-        </div>
       </div>
 
       {/* Pin Detail Overlay */}

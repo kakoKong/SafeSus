@@ -26,39 +26,54 @@ export default function MapFilters({
   const [isExpanded, setIsExpanded] = useState(true);
 
   return (
-    <Card className="shadow-lg max-w-[240px] sm:max-w-none">
-      <CardContent className="p-3 sm:p-4">
-        <div className="flex items-center justify-between mb-2 sm:mb-3">
-          <div className="flex items-center gap-1.5 sm:gap-2">
-            <Layers className="h-3.5 w-3.5 sm:h-4 sm:w-4 text-primary flex-shrink-0" />
-            <h3 className="font-semibold text-xs sm:text-sm">Map Layers</h3>
+    <Card className="shadow-xl border border-slate-300 dark:border-slate-600 bg-white/95 dark:bg-slate-900/95 backdrop-blur-sm max-w-[200px] sm:max-w-[220px]">
+      <CardContent className="p-2.5 sm:p-3">
+        <div className="flex items-center justify-between mb-2">
+          <div className="flex items-center gap-1.5">
+            <div className="rounded-md bg-primary/10 dark:bg-primary/20 p-1">
+              <Layers className="h-3 w-3 text-primary flex-shrink-0" />
+            </div>
+            <h3 className="font-semibold text-xs text-slate-900 dark:text-white">Layers</h3>
           </div>
           <Button
             variant="ghost"
             size="sm"
             onClick={() => setIsExpanded(!isExpanded)}
-            className="h-6 w-6 p-0 flex-shrink-0"
+            className="h-5 w-5 p-0 flex-shrink-0 hover:bg-slate-100 dark:hover:bg-slate-800 rounded"
           >
-            {isExpanded ? '−' : '+'}
+            <span className="text-sm font-semibold text-slate-600 dark:text-slate-300">
+              {isExpanded ? '−' : '+'}
+            </span>
           </Button>
         </div>
         
         {isExpanded && (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {/* Zones Filter */}
             <button
               onClick={onToggleZones}
               className={`w-full flex items-center justify-between p-2 rounded-lg transition-all ${
                 showZones
-                  ? 'bg-primary/10 border-2 border-primary/30'
-                  : 'bg-gray-50 dark:bg-gray-900/20 border-2 border-gray-200 dark:border-gray-800 opacity-50'
+                  ? 'bg-emerald-50 dark:bg-emerald-950/30 border border-emerald-300 dark:border-emerald-700'
+                  : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 opacity-60 hover:opacity-80'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <MapPin className={`h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 ${showZones ? 'text-primary' : 'text-gray-400'}`} />
-                <span className="text-xs sm:text-sm font-medium">Zones</span>
+              <div className="flex items-center gap-1.5">
+                <div className={`rounded p-1 ${showZones ? 'bg-emerald-100 dark:bg-emerald-900/50' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                  <MapPin className={`h-3 w-3 flex-shrink-0 ${showZones ? 'text-emerald-600 dark:text-emerald-400' : 'text-slate-400'}`} />
+                </div>
+                <span className={`text-xs font-medium ${showZones ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                  Zones
+                </span>
               </div>
-              <Badge variant="secondary" className="text-xs flex-shrink-0">
+              <Badge 
+                variant="secondary" 
+                className={`text-xs font-medium px-1.5 py-0 flex-shrink-0 h-4 ${
+                  showZones 
+                    ? 'bg-emerald-100 dark:bg-emerald-900/50 text-emerald-700 dark:text-emerald-300' 
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                }`}
+              >
                 {zoneCount}
               </Badge>
             </button>
@@ -68,15 +83,26 @@ export default function MapFilters({
               onClick={onToggleTips}
               className={`w-full flex items-center justify-between p-2 rounded-lg transition-all ${
                 showTips
-                  ? 'bg-primary/10 border-2 border-primary/30'
-                  : 'bg-gray-50 dark:bg-gray-900/20 border-2 border-gray-200 dark:border-gray-800 opacity-50'
+                  ? 'bg-orange-50 dark:bg-orange-950/30 border border-orange-300 dark:border-orange-700'
+                  : 'bg-slate-50 dark:bg-slate-800/50 border border-slate-200 dark:border-slate-700 opacity-60 hover:opacity-80'
               }`}
             >
-              <div className="flex items-center gap-2">
-                <Info className={`h-3.5 w-3.5 sm:h-4 sm:w-4 flex-shrink-0 ${showTips ? 'text-primary' : 'text-gray-400'}`} />
-                <span className="text-xs sm:text-sm font-medium">Tips & Alerts</span>
+              <div className="flex items-center gap-1.5">
+                <div className={`rounded p-1 ${showTips ? 'bg-orange-100 dark:bg-orange-900/50' : 'bg-slate-200 dark:bg-slate-700'}`}>
+                  <Info className={`h-3 w-3 flex-shrink-0 ${showTips ? 'text-orange-600 dark:text-orange-400' : 'text-slate-400'}`} />
+                </div>
+                <span className={`text-xs font-medium ${showTips ? 'text-slate-900 dark:text-white' : 'text-slate-500 dark:text-slate-400'}`}>
+                  Tips
+                </span>
               </div>
-              <Badge variant="secondary" className="text-xs flex-shrink-0">
+              <Badge 
+                variant="secondary" 
+                className={`text-xs font-medium px-1.5 py-0 flex-shrink-0 h-4 ${
+                  showTips 
+                    ? 'bg-orange-100 dark:bg-orange-900/50 text-orange-700 dark:text-orange-300' 
+                    : 'bg-slate-200 dark:bg-slate-700 text-slate-500 dark:text-slate-400'
+                }`}
+              >
                 {tipCount}
               </Badge>
             </button>
