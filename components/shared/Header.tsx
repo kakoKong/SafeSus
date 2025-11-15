@@ -117,8 +117,8 @@ export default function Header() {
               <Image
                 src={logo}
                 alt="Safesus"
-                width={150}
-                className="w-24 sm:w-[120px] md:w-[130px] xl:w-[150px] h-auto object-contain"
+                width={120}
+                className="w-28 sm:w-[110px] md:w-[120px] xl:w-[130px] h-auto object-contain"
                 priority
               />
             </Link>
@@ -129,7 +129,7 @@ export default function Header() {
             <Link
               href="/"
               className={cn(
-                'text-xs xl:text-sm font-medium transition-colors hover:text-primary',
+                'text-sm xl:text-base font-medium transition-colors hover:text-primary',
                 pathname === '/' ? 'text-primary' : 'text-muted-foreground'
               )}
             >
@@ -138,7 +138,7 @@ export default function Header() {
             <a
               href="/#features"
               className={cn(
-                'text-xs xl:text-sm font-medium transition-colors hover:text-primary cursor-pointer',
+                'text-sm xl:text-base font-medium transition-colors hover:text-primary cursor-pointer',
                 'text-muted-foreground'
               )}
               onClick={(e) => {
@@ -162,7 +162,7 @@ export default function Header() {
             <a
               href="/#about"
               className={cn(
-                'text-xs xl:text-sm font-medium transition-colors hover:text-primary cursor-pointer',
+                'text-sm xl:text-base font-medium transition-colors hover:text-primary cursor-pointer',
                 'text-muted-foreground'
               )}
               onClick={(e) => {
@@ -186,7 +186,7 @@ export default function Header() {
             <Link
               href="/submit"
               className={cn(
-                'text-xs xl:text-sm font-medium transition-colors hover:text-primary',
+                'text-sm xl:text-base font-medium transition-colors hover:text-primary',
                 pathname === '/submit' ? 'text-primary' : 'text-muted-foreground'
               )}
             >
@@ -219,10 +219,10 @@ export default function Header() {
                 <DropdownMenuContent align="end" className="w-56">
                   <DropdownMenuLabel>
                     <div className="flex flex-col space-y-1">
-                      <p className="text-sm font-medium">
+                      <p className="text-xs font-medium">
                         {user.user_metadata?.full_name || 'User'}
                       </p>
-                      <p className="text-xs text-muted-foreground">
+                      <p className="text-[11px] text-muted-foreground">
                         {user.email}
                       </p>
                       {userProfile && (
@@ -283,7 +283,7 @@ export default function Header() {
               </SheetTrigger>
               <SheetContent side="right" className="w-full sm:w-3/4 lg:w-[40%]">
                 <SheetHeader>
-                  <SheetTitle>Menu</SheetTitle>
+                  <SheetTitle className="text-base">Menu</SheetTitle>
                 </SheetHeader>
                 <div className="mt-6 space-y-1">
                   <Link
