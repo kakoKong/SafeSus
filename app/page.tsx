@@ -25,7 +25,7 @@ export default function Home() {
     <div className="flex flex-col overflow-hidden">
       {/* Hero Section */}
       <section className="relative bg-gradient-to-b from-white via-slate-50 to-white py-12 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:py-16 lg:py-20">
-        <div className="container mx-auto max-w-6xl px-4">
+        <div className="container mx-auto max-w-5xl px-4">
           <div className="grid gap-12 lg:grid-cols-2 lg:items-center lg:gap-16">
             {/* Left: Content */}
             <div className="space-y-6 text-center lg:text-left">
@@ -236,7 +236,7 @@ export default function Home() {
       <div className="space-y-24 md:space-y-32 px-4 sm:px-6 lg:px-8 py-16 md:py-24">
         {/* SafeMap Overview */}
         <section id="features" className="scroll-mt-20">
-          <div className="container mx-auto max-w-7xl">
+          <div className="container mx-auto max-w-5xl">
             <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 md:p-12">
               <div className="space-y-12 md:space-y-16">
                 {/* Header */}
@@ -257,47 +257,47 @@ export default function Home() {
                 </div>
 
                 {/* Zone Cards */}
-                <div className="grid gap-6 md:grid-cols-3">
-                  <div className="group relative rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-6 sm:p-8 transition-all hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1">
-                    <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-10 -mt-10 blur-2xl" />
+                <div className="grid grid-cols-3 gap-2 sm:gap-4 md:gap-6 md:grid-cols-3">
+                  <div className="group relative rounded-xl sm:rounded-2xl border-2 border-emerald-200 dark:border-emerald-800 bg-emerald-50 dark:bg-emerald-950/30 p-3 sm:p-6 md:p-8 transition-all hover:shadow-xl hover:shadow-emerald-500/10 hover:-translate-y-1">
+                    <div className="absolute top-0 right-0 w-20 h-20 bg-emerald-500/10 rounded-full -mr-10 -mt-10 blur-2xl hidden sm:block" />
                     <div className="relative">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="rounded-xl bg-emerald-500 p-3 shadow-lg">
-                          <Shield className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                      <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 mb-0 sm:mb-4">
+                        <div className="rounded-lg sm:rounded-xl bg-emerald-500 p-2 sm:p-3 shadow-lg">
+                          <Shield className="h-4 w-4 sm:h-6 sm:w-6 md:h-7 md:w-7 text-white" />
                         </div>
-                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Safe</h3>
+                        <h3 className="text-sm sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white text-center sm:text-left">Safe</h3>
                       </div>
-                      <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                      <p className="hidden sm:block text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
                         Actually safe. Verified. You're good.
                       </p>
                     </div>
                   </div>
 
-                  <div className="group relative rounded-2xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-6 sm:p-8 transition-all hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1 md:mt-12">
-                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-amber-500/10 rounded-full -ml-10 -mb-10 blur-2xl" />
+                  <div className="group relative rounded-xl sm:rounded-2xl border-2 border-amber-200 dark:border-amber-800 bg-amber-50 dark:bg-amber-950/30 p-3 sm:p-6 md:p-8 transition-all hover:shadow-xl hover:shadow-amber-500/10 hover:-translate-y-1 md:mt-12">
+                    <div className="absolute bottom-0 left-0 w-20 h-20 bg-amber-500/10 rounded-full -ml-10 -mb-10 blur-2xl hidden sm:block" />
                     <div className="relative">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="rounded-xl bg-amber-500 p-3 shadow-lg">
-                          <AlertTriangle className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                      <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 mb-0 sm:mb-4">
+                        <div className="rounded-lg sm:rounded-xl bg-amber-500 p-2 sm:p-3 shadow-lg">
+                          <AlertTriangle className="h-4 w-4 sm:h-6 sm:w-6 md:h-7 md:w-7 text-white" />
                         </div>
-                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Watch</h3>
+                        <h3 className="text-sm sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white text-center sm:text-left">Watch</h3>
                       </div>
-                      <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                      <p className="hidden sm:block text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
                         Fine, but stay alert. Watch your back.
                       </p>
                     </div>
                   </div>
 
-                  <div className="group relative rounded-2xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-6 sm:p-8 transition-all hover:shadow-xl hover:shadow-red-500/10 hover:-translate-y-1">
-                    <div className="absolute top-1/2 right-0 w-20 h-20 bg-red-500/10 rounded-full -mr-10 blur-2xl" />
+                  <div className="group relative rounded-xl sm:rounded-2xl border-2 border-red-200 dark:border-red-800 bg-red-50 dark:bg-red-950/30 p-3 sm:p-6 md:p-8 transition-all hover:shadow-xl hover:shadow-red-500/10 hover:-translate-y-1">
+                    <div className="absolute top-1/2 right-0 w-20 h-20 bg-red-500/10 rounded-full -mr-10 blur-2xl hidden sm:block" />
                     <div className="relative">
-                      <div className="flex items-center gap-3 mb-4">
-                        <div className="rounded-xl bg-red-500 p-3 shadow-lg">
-                          <ShieldAlert className="h-6 w-6 sm:h-7 sm:w-7 text-white" />
+                      <div className="flex flex-col sm:flex-row items-center sm:items-center gap-2 sm:gap-3 mb-0 sm:mb-4">
+                        <div className="rounded-lg sm:rounded-xl bg-red-500 p-2 sm:p-3 shadow-lg">
+                          <ShieldAlert className="h-4 w-4 sm:h-6 sm:w-6 md:h-7 md:w-7 text-white" />
                         </div>
-                        <h3 className="text-xl sm:text-2xl font-bold text-slate-900 dark:text-white">Avoid</h3>
+                        <h3 className="text-sm sm:text-xl md:text-2xl font-bold text-slate-900 dark:text-white text-center sm:text-left">Avoid</h3>
                       </div>
-                      <p className="text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
+                      <p className="hidden sm:block text-sm sm:text-base text-slate-700 dark:text-slate-300 leading-relaxed">
                         Multiple incidents. Just don't go.
                       </p>
                     </div>
@@ -338,7 +338,7 @@ export default function Home() {
 
         {/* SafeAlert Feed */}
         <section className="scroll-mt-12">
-          <div className="container mx-auto max-w-7xl">
+          <div className="container mx-auto max-w-5xl">
             <div className="relative rounded-2xl border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 via-white to-white dark:from-orange-950/30 dark:via-slate-900 dark:to-slate-950 p-6 sm:p-8 md:p-12 overflow-hidden">
               <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
               <div className="relative space-y-8 md:space-y-12">
@@ -366,7 +366,7 @@ export default function Home() {
 
         {/* SafeGroup Feature */}
         <section className="scroll-mt-12">
-          <div className="container mx-auto max-w-7xl">
+          <div className="container mx-auto max-w-5xl">
             <div className="relative rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-slate-50 dark:from-primary/10 dark:via-slate-900 dark:to-slate-950 p-6 sm:p-8 md:p-12 overflow-hidden">
               <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full -ml-32 -mb-32 blur-3xl" />
               <div className="relative space-y-12 md:space-y-16">
@@ -454,7 +454,7 @@ export default function Home() {
 
       {/* Cities Section */}
       <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-slate-950 text-white">
-        <div className="container max-w-7xl mx-auto">
+        <div className="container max-w-5xl mx-auto">
           <div className="max-w-2xl mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 rounded-full bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-300 mb-6">
               <MapPin className="h-3.5 w-3.5" />
@@ -468,7 +468,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 max-w-5xl">
+          <div className="grid gap-4 sm:gap-6 md:grid-cols-2 max-w-4xl">
             {/* Bangkok - Featured Large */}
             <div className="group relative rounded-2xl border-2 border-emerald-500/30 bg-gradient-to-br from-emerald-500/10 to-slate-900 p-6 sm:p-8 md:col-span-2 transition-all hover:border-emerald-500/50 hover:shadow-xl hover:shadow-emerald-500/10">
               <div className="space-y-4">
@@ -507,7 +507,7 @@ export default function Home() {
 
       {/* About Section */}
       <section id="about" className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-950 scroll-mt-20">
-        <div className="container max-w-4xl mx-auto">
+        <div className="container max-w-3xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-6">
               About
@@ -530,7 +530,7 @@ export default function Home() {
 
       {/* How It Works */}
       <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-white dark:bg-slate-950">
-        <div className="container max-w-6xl mx-auto">
+        <div className="container max-w-4xl mx-auto">
           <div className="max-w-3xl mx-auto text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-6">
               <Sparkles className="h-3.5 w-3.5" />
@@ -544,7 +544,7 @@ export default function Home() {
             </p>
           </div>
 
-          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 max-w-5xl mx-auto">
+          <div className="grid sm:grid-cols-2 gap-6 sm:gap-8 max-w-4xl mx-auto">
             {[
               {
                 icon: Map,
@@ -604,7 +604,7 @@ export default function Home() {
 
       {/* FAQ */}
       <section className="py-16 sm:py-20 md:py-24 px-4 sm:px-6 lg:px-8 bg-slate-50 dark:bg-slate-900">
-        <div className="container max-w-4xl mx-auto">
+        <div className="container max-w-3xl mx-auto">
           <div className="text-center mb-12 md:mb-16">
             <div className="inline-flex items-center gap-2 rounded-full bg-slate-100 dark:bg-slate-800 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-slate-600 dark:text-slate-300 mb-6">
               FAQ
@@ -689,7 +689,7 @@ export default function Home() {
 
       {/* Footer - Clean & Minimal */}
       <footer className="relative py-16 border-t border-slate-200 dark:border-slate-700 bg-slate-50 dark:bg-slate-900">
-        <div className="container px-4 max-w-6xl mx-auto">
+        <div className="container px-4 max-w-5xl mx-auto">
           <div className="grid md:grid-cols-12 gap-12 mb-12">
             {/* Brand */}
             <div className="md:col-span-5">

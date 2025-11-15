@@ -14,6 +14,13 @@ import {
   DropdownMenuSeparator,
   DropdownMenuTrigger,
 } from '@/components/ui/dropdown-menu';
+import {
+  Sheet,
+  SheetContent,
+  SheetHeader,
+  SheetTitle,
+  SheetTrigger,
+} from '@/components/ui/sheet';
 import { Menu, X, User, LogOut, Settings } from 'lucide-react';
 import { cn } from '@/lib/utils';
 import { createClient } from '@/lib/supabase/client';
@@ -264,138 +271,140 @@ export default function Header() {
                 Sign In
               </Button>
             )}
-            <Button
-              variant="ghost"
-              size="icon"
-              className={cn('md:hidden h-9 w-9', mobileMenuOpen && 'bg-slate-100 dark:bg-slate-800')}
-              onClick={() => setMobileMenuOpen(!mobileMenuOpen)}
-            >
-              {mobileMenuOpen ? <X className="h-4 w-4 sm:h-5 sm:w-5" /> : <Menu className="h-4 w-4 sm:h-5 sm:w-5" />}
-            </Button>
-          </div>
-        </div>
-
-        {/* Mobile Navigation */}
-        {mobileMenuOpen && (
-          <div className="md:hidden border-t">
-            <div className="container space-y-1 px-2 py-3 sm:px-4 sm:py-4">
-              <Link
-                href="/"
-                className={cn(
-                  'block rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-colors',
-                  pathname === '/' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
-                )}
-                onClick={closeMobileMenu}
-              >
-                Home
-              </Link>
-              <a
-                href="/#features"
-                className={cn(
-                  'block rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-colors cursor-pointer',
-                  'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
-                )}
-                onClick={(e) => {
-                  e.preventDefault();
-                  closeMobileMenu();
-                  if (pathname === '/') {
-                    const element = document.getElementById('features');
-                    if (element) {
-                      const headerOffset = 80;
-                      const elementPosition = element.getBoundingClientRect().top;
-                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                      window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                      });
-                    }
-                  } else {
-                    router.push('/#features');
-                  }
-                }}
-              >
-                Features
-              </a>
-              <a
-                href="/#about"
-                className={cn(
-                  'block rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-colors cursor-pointer',
-                  'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
-                )}
-                onClick={(e) => {
-                  e.preventDefault();
-                  closeMobileMenu();
-                  if (pathname === '/') {
-                    const element = document.getElementById('about');
-                    if (element) {
-                      const headerOffset = 80;
-                      const elementPosition = element.getBoundingClientRect().top;
-                      const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
-                      window.scrollTo({
-                        top: offsetPosition,
-                        behavior: 'smooth'
-                      });
-                    }
-                  } else {
-                    router.push('/#about');
-                  }
-                }}
-              >
-                About Us
-              </a>
-              <Link
-                href="/submit"
-                className={cn(
-                  'block rounded-lg px-3 py-2 text-xs sm:text-sm font-medium transition-colors',
-                  pathname === '/submit' 
-                    ? 'bg-primary text-primary-foreground' 
-                    : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
-                )}
-                onClick={closeMobileMenu}
-              >
-                Submit
-              </Link>
-              {!checkingAuth && user && (
-                <>
+            <Sheet open={mobileMenuOpen} onOpenChange={setMobileMenuOpen}>
+              <SheetTrigger asChild>
+                <Button
+                  variant="ghost"
+                  size="icon"
+                  className="md:hidden h-9 w-9"
+                >
+                  <Menu className="h-4 w-4 sm:h-5 sm:w-5" />
+                </Button>
+              </SheetTrigger>
+              <SheetContent side="right" className="w-full sm:w-3/4 lg:w-[40%]">
+                <SheetHeader>
+                  <SheetTitle>Menu</SheetTitle>
+                </SheetHeader>
+                <div className="mt-6 space-y-1">
                   <Link
-                    href="/account"
+                    href="/"
                     className={cn(
-                      'block rounded-lg px-4 py-2 text-sm font-medium transition-colors',
-                      pathname?.startsWith('/account') 
+                      'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      pathname === '/' 
                         ? 'bg-primary text-primary-foreground' 
                         : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
                     )}
                     onClick={closeMobileMenu}
                   >
-                    My Account
+                    Home
                   </Link>
-                  <button
-                    onClick={() => {
-                      handleLogout();
+                  <a
+                    href="/#features"
+                    className={cn(
+                      'block rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer',
+                      'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                    )}
+                    onClick={(e) => {
+                      e.preventDefault();
                       closeMobileMenu();
+                      if (pathname === '/') {
+                        const element = document.getElementById('features');
+                        if (element) {
+                          const headerOffset = 80;
+                          const elementPosition = element.getBoundingClientRect().top;
+                          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                          window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                          });
+                        }
+                      } else {
+                        router.push('/#features');
+                      }
                     }}
-                    className="block rounded-lg px-4 py-2 text-sm font-medium transition-colors text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 w-full text-left"
                   >
-                    Sign Out
-                  </button>
-                </>
-              )}
-              {!checkingAuth && !user && (
-                <button
-                  onClick={() => {
-                    setShowLoginModal(true);
-                    closeMobileMenu();
-                  }}
-                  className="block rounded-lg px-4 py-2 text-sm font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90 w-full text-center"
-                >
-                  Sign In
-                </button>
-              )}
-            </div>
+                    Features
+                  </a>
+                  <a
+                    href="/#about"
+                    className={cn(
+                      'block rounded-lg px-3 py-2 text-sm font-medium transition-colors cursor-pointer',
+                      'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                    )}
+                    onClick={(e) => {
+                      e.preventDefault();
+                      closeMobileMenu();
+                      if (pathname === '/') {
+                        const element = document.getElementById('about');
+                        if (element) {
+                          const headerOffset = 80;
+                          const elementPosition = element.getBoundingClientRect().top;
+                          const offsetPosition = elementPosition + window.pageYOffset - headerOffset;
+                          window.scrollTo({
+                            top: offsetPosition,
+                            behavior: 'smooth'
+                          });
+                        }
+                      } else {
+                        router.push('/#about');
+                      }
+                    }}
+                  >
+                    About Us
+                  </a>
+                  <Link
+                    href="/submit"
+                    className={cn(
+                      'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                      pathname === '/submit' 
+                        ? 'bg-primary text-primary-foreground' 
+                        : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                    )}
+                    onClick={closeMobileMenu}
+                  >
+                    Submit
+                  </Link>
+                  {!checkingAuth && user && (
+                    <>
+                      <Link
+                        href="/account"
+                        className={cn(
+                          'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
+                          pathname?.startsWith('/account') 
+                            ? 'bg-primary text-primary-foreground' 
+                            : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
+                        )}
+                        onClick={closeMobileMenu}
+                      >
+                        My Account
+                      </Link>
+                      <button
+                        onClick={() => {
+                          handleLogout();
+                          closeMobileMenu();
+                        }}
+                        className="block rounded-lg px-3 py-2 text-sm font-medium transition-colors text-red-600 dark:text-red-400 hover:bg-slate-100 dark:hover:bg-slate-800 w-full text-left"
+                      >
+                        Sign Out
+                      </button>
+                    </>
+                  )}
+                  {!checkingAuth && !user && (
+                    <button
+                      onClick={() => {
+                        setShowLoginModal(true);
+                        closeMobileMenu();
+                      }}
+                      className="block rounded-lg px-3 py-2 text-sm font-medium transition-colors bg-primary text-primary-foreground hover:bg-primary/90 w-full text-center mt-4"
+                    >
+                      Sign In
+                    </button>
+                  )}
+                </div>
+              </SheetContent>
+            </Sheet>
           </div>
-        )}
+        </div>
       </header>
 
       <LoginModal
