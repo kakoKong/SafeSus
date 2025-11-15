@@ -6,7 +6,8 @@ import MapFilters from '@/components/map/MapFilters';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
 import { MapPin, X, AlertTriangle, Eye, EyeOff } from 'lucide-react';
-import type { CityDetail, Pin, PinType } from '@/types';
+import type { CityDetail, Pin, PinType, Zone } from '@/types';
+import { getZoneBadgeClasses } from '@/lib/utils';
 
 // Get image for pin type
 function getPinImage(type: PinType, seed?: number): string {
@@ -39,6 +40,7 @@ export default function InteractiveMapDemo() {
   const [showZones, setShowZones] = useState(true);
   const [showTips, setShowTips] = useState(false);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
+  const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
   const [isInteractive, setIsInteractive] = useState(false);
 
   useEffect(() => {
@@ -107,7 +109,14 @@ export default function InteractiveMapDemo() {
           className="w-full h-full"
           disableZoom={!isInteractive}
           maxBounds={bangkokBounds}
-          onPinClick={(pin) => setSelectedPin(pin)}
+          onPinClick={isInteractive ? (pin) => {
+            setSelectedPin(pin);
+            setSelectedZone(null); // Close zone modal if pin is clicked
+          } : undefined}
+          onZoneClick={isInteractive ? (zone) => {
+            setSelectedZone(zone);
+            setSelectedPin(null); // Close pin modal if zone is clicked
+          } : undefined}
         />
       </div>
       
@@ -215,6 +224,57 @@ export default function InteractiveMapDemo() {
                   {selectedPin.details}
                 </p>
               )}
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Zone Detail Overlay */}
+      {selectedZone && (
+        <div 
+          className="absolute inset-0 z-20 flex items-center justify-center p-4 pointer-events-auto"
+          onClick={() => setSelectedZone(null)}
+        >
+          <div 
+            className="pointer-events-auto bg-white dark:bg-slate-900 rounded-xl shadow-2xl border border-slate-200 dark:border-slate-800 max-w-sm w-full max-h-[70vh] overflow-hidden flex flex-col"
+            onClick={(e) => e.stopPropagation()}
+          >
+            {/* Header with Zone Level Badge */}
+            <div className="relative p-4 bg-gradient-to-br from-slate-50 to-slate-100 dark:from-slate-800 dark:to-slate-900 border-b border-slate-200 dark:border-slate-700">
+              <Button
+                variant="ghost"
+                size="icon"
+                className="absolute top-2 right-2 h-7 w-7"
+                onClick={() => setSelectedZone(null)}
+              >
+                <X className="h-3 w-3" />
+              </Button>
+              <div className="pr-8">
+                <h3 className="text-lg font-bold mb-2 text-slate-900 dark:text-white">
+                  {selectedZone.label}
+                </h3>
+                <Badge className={getZoneBadgeClasses(selectedZone.level)}>
+                  <MapPin className="h-3 w-3 mr-1" />
+                  {selectedZone.level === 'recommended' && 'Safe Zone'}
+                  {selectedZone.level === 'neutral' && 'Neutral Zone'}
+                  {selectedZone.level === 'caution' && 'Caution Zone'}
+                  {selectedZone.level === 'avoid' && 'Avoid Zone'}
+                </Badge>
+              </div>
+            </div>
+
+            {/* Content */}
+            <div className="p-4 flex-1 overflow-y-auto">
+              <div className="mb-3">
+                <p className="text-sm font-semibold text-slate-900 dark:text-white mb-1.5">
+                  {selectedZone.reason_short}
+                </p>
+                {selectedZone.reason_long && (
+                  <p className="text-xs text-slate-600 dark:text-slate-300 leading-relaxed">
+                    {selectedZone.reason_long}
+                  </p>
+                )}
+              </div>
             </div>
           </div>
         </div>

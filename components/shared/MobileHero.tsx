@@ -16,8 +16,8 @@ export default function MobileHero() {
 
       {/* Title */}
       <h1 className="text-4xl font-bold leading-tight tracking-tight md:text-5xl animate-fade-in-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
-        Know where it's <span className="text-primary animate-pulse-slow">safe</span>.<br />
-        Skip the <span className="text-red-500 animate-pulse-slow" style={{ animationDelay: '0.5s' }}>sketchy</span>.
+        Travel smarter.<br />
+        <span className="text-primary animate-pulse-slow">Stay safer.</span>
       </h1>
 
       {/* Image */}
@@ -27,7 +27,7 @@ export default function MobileHero() {
 
       {/* Subtitle */}
       <p className="text-lg text-muted-foreground md:text-lg max-w-xl mx-auto animate-fade-in-up" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
-        Real-time safety maps. No BS. Just real travelers keeping it real.
+        Safety maps, real-time alerts, and location sharing. Built by travelers, for travelers.
       </p>
 
       {/* Button */}

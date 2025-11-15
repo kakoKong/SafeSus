@@ -41,23 +41,26 @@ export default function Home() {
       {/* Feature Navigation */}
       <div className="px-4 sm:px-6 lg:px-8 py-8">
         <div className="container mx-auto max-w-5xl">
-          <div className="flex items-center justify-center gap-2 sm:gap-3">
+          <div className="flex items-center justify-center gap-6 sm:gap-8 md:gap-10">
             <a
               href="#features"
-              className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-primary/10 dark:bg-primary/20 text-primary border border-primary/20 dark:border-primary/30 text-xs sm:text-sm font-semibold hover:bg-primary/20 dark:hover:bg-primary/30 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-gray-200 dark:bg-gray-700 text-gray-800 dark:text-gray-200 border border-gray-300 dark:border-gray-600 text-xs sm:text-sm font-semibold hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
             >
+              <Sparkles className="h-3.5 w-3.5" />
               SafeMap
             </a>
             <a
               href="#safealert"
-              className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-orange-100 dark:bg-orange-900/30 text-orange-700 dark:text-orange-300 border border-orange-200 dark:border-orange-800 text-xs sm:text-sm font-semibold hover:bg-orange-200 dark:hover:bg-orange-900/50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-orange-200 dark:bg-orange-700 text-orange-800 dark:text-orange-200 border border-orange-300 dark:border-orange-600 text-xs sm:text-sm font-semibold hover:bg-orange-300 dark:hover:bg-orange-600 transition-colors"
             >
+              <AlertTriangle className="h-3.5 w-3.5" />
               SafeAlert
             </a>
             <a
               href="#safegroup"
-              className="px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-purple-100 dark:bg-purple-900/30 text-purple-700 dark:text-purple-300 border border-purple-200 dark:border-purple-800 text-xs sm:text-sm font-semibold hover:bg-purple-200 dark:hover:bg-purple-900/50 transition-colors"
+              className="flex items-center gap-2 px-4 py-2 sm:px-5 sm:py-2.5 rounded-full bg-blue-200 dark:bg-blue-700 text-blue-800 dark:text-blue-200 border border-blue-300 dark:border-blue-600 text-xs sm:text-sm font-semibold hover:bg-blue-300 dark:hover:bg-blue-600 transition-colors"
             >
+              <Users className="h-3.5 w-3.5" />
               SafeGroup
             </a>
           </div>
@@ -65,7 +68,7 @@ export default function Home() {
       </div>
 
       {/* SafeMap Overview */}
-      <section id="features" className="scroll-mt-20">
+      <section id="features" className="scroll-mt-20 py-6 sm:py-8 md:py-10">
         <div className="container mx-auto max-w-5xl">
           <div className="rounded-2xl border-2 border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-6 sm:p-8 md:p-12">
             <div className="space-y-12 md:space-y-16">
@@ -167,7 +170,7 @@ export default function Home() {
       </section>
 
       {/* SafeAlert Feed */}
-      <section id="safealert" className="scroll-mt-12">
+      <section id="safealert" className="scroll-mt-12 py-6 sm:py-8 md:py-10">
         <div className="container mx-auto max-w-5xl">
           <div className="relative rounded-2xl border-2 border-orange-200 dark:border-orange-800 bg-gradient-to-br from-orange-50 via-white to-white dark:from-orange-950/30 dark:via-slate-900 dark:to-slate-950 p-6 sm:p-8 md:p-12 overflow-hidden">
             <div className="absolute top-0 right-0 w-64 h-64 bg-orange-500/10 rounded-full -mr-32 -mt-32 blur-3xl" />
@@ -195,7 +198,7 @@ export default function Home() {
       </section>
 
       {/* SafeGroup Feature */}
-      <section id="safegroup" className="scroll-mt-12">
+      <section id="safegroup" className="scroll-mt-12 py-6 sm:py-8 md:py-10">
         <div className="container mx-auto max-w-5xl">
           <div className="relative rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-slate-50 dark:from-primary/10 dark:via-slate-900 dark:to-slate-950 p-6 sm:p-8 md:p-12 overflow-hidden">
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full -ml-32 -mb-32 blur-3xl" />
