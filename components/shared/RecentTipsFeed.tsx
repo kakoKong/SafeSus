@@ -4,7 +4,6 @@ import { useState, useEffect, useRef } from 'react';
 import { Card } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { Clock, MapPin, TrendingUp, ChevronLeft, ChevronRight, AlertTriangle } from 'lucide-react';
-import Link from 'next/link';
 import { Button } from '@/components/ui/button';
 import type { PinType } from '@/types';
 
@@ -138,18 +137,10 @@ export default function RecentTipsFeed() {
 
   return (
     <Card className="p-4 sm:p-6 overflow-hidden">
-      <div className="flex items-center justify-between mb-4">
-        <div className="flex items-center gap-2">
-          <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
-          <h3 className="font-bold text-sm sm:text-base">Live Community Signals</h3>
-          <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
-        </div>
-        <Link
-          href="/community"
-          className="text-xs sm:text-sm text-primary font-semibold hover:underline"
-        >
-          View all →
-        </Link>
+      <div className="flex items-center gap-2 mb-4">
+        <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-500 flex-shrink-0" />
+        <h3 className="font-bold text-sm sm:text-base">Live Community Signals</h3>
+        <div className="w-2 h-2 bg-red-500 rounded-full animate-pulse" />
       </div>
 
       {pins.length === 0 ? (
@@ -195,12 +186,11 @@ export default function RecentTipsFeed() {
               const Icon = typeConfig.icon;
 
               return (
-                <Link
+                <div
                   key={pin.id}
-                  href={pin.city_slug ? `/city/${pin.city_slug}` : '/community'}
-                  className="flex-shrink-0 w-[300px] sm:w-[340px] snap-start group"
+                  className="flex-shrink-0 w-[300px] sm:w-[340px] snap-start"
                 >
-                  <Card className="h-full hover:shadow-lg transition-all duration-300 hover:-translate-y-1 border overflow-hidden border-l-4 border-l-red-500">
+                  <Card className="h-full border overflow-hidden border-l-4 border-l-red-500">
                     {/* Content */}
                     <div className="p-4 space-y-3">
                       <div className="flex items-start justify-between gap-2">
@@ -223,7 +213,7 @@ export default function RecentTipsFeed() {
                         </div>
                       </div>
 
-                      <h4 className="font-semibold text-sm sm:text-base line-clamp-2 leading-tight group-hover:text-primary transition-colors">
+                      <h4 className="font-semibold text-sm sm:text-base line-clamp-2 leading-tight">
                         {pin.title}
                       </h4>
                       
@@ -239,7 +229,7 @@ export default function RecentTipsFeed() {
                       )}
                     </div>
                   </Card>
-                </Link>
+                </div>
               );
             })}
           </div>

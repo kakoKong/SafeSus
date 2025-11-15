@@ -18,6 +18,7 @@ import {
 import RecentTipsFeed from '@/components/shared/RecentTipsFeed';
 import InteractiveMapDemo from '@/components/shared/InteractiveMapDemo';
 import SafeGroupMock from '@/components/shared/SafeGroupMock';
+import WaitlistCount from '@/components/shared/WaitlistCount';
 
 export default function Home() {
   return (
@@ -53,12 +54,10 @@ export default function Home() {
                     target="_blank" 
                     rel="noopener noreferrer"
                   >
-                    Join waitlist
+                    Join waitlist - Bangkok
                   </a>
                 </Button>
-                <p className="text-sm text-muted-foreground">
-                  Starting in Bangkok
-                </p>
+                <WaitlistCount />
             </div>
           </div>
 
@@ -663,23 +662,28 @@ export default function Home() {
             <span className="text-primary">Skip the sketchy.</span>
           </h2>
 
-          <p className="text-base sm:text-lg md:text-lg lg:text-xl text-slate-400 mb-8 sm:mb-10 max-w-2xl mx-auto leading-relaxed">
+          <p className="text-base sm:text-lg md:text-lg lg:text-xl text-slate-400 mb-6 sm:mb-8 max-w-2xl mx-auto leading-relaxed">
             Join travelers who actually want to stay safe. No BS, just real info.
           </p>
 
-          <Button 
-            size="lg" 
-            className="bg-primary hover:bg-primary/90 text-white text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full shadow-2xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:scale-105"
-            asChild
-          >
-            <a 
-              href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form" 
-              target="_blank" 
-              rel="noopener noreferrer"
+          <div className="flex flex-col items-center gap-4 mb-8 sm:mb-10">
+            <Button 
+              size="lg" 
+              className="bg-primary hover:bg-primary/90 text-white text-base sm:text-lg px-6 sm:px-8 py-5 sm:py-6 rounded-full shadow-2xl shadow-primary/25 hover:shadow-primary/40 transition-all hover:scale-105"
+              asChild
             >
-              Sign Up for Bangkok Safety Map
-            </a>
-          </Button>
+              <a 
+                href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form" 
+                target="_blank" 
+                rel="noopener noreferrer"
+              >
+                Sign Up for Bangkok Safety Map
+              </a>
+            </Button>
+            <div className="text-slate-400">
+              <WaitlistCount />
+            </div>
+          </div>
         </div>
       </section>
 
