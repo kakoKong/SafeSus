@@ -1,5 +1,6 @@
 import type { Metadata } from 'next';
 import { Analytics as VercelAnalytics } from "@vercel/analytics/next"
+import { SpeedInsights } from "@vercel/speed-insights/next"
 import { Inter } from 'next/font/google';
 import './globals.css';
 import Header from '@/components/shared/Header';
@@ -73,6 +74,7 @@ export default function RootLayout({
           <Toaster />
           <Analytics />
           <VercelAnalytics />
+          <SpeedInsights />
         </AuthProvider>
       </body>
     </html>
