@@ -25,7 +25,7 @@ export default function Home() {
   return (
     <div className="flex flex-col overflow-hidden">
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-b from-white via-slate-50 to-white pt-8 pb-12 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:pt-12 md:pb-16 lg:pt-16 lg:pb-20 overflow-hidden">
+      <section className="relative bg-gradient-to-b from-white via-slate-50 to-white pt-6 pb-8 dark:from-slate-950 dark:via-slate-900 dark:to-slate-950 md:pt-8 md:pb-10 lg:pt-10 lg:pb-12 overflow-hidden">
         {/* Animated background elements */}
         <div className="absolute inset-0 overflow-hidden pointer-events-none">
           <div className="absolute top-1/4 left-1/4 w-72 h-72 bg-primary/5 rounded-full blur-3xl animate-pulse" style={{ animationDuration: '4s' }} />
@@ -200,84 +200,73 @@ export default function Home() {
       {/* SafeGroup Feature */}
       <section id="safegroup" className="scroll-mt-12 py-6 sm:py-8 md:py-10">
         <div className="container mx-auto max-w-5xl">
-          <div className="relative rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-slate-50 dark:from-primary/10 dark:via-slate-900 dark:to-slate-950 p-6 sm:p-8 md:p-12 overflow-hidden">
+          <div className="relative rounded-2xl border-2 border-primary/20 bg-gradient-to-br from-primary/5 via-white to-slate-50 dark:from-primary/10 dark:via-slate-900 dark:to-slate-950 p-4 sm:p-6 md:p-12 overflow-hidden">
             <div className="absolute bottom-0 left-0 w-64 h-64 bg-primary/10 rounded-full -ml-32 -mb-32 blur-3xl" />
-            <div className="relative space-y-12 md:space-y-16">
-              <div className="space-y-4 max-w-3xl">
-                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
+            <div className="relative space-y-6 sm:space-y-8 md:space-y-12">
+              {/* Header */}
+              <div className="space-y-2 sm:space-y-3">
+                <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 dark:bg-primary/20 border border-primary/20 px-3 sm:px-4 py-1.5 text-xs font-semibold uppercase tracking-wider text-primary">
                   <Users className="h-3.5 w-3.5" />
                   SafeGroup
                 </div>
-                <div className="space-y-3">
-                  <h2 className="text-3xl sm:text-4xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-[1.1] tracking-tight">
-                    Let your crew know<br />
-                    <span className="text-primary">you're good.</span>
-                  </h2>
-                  <p className="text-base sm:text-lg md:text-lg lg:text-xl text-muted-foreground leading-relaxed">
-                    Share location without spamming. They see where you are, if you're safe. No annoying texts.
-                  </p>
-                </div>
+                <h2 className="text-2xl sm:text-3xl md:text-4xl lg:text-5xl font-bold text-slate-900 dark:text-white leading-[1.1] tracking-tight">
+                  Let your crew know<br />
+                  <span className="text-primary">you're good.</span>
+                </h2>
+                <p className="hidden sm:block text-base sm:text-lg text-muted-foreground leading-relaxed">
+                  Share location without spamming. They see where you are, if you're safe. No annoying texts.
+                </p>
               </div>
 
-              <div className="grid gap-8 lg:grid-cols-2 lg:gap-12">
-                <div className="space-y-6">
-                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6 sm:p-8">
-                    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 dark:bg-primary/20 px-3 py-1.5 text-xs font-semibold uppercase tracking-wide text-primary mb-6">
+              {/* Features - Compact on mobile */}
+              <div className="grid grid-cols-3 gap-2 sm:gap-3 md:gap-4">
+                {[
+                  {
+                    title: 'Location',
+                    icon: MapPin,
+                    bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
+                    iconColor: 'text-emerald-600 dark:text-emerald-400'
+                  },
+                  {
+                    title: 'Alerts',
+                    icon: AlertTriangle,
+                    bgColor: 'bg-amber-100 dark:bg-amber-900/30',
+                    iconColor: 'text-amber-600 dark:text-amber-400'
+                  },
+                  {
+                    title: 'Timeline',
+                    icon: Map,
+                    bgColor: 'bg-blue-100 dark:bg-blue-900/30',
+                    iconColor: 'text-blue-600 dark:text-blue-400'
+                  },
+                ].map((item, i) => {
+                  const Icon = item.icon;
+                  return (
+                    <div key={item.title} className="rounded-lg sm:rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-3 sm:p-4 transition-all hover:shadow-md">
+                      <div className="flex flex-col items-center text-center gap-2 sm:gap-3">
+                        <div className={`rounded-lg ${item.bgColor} p-2 sm:p-2.5`}>
+                          <Icon className={`h-4 w-4 sm:h-5 sm:w-5 ${item.iconColor}`} />
+                        </div>
+                        <h4 className="text-xs sm:text-sm font-semibold text-slate-900 dark:text-white">{item.title}</h4>
+                      </div>
+                    </div>
+                  );
+                })}
+              </div>
+
+              {/* Live Feed Demo */}
+              <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-6 shadow-sm">
+                <div className="flex items-center justify-between mb-3 sm:mb-4">
+                  <div>
+                    <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 dark:bg-primary/20 px-2.5 sm:px-3 py-1 text-xs font-semibold uppercase tracking-wide text-primary mb-1">
                       Live feed
                     </div>
-                    <h3 className="text-2xl sm:text-3xl font-bold text-slate-900 dark:text-white mb-8">What they see</h3>
-
-                    <div className="space-y-4">
-                      {[
-                        {
-                          title: 'Location updates',
-                          desc: 'Auto-check-ins. No need to text "I\'m here" every 5 min.',
-                          icon: MapPin,
-                          bgColor: 'bg-emerald-100 dark:bg-emerald-900/30',
-                          iconColor: 'text-emerald-600 dark:text-emerald-400'
-                        },
-                        {
-                          title: 'Warning alerts',
-                          desc: 'Sketchy area? They get notified. Someone knows if you need help.',
-                          icon: AlertTriangle,
-                          bgColor: 'bg-amber-100 dark:bg-amber-900/30',
-                          iconColor: 'text-amber-600 dark:text-amber-400'
-                        },
-                        {
-                          title: 'Where you\'ve been',
-                          desc: 'Simple timeline. Nothing creepy, just peace of mind.',
-                          icon: Map,
-                          bgColor: 'bg-blue-100 dark:bg-blue-900/30',
-                          iconColor: 'text-blue-600 dark:text-blue-400'
-                        },
-                      ].map((item, i) => {
-                        const Icon = item.icon;
-                        return (
-                          <div key={item.title} className="rounded-xl border border-slate-200 dark:border-slate-800 bg-white dark:bg-slate-900 p-4 sm:p-5 transition-all hover:shadow-md">
-                            <div className="flex items-start gap-4">
-                              <div className={`rounded-lg ${item.bgColor} p-2.5 flex-shrink-0`}>
-                                <Icon className={`h-5 w-5 ${item.iconColor}`} />
-                              </div>
-                              <div className="flex-1 min-w-0">
-                                <h4 className="text-sm sm:text-base font-semibold text-slate-900 dark:text-white mb-1.5">{item.title}</h4>
-                                <p className="text-sm text-muted-foreground leading-relaxed">{item.desc}</p>
-                              </div>
-                            </div>
-                          </div>
-                        );
-                      })}
-                    </div>
-                  </div>
-                </div>
-
-                <div className="space-y-6">
-                  <SafeGroupMock />
-                  <div className="rounded-2xl border border-slate-200 dark:border-slate-800 bg-slate-50 dark:bg-slate-900/50 p-6">
-                    <p className="text-sm sm:text-base text-muted-foreground leading-relaxed">
-                      Exploring Bangkok at 2am? Hiking in Chiang Mai? Your people know you're good. No hovering, no spam—just peace of mind.
+                    <p className="text-xs sm:text-sm text-muted-foreground">
+                      What your group sees
                     </p>
                   </div>
                 </div>
+                <SafeGroupMock />
               </div>
             </div>
           </div>

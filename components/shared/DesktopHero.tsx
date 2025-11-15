@@ -7,7 +7,7 @@ import HeroImage from '@/components/shared/HeroImage';
 
 export default function DesktopHero() {
   return (
-    <div className="grid grid-cols-2 gap-16 items-center">
+    <div className="grid grid-cols-2 gap-8 lg:gap-12 items-center">
       {/* Left Column - Content */}
       <div className="space-y-6 text-left">
         {/* Badge */}

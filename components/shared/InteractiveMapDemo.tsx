@@ -1,11 +1,11 @@
 'use client';
 
-import { useEffect, useState, useMemo } from 'react';
-import MapView from '@/components/map/MapView';
+import { useEffect, useState, useMemo, useRef } from 'react';
+import MapView, { type MapViewRef } from '@/components/map/MapView';
 import MapFilters from '@/components/map/MapFilters';
 import { Badge } from '@/components/ui/badge';
 import { Button } from '@/components/ui/button';
-import { MapPin, X, AlertTriangle } from 'lucide-react';
+import { MapPin, X, AlertTriangle, Maximize2, Minimize2 } from 'lucide-react';
 import type { CityDetail, Pin, PinType, Zone } from '@/types';
 import { getZoneBadgeClasses } from '@/lib/utils';
 
@@ -54,6 +54,9 @@ export default function InteractiveMapDemo({
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
   const [isInteractive, setIsInteractive] = useState(false);
+  const [isExpanded, setIsExpanded] = useState(false);
+  const [isMobile, setIsMobile] = useState(false);
+  const mapRef = useRef<MapViewRef>(null);
   
   // Internal state if no props provided (for backward compatibility)
   const [internalShowZones, setInternalShowZones] = useState(true);
@@ -61,6 +64,28 @@ export default function InteractiveMapDemo({
   
   const finalShowZones = onToggleZones !== undefined ? showZones : internalShowZones;
   const finalShowTips = onToggleTips !== undefined ? showTips : internalShowTips;
+
+  // Detect mobile
+  useEffect(() => {
+    const checkMobile = () => {
+      setIsMobile(window.innerWidth < 768); // md breakpoint
+    };
+    
+    checkMobile();
+    window.addEventListener('resize', checkMobile);
+    return () => window.removeEventListener('resize', checkMobile);
+  }, []);
+
+  // Resize map when expanded state changes
+  useEffect(() => {
+    if (mapRef.current) {
+      // Use setTimeout to ensure DOM has updated after height transition
+      const timer = setTimeout(() => {
+        mapRef.current?.resize();
+      }, 350); // Slightly longer than transition duration (300ms)
+      return () => clearTimeout(timer);
+    }
+  }, [isExpanded, isMobile]);
 
   useEffect(() => {
     async function fetchDemoData() {
@@ -97,9 +122,19 @@ export default function InteractiveMapDemo({
     [filteredPins, finalShowTips]
   );
 
+  // Bangkok bounds: [[west, south], [east, north]]
+  const bangkokBounds: [[number, number], [number, number]] = [
+    [100.3, 13.5], // Southwest corner
+    [100.8, 13.9], // Northeast corner
+  ];
+
+  // Dynamic height based on mobile and expanded state
+  const mapHeight = isMobile && !isExpanded ? 'h-[300px]' : 'h-[600px]';
+
   if (loading) {
+    const loadingHeight = isMobile && !isExpanded ? 'h-[300px]' : 'h-[600px]';
     return (
-      <div className="w-full h-[600px] bg-slate-200 dark:bg-slate-800 rounded-2xl flex items-center justify-center">
+      <div className={`w-full ${loadingHeight} bg-slate-200 dark:bg-slate-800 rounded-2xl flex items-center justify-center transition-all duration-300`}>
         <div className="text-center">
           <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
           <p className="text-muted-foreground">Loading map...</p>
@@ -112,17 +147,12 @@ export default function InteractiveMapDemo({
     return null;
   }
 
-  // Bangkok bounds: [[west, south], [east, north]]
-  const bangkokBounds: [[number, number], [number, number]] = [
-    [100.3, 13.5], // Southwest corner
-    [100.8, 13.9], // Northeast corner
-  ];
-
   return (
-    <div className="relative w-full h-[600px] bg-slate-200 dark:bg-slate-800 rounded-2xl border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center">
+    <div className={`relative w-full ${mapHeight} bg-slate-200 dark:bg-slate-800 rounded-2xl border border-slate-300 dark:border-slate-700 overflow-hidden flex items-center justify-center transition-all duration-300`}>
       {/* Map Background */}
       <div className="absolute inset-0 z-0">
         <MapView
+          ref={mapRef}
           zones={zonesToShow}
           pins={pinsToShow}
           center={[100.5320, 13.7463]}
@@ -171,7 +201,23 @@ export default function InteractiveMapDemo({
         </div>
 
         {/* Filter/Try it now button - Top right */}
-        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 pointer-events-auto z-20">
+        <div className="absolute top-3 right-3 sm:top-4 sm:right-4 pointer-events-auto z-20 flex items-center gap-2">
+          {/* Mobile expand button */}
+          {isMobile && (
+            <Button
+              onClick={() => setIsExpanded(!isExpanded)}
+              size="sm"
+              variant="outline"
+              className="bg-slate-900/50 backdrop-blur-sm border-slate-700 text-white hover:bg-slate-800/70 hover:border-slate-600 h-8 w-8 p-0"
+            >
+              {isExpanded ? (
+                <Minimize2 className="h-4 w-4" />
+              ) : (
+                <Maximize2 className="h-4 w-4" />
+              )}
+            </Button>
+          )}
+          
           {!isInteractive ? (
             <Button
               onClick={() => setIsInteractive(true)}
@@ -182,7 +228,7 @@ export default function InteractiveMapDemo({
               Try it now
             </Button>
           ) : (
-            cityData && (
+            cityData && !isMobile && (
               <MapFilters
                 showZones={finalShowZones}
                 showTips={finalShowTips}

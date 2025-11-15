@@ -1,6 +1,6 @@
 export default function HeroImage() {
   return (
-    <div className="relative w-full max-w-lg">
+    <div className="relative w-full max-w-[240px] sm:max-w-[320px] md:max-w-md lg:max-w-lg">
       {/* Background gradient blobs with animation */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute top-0 right-0 h-96 w-96 rounded-full bg-primary/20 blur-3xl animate-float" style={{ animationDuration: '8s' }} />

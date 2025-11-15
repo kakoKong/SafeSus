@@ -7,7 +7,7 @@ import HeroImage from '@/components/shared/HeroImage';
 
 export default function MobileHero() {
   return (
-    <div className="flex flex-col gap-8 text-center">
+    <div className="flex flex-col gap-4 sm:gap-6 text-center">
       {/* Badge */}
       <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary animate-fade-in-up mx-auto" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
         <Sparkles className="h-3.5 w-3.5 animate-spin-slow" />

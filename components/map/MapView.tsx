@@ -12,6 +12,7 @@ export interface MapViewRef {
   zoomToZone: (zone: Zone) => void;
   zoomToPin: (pin: Pin) => void;
   zoomToLocation: (lng: number, lat: number) => void;
+  resize: () => void;
 }
 
 interface MapViewProps {
@@ -102,6 +103,14 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         });
       } catch (error) {
         console.error('Error zooming to location:', error);
+      }
+    },
+    resize: () => {
+      if (!map.current || !mapLoaded) return;
+      try {
+        map.current.resize();
+      } catch (error) {
+        console.error('Error resizing map:', error);
       }
     },
   }));
