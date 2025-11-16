@@ -2,40 +2,42 @@ import type { NextRequest } from 'next/server';
 import { NextResponse } from 'next/server';
 
 const ALLOWED_PATHS = new Set([
-  '/',
-  '/favicon.ico',
-  '/manifest.json',
-  '/admin',
-  '/submit',
-  '/auth',
-  '/safegroup',
+	'/',
+	'/favicon.ico',
+	'/manifest.json',
+	'/admin',
+	'/submit',
+	'/auth',
+	'/safegroup',
+	'/debug',
 ]);
 
 export function middleware(request: NextRequest) {
-  const { pathname } = request.nextUrl;
+	const { pathname } = request.nextUrl;
 
-  if (
-    ALLOWED_PATHS.has(pathname) ||
-    pathname.startsWith('/api') ||
-    pathname.startsWith('/_next') ||
-    pathname.startsWith('/static') ||
-    pathname.startsWith('/images') ||
-    pathname.startsWith('/admin') ||
-    pathname.startsWith('/submit') ||
-    pathname.startsWith('/auth') ||
-    pathname.startsWith('/safegroup')
-  ) {
-    return NextResponse.next();
-  }
+	if (
+		ALLOWED_PATHS.has(pathname) ||
+		pathname.startsWith('/api') ||
+		pathname.startsWith('/_next') ||
+		pathname.startsWith('/static') ||
+		pathname.startsWith('/images') ||
+		pathname.startsWith('/admin') ||
+		pathname.startsWith('/submit') ||
+		pathname.startsWith('/auth') ||
+		pathname.startsWith('/safegroup') ||
+		pathname.startsWith('/debug')
+	) {
+		return NextResponse.next();
+	}
 
-  const url = request.nextUrl.clone();
-  url.pathname = '/';
-  url.search = '';
+	const url = request.nextUrl.clone();
+	url.pathname = '/';
+	url.search = '';
 
-  return NextResponse.redirect(url);
+	return NextResponse.redirect(url);
 }
 
 export const config = {
-  matcher: ['/((?!api|_next|static|images|favicon.ico|manifest.json).*)'],
+	matcher: ['/((?!api|_next|static|images|favicon.ico|manifest.json).*)'],
 };
 
