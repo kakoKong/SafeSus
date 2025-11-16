@@ -18,7 +18,7 @@ function normalizeToGeoJSONPoint(geom: any): GeoJSON.Point | null {
   let coords: [number, number] | null = null;
 
   if (typeof geom === 'string') {
-    const match = geom.match(/POINT\(([-\d.]+)\s+([-)\d.]+)\)/);
+    const match = geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
     if (match) {
       const lng = parseFloat(match[1]);
       const lat = parseFloat(match[2]);
