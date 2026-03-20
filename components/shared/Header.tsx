@@ -29,6 +29,7 @@ import LoginModal from '@/components/shared/LoginModal';
 
 export default function Header() {
   const pathname = usePathname();
+  const currentPath = pathname ?? '';
   const router = useRouter();
   const { toast } = useToast();
   const [mobileMenuOpen, setMobileMenuOpen] = useState(false);
@@ -107,7 +108,7 @@ export default function Header() {
     router.push('/');
   }
 
-  if (pathname === '/' || pathname.startsWith('/city/')) {
+  if (currentPath === '/' || currentPath.startsWith('/city/')) {
     return null;
   }
 
@@ -134,7 +135,7 @@ export default function Header() {
               href="/"
               className={cn(
                 'text-sm xl:text-base font-medium transition-colors hover:text-primary',
-                pathname === '/' ? 'text-primary' : 'text-muted-foreground'
+                currentPath === '/' ? 'text-primary' : 'text-muted-foreground'
               )}
             >
               Home
@@ -146,7 +147,7 @@ export default function Header() {
                 'text-muted-foreground'
               )}
               onClick={(e) => {
-                if (pathname === '/') {
+                if (currentPath === '/') {
                   e.preventDefault();
                   const element = document.getElementById('features');
                   if (element) {
@@ -170,7 +171,7 @@ export default function Header() {
                 'text-muted-foreground'
               )}
               onClick={(e) => {
-                if (pathname === '/') {
+                if (currentPath === '/') {
                   e.preventDefault();
                   const element = document.getElementById('about');
                   if (element) {
@@ -191,7 +192,7 @@ export default function Header() {
               href="/submit"
               className={cn(
                 'text-sm xl:text-base font-medium transition-colors hover:text-primary',
-                pathname === '/submit' ? 'text-primary' : 'text-muted-foreground'
+                currentPath === '/submit' ? 'text-primary' : 'text-muted-foreground'
               )}
             >
               Submit
@@ -294,7 +295,7 @@ export default function Header() {
                     href="/"
                     className={cn(
                       'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                      pathname === '/' 
+                      currentPath === '/' 
                         ? 'bg-primary text-primary-foreground' 
                         : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
                     )}
@@ -311,7 +312,7 @@ export default function Header() {
                     onClick={(e) => {
                       e.preventDefault();
                       closeMobileMenu();
-                      if (pathname === '/') {
+                      if (currentPath === '/') {
                         const element = document.getElementById('features');
                         if (element) {
                           const headerOffset = 80;
@@ -338,7 +339,7 @@ export default function Header() {
                     onClick={(e) => {
                       e.preventDefault();
                       closeMobileMenu();
-                      if (pathname === '/') {
+                      if (currentPath === '/') {
                         const element = document.getElementById('about');
                         if (element) {
                           const headerOffset = 80;
@@ -360,7 +361,7 @@ export default function Header() {
                     href="/submit"
                     className={cn(
                       'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                      pathname === '/submit' 
+                      currentPath === '/submit' 
                         ? 'bg-primary text-primary-foreground' 
                         : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
                     )}
@@ -374,7 +375,7 @@ export default function Header() {
                         href="/account"
                         className={cn(
                           'block rounded-lg px-3 py-2 text-sm font-medium transition-colors',
-                          pathname?.startsWith('/account') 
+                          currentPath.startsWith('/account') 
                             ? 'bg-primary text-primary-foreground' 
                             : 'text-muted-foreground hover:bg-slate-100 dark:hover:bg-slate-800'
                         )}

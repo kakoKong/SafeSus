@@ -79,6 +79,7 @@ export default function SafeGroupMock() {
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
+    const markers = markersRef.current;
 
     // Calculate center of all members
     const avgLng = MOCK_MEMBERS.reduce((sum, m) => sum + m.location.lng, 0) / MOCK_MEMBERS.length;
@@ -97,8 +98,8 @@ export default function SafeGroupMock() {
     });
 
     return () => {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current.clear();
+      markers.forEach((marker) => marker.remove());
+      markers.clear();
       map.current?.remove();
       map.current = null;
     };
@@ -107,10 +108,11 @@ export default function SafeGroupMock() {
   // Add markers
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
+    const markers = markersRef.current;
 
     // Clear existing markers
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current.clear();
+    markers.forEach((marker) => marker.remove());
+    markers.clear();
 
     // Create markers for each member
     MOCK_MEMBERS.forEach((member) => {
@@ -199,12 +201,12 @@ export default function SafeGroupMock() {
         .setLngLat([member.location.lng, member.location.lat])
         .addTo(map.current!);
 
-      markersRef.current.set(member.id, marker);
+      markers.set(member.id, marker);
     });
 
     return () => {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current.clear();
+      markers.forEach((marker) => marker.remove());
+      markers.clear();
     };
   }, [map, mapLoaded]);
 

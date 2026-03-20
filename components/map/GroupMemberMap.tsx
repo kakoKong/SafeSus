@@ -38,10 +38,11 @@ export default function GroupMemberMap({
 
   useEffect(() => {
     if (!map || !mapLoaded) return;
+    const markers = markersRef.current;
 
     // Clear existing markers
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current.clear();
+    markers.forEach((marker) => marker.remove());
+    markers.clear();
 
     // Create markers for each member
     members.forEach((member) => {
@@ -157,12 +158,12 @@ export default function GroupMemberMap({
         .setLngLat([member.location.lng, member.location.lat])
         .addTo(map);
 
-      markersRef.current.set(member.id, marker);
+      markers.set(member.id, marker);
     });
 
     return () => {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current.clear();
+      markers.forEach((marker) => marker.remove());
+      markers.clear();
     };
   }, [map, mapLoaded, members, onMemberClick, selectedMemberId]);
 

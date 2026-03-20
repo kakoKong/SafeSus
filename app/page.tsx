@@ -42,9 +42,6 @@ export default function Home() {
                 Beta
               </span>
             </Link>
-            <Link href="/city/bangkok" className="hidden px-4 py-2 font-bold text-blue-900 transition-opacity hover:opacity-90 lg:block">
-              Download
-            </Link>
             <Link
               href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form"
               className="rounded-2xl bg-gradient-to-br from-[#00327d] to-[#0047ab] px-6 py-3 font-bold text-white shadow-lg transition-all hover:opacity-90 active:scale-95"

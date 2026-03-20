@@ -41,6 +41,7 @@ export default function SafeGroupMapView({
   // Initialize map
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
+    const markers = markersRef.current;
 
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
@@ -54,8 +55,8 @@ export default function SafeGroupMapView({
     });
 
     return () => {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current.clear();
+      markers.forEach((marker) => marker.remove());
+      markers.clear();
       map.current?.remove();
       map.current = null;
     };
@@ -73,10 +74,11 @@ export default function SafeGroupMapView({
   // Add/update markers
   useEffect(() => {
     if (!map.current || !mapLoaded) return;
+    const markers = markersRef.current;
 
     // Clear existing markers
-    markersRef.current.forEach((marker) => marker.remove());
-    markersRef.current.clear();
+    markers.forEach((marker) => marker.remove());
+    markers.clear();
 
     // Create markers for each member
     members.forEach((member) => {
@@ -203,12 +205,12 @@ export default function SafeGroupMapView({
         .setLngLat([member.location.lng, member.location.lat])
         .addTo(map.current!);
 
-      markersRef.current.set(member.id, marker);
+      markers.set(member.id, marker);
     });
 
     return () => {
-      markersRef.current.forEach((marker) => marker.remove());
-      markersRef.current.clear();
+      markers.forEach((marker) => marker.remove());
+      markers.clear();
     };
   }, [map, mapLoaded, members, onMemberClick]);
 

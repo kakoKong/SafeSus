@@ -47,7 +47,8 @@ function zoneBadgeTone(level: Zone['level']) {
 
 export default function CityDetailPage() {
   const params = useParams();
-  const slug = params.slug as string;
+  const slugParam = params?.slug;
+  const slug = Array.isArray(slugParam) ? slugParam[0] : slugParam ?? '';
 
   const [cityData, setCityData] = useState<CityDetail | null>(null);
   const [loading, setLoading] = useState(true);
@@ -67,6 +68,12 @@ export default function CityDetailPage() {
   const mapRef = useRef<MapViewRef>(null);
 
   useEffect(() => {
+    if (!slug) {
+      setCityData(null);
+      setLoading(false);
+      return;
+    }
+
     async function fetchCity() {
       try {
         const res = await fetch(`/api/city/${slug}`);
@@ -223,7 +230,7 @@ export default function CityDetailPage() {
   };
 
   const mapSectionRef = useRef<HTMLElement | null>(null);
-  const alertsSectionRef = useRef<HTMLElement | null>(null);
+  const alertsSectionRef = useRef<HTMLDivElement | null>(null);
   const safetySectionRef = useRef<HTMLElement | null>(null);
 
   const scrollToSection = (section: 'map' | 'alerts' | 'safety') => {
@@ -264,13 +271,21 @@ export default function CityDetailPage() {
               Loading Live Safety Feed
             </div>
             <h1 className={`${headline.className} text-2xl font-extrabold tracking-tight sm:text-3xl`}>
-              Preparing {slug.replace('-', ' ')} intelligence
+              🗺️ Building {slug.replace(/-/g, ' ')} safety map
             </h1>
-            <p className="mt-2 text-sm text-white/80">Fetching latest zones, reports, and checkpoints...</p>
+            <p className="mt-2 text-sm text-white/80">Pinning alerts, checking zones, and warming up routes... almost there ✨</p>
+            <div className="mt-4 flex items-center gap-2 text-xs text-white/90">
+              <span className="animate-bounce [animation-delay:0ms]">📍</span>
+              <span className="animate-bounce [animation-delay:120ms]">🚕</span>
+              <span className="animate-bounce [animation-delay:240ms]">🛡️</span>
+            </div>
           </div>
 
           <div className="space-y-4 rounded-[2rem] bg-[#ededf4] p-5">
-            <div className="h-4 w-40 animate-pulse rounded bg-slate-300/70" />
+            <div className="flex items-center justify-between">
+              <div className="h-4 w-40 animate-pulse rounded bg-slate-300/70" />
+              <span className="text-xs font-semibold text-slate-500">Loading map layers...</span>
+            </div>
             <div className="h-[220px] animate-pulse rounded-[1.5rem] bg-slate-300/60" />
             <div className="grid grid-cols-2 gap-3">
               <div className="h-11 animate-pulse rounded-xl bg-slate-300/60" />
