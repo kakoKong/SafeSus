@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 function normalizeToGeoJSONPoint(geom: any): GeoJSON.Point | null {
   if (!geom) return null;
@@ -81,7 +81,7 @@ export async function GET(request: Request) {
     return NextResponse.json({ error: 'lat and lng are required' }, { status: 400 });
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   try {
     // Nearby pins via existing RPC (server-side geospatial)
@@ -123,7 +123,7 @@ export async function GET(request: Request) {
         .from('tip_submissions')
         .select('id, title, summary, location, location_v2, status, created_at, city_id')
         .eq('status', 'approved')
-        .not('location', 'is', null)
+        .or('location.not.is.null,location_v2.not.is.null')
         .order('created_at', { ascending: false })
         .limit(limit);
 

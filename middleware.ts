@@ -5,6 +5,8 @@ const ALLOWED_PATHS = new Set([
 	'/',
 	'/favicon.ico',
 	'/manifest.json',
+	'/city',
+	'/cities',
 	'/admin',
 	'/submit',
 	'/auth',
@@ -21,6 +23,8 @@ export function middleware(request: NextRequest) {
 		pathname.startsWith('/_next') ||
 		pathname.startsWith('/static') ||
 		pathname.startsWith('/images') ||
+		pathname.startsWith('/city') ||
+		pathname.startsWith('/cities') ||
 		pathname.startsWith('/admin') ||
 		pathname.startsWith('/submit') ||
 		pathname.startsWith('/auth') ||

@@ -56,6 +56,7 @@ export default function InteractiveMapDemo({
   const [isInteractive, setIsInteractive] = useState(false);
   const [isExpanded, setIsExpanded] = useState(false);
   const [isMobile, setIsMobile] = useState(false);
+  const [mapRenderMode, setMapRenderMode] = useState<'zones' | 'brush' | 'both'>('both');
   const mapRef = useRef<MapViewRef>(null);
   
   // Internal state if no props provided (for backward compatibility)
@@ -113,13 +114,22 @@ export default function InteractiveMapDemo({
   const filteredPins = useMemo(() => cityData?.pins ?? [], [cityData]);
 
   const zonesToShow = useMemo(
-    () => (finalShowZones ? [...filteredZones] : []),
-    [filteredZones, finalShowZones]
+    () => {
+      if (!finalShowZones) return [];
+      if (mapRenderMode === 'brush') return [];
+      return [...filteredZones];
+    },
+    [filteredZones, finalShowZones, mapRenderMode]
   );
 
   const pinsToShow = useMemo(
     () => (finalShowTips ? [...filteredPins] : []),
     [filteredPins, finalShowTips]
+  );
+
+  const brushPinsToShow = useMemo(
+    () => (mapRenderMode === 'zones' ? [] : [...filteredPins]),
+    [filteredPins, mapRenderMode]
   );
 
   // Bangkok bounds: [[west, south], [east, north]]
@@ -155,6 +165,8 @@ export default function InteractiveMapDemo({
           ref={mapRef}
           zones={zonesToShow}
           pins={pinsToShow}
+          brushPins={brushPinsToShow}
+          showSafetyBrush={mapRenderMode !== 'zones'}
           center={[100.5320, 13.7463]}
           className="w-full h-full"
           disableZoom={!isInteractive}
@@ -228,28 +240,68 @@ export default function InteractiveMapDemo({
               Try it now
             </Button>
           ) : (
-            cityData && !isMobile && (
-              <MapFilters
-                showZones={finalShowZones}
-                showTips={finalShowTips}
-                onToggleZones={() => {
-                  if (onToggleZones) {
-                    onToggleZones();
-                  } else {
-                    setInternalShowZones(!internalShowZones);
-                  }
-                }}
-                onToggleTips={() => {
-                  if (onToggleTips) {
-                    onToggleTips();
-                  } else {
-                    setInternalShowTips(!internalShowTips);
-                  }
-                }}
-                zoneCount={cityData.zones.length}
-                tipCount={cityData.pins.length}
-              />
-            )
+            <>
+              <div className="hidden sm:flex items-center rounded-lg border border-slate-700 bg-slate-900/70 backdrop-blur-sm p-1">
+                <Button
+                  size="sm"
+                  variant={mapRenderMode === 'zones' ? 'secondary' : 'ghost'}
+                  className={`h-7 px-2.5 text-xs ${
+                    mapRenderMode === 'zones'
+                      ? 'bg-white text-slate-900 hover:bg-white/90'
+                      : 'text-white hover:bg-slate-800/70'
+                  }`}
+                  onClick={() => setMapRenderMode('zones')}
+                >
+                  Zones
+                </Button>
+                <Button
+                  size="sm"
+                  variant={mapRenderMode === 'brush' ? 'secondary' : 'ghost'}
+                  className={`h-7 px-2.5 text-xs ${
+                    mapRenderMode === 'brush'
+                      ? 'bg-white text-slate-900 hover:bg-white/90'
+                      : 'text-white hover:bg-slate-800/70'
+                  }`}
+                  onClick={() => setMapRenderMode('brush')}
+                >
+                  Brush
+                </Button>
+                <Button
+                  size="sm"
+                  variant={mapRenderMode === 'both' ? 'secondary' : 'ghost'}
+                  className={`h-7 px-2.5 text-xs ${
+                    mapRenderMode === 'both'
+                      ? 'bg-white text-slate-900 hover:bg-white/90'
+                      : 'text-white hover:bg-slate-800/70'
+                  }`}
+                  onClick={() => setMapRenderMode('both')}
+                >
+                  Both
+                </Button>
+              </div>
+              {cityData && !isMobile && (
+                <MapFilters
+                  showZones={finalShowZones}
+                  showTips={finalShowTips}
+                  onToggleZones={() => {
+                    if (onToggleZones) {
+                      onToggleZones();
+                    } else {
+                      setInternalShowZones(!internalShowZones);
+                    }
+                  }}
+                  onToggleTips={() => {
+                    if (onToggleTips) {
+                      onToggleTips();
+                    } else {
+                      setInternalShowTips(!internalShowTips);
+                    }
+                  }}
+                  zoneCount={cityData.zones.length}
+                  tipCount={cityData.pins.length}
+                />
+              )}
+            </>
           )}
         </div>
 

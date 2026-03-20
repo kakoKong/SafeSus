@@ -2,8 +2,14 @@
 
 import { useEffect, useState } from 'react';
 import { Users } from 'lucide-react';
+import { cn } from '@/lib/utils';
 
-export default function WaitlistCount() {
+interface WaitlistCountProps {
+  className?: string;
+  light?: boolean;
+}
+
+export default function WaitlistCount({ className, light = false }: WaitlistCountProps) {
   const [count, setCount] = useState<number | null>(null);
   const [loading, setLoading] = useState(true);
 
@@ -27,7 +33,7 @@ export default function WaitlistCount() {
 
   if (loading) {
     return (
-      <div className="flex items-center gap-2 text-sm text-muted-foreground">
+      <div className={cn('flex items-center gap-2 text-sm', light ? 'text-white/85' : 'text-muted-foreground', className)}>
         <Users className="h-4 w-4" />
         <span className="animate-pulse">Loading...</span>
       </div>
@@ -39,10 +45,13 @@ export default function WaitlistCount() {
   }
 
   return (
-    <div className="flex items-center gap-2 text-sm text-muted-foreground">
+    <div className={cn('flex items-center gap-2 text-sm', light ? 'text-white/85' : 'text-muted-foreground', className)}>
       <Users className="h-4 w-4" />
       <span>
-        <span className="font-semibold text-foreground">{count.toLocaleString()}</span> {count === 1 ? 'person' : 'people'} on the waitlist
+        <span className={cn('font-semibold', light ? 'text-white' : 'text-foreground')}>
+          {count.toLocaleString()}
+        </span>{' '}
+        {count === 1 ? 'person' : 'people'} on the waitlist
       </span>
     </div>
   );

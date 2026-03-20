@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 // Helper to normalize geometry to GeoJSON Point format
 function normalizeToGeoJSONPoint(geom: any): GeoJSON.Point | null {
@@ -63,7 +63,7 @@ export async function GET(
   request: Request,
   { params }: { params: { slug: string } }
 ) {
-  const supabase = createClient();
+  const supabase = createAdminClient();
   const { slug } = params;
 
   // Get city

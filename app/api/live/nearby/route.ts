@@ -1,5 +1,5 @@
 import { NextResponse } from 'next/server';
-import { createClient } from '@/lib/supabase/server';
+import { createAdminClient } from '@/lib/supabase/admin';
 
 export async function GET(request: Request) {
   const { searchParams } = new URL(request.url);
@@ -14,7 +14,7 @@ export async function GET(request: Request) {
     );
   }
 
-  const supabase = createClient();
+  const supabase = createAdminClient();
 
   // Get zones for the city
   let zonesQuery = supabase.from('zones').select('*');

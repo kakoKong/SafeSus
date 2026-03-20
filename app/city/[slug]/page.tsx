@@ -1,597 +1,282 @@
 'use client';
 
-import { useEffect, useState, useMemo, useCallback, useRef } from 'react';
-import { useParams, useSearchParams } from 'next/navigation';
-import MapView, { type MapViewRef } from '@/components/map/MapView';
-import MapFilterSidebar, { type MapFilters as MapFiltersType } from '@/components/map/MapFilterSidebar';
-import { Card, CardContent, CardDescription, CardHeader, CardTitle } from '@/components/ui/card';
-import { Button } from '@/components/ui/button';
+import { useEffect, useMemo, useRef, useState } from 'react';
+import Image from 'next/image';
+import Link from 'next/link';
+import { Inter, Manrope } from 'next/font/google';
+import { useParams } from 'next/navigation';
+import MapView from '@/components/map/MapView';
+import type { MapViewRef } from '@/components/map/MapView';
+import { Sheet, SheetContent, SheetDescription, SheetHeader, SheetTitle } from '@/components/ui/sheet';
 import { Badge } from '@/components/ui/badge';
-import { Sheet, SheetContent, SheetHeader, SheetTitle, SheetDescription, SheetTrigger } from '@/components/ui/sheet';
-import { Collapsible, CollapsibleContent, CollapsibleTrigger } from '@/components/ui/collapsible';
-import LoginModal from '@/components/shared/LoginModal';
-import ReportButton from '@/components/shared/ReportButton';
-import { Bookmark, Plus, AlertTriangle, CheckCircle, XCircle, ChevronDown, ChevronUp, MapPin, Heart, Backpack, Baby, Sparkles, Info, Navigation } from 'lucide-react';
-import type { CityDetail, Zone, Pin, PinType } from '@/types';
-import { trackEvent, Events } from '@/lib/analytics';
-import { useToast } from '@/components/ui/use-toast';
-import { createClient } from '@/lib/supabase/client';
-import { getPinBadgeClasses, getZoneBadgeClasses } from '@/lib/utils';
-// @ts-ignore - Turf types resolution issue
-import * as turf from '@turf/turf';
-import mapboxgl from 'mapbox-gl';
-import type { LngLatBounds as MapboxLngLatBounds } from 'mapbox-gl';
+import type { CityDetail, Pin, Zone } from '@/types';
+import {
+  BellRing,
+  Bell,
+  Check,
+  Layers3,
+  MapPin,
+  Map,
+  Minus,
+  Plus,
+  Search,
+  ShieldAlert,
+  ShieldCheck,
+  AlertTriangle,
+  UserCircle2,
+  User,
+  Users2,
+  Download,
+  LocateFixed,
+  Maximize2,
+  Minimize2,
+  X,
+} from 'lucide-react';
 
-const TRIP_TYPE_INFO: Record<string, { icon: any; label: string; color: string; tips: string }> = {
-  solo: {
-    icon: Backpack,
-    label: 'Solo Traveler',
-    color: 'bg-orange-500',
-    tips: 'Budget-friendly safety tips, hostel areas, and solo traveler alerts prioritized'
-  },
-  family: {
-    icon: Baby,
-    label: 'Family',
-    color: 'bg-blue-500',
-    tips: 'Family-friendly zones, kid-safe areas, and child-specific safety alerts highlighted'
-  },
-  couple: {
-    icon: Heart,
-    label: 'Couple',
-    color: 'bg-pink-500',
-    tips: 'Couple-friendly safe zones, romantic area safety, and date scams highlighted'
-  }
-};
+const headline = Manrope({ subsets: ['latin'] });
+const body = Inter({ subsets: ['latin'] });
+type MobileFilter = 'all' | 'police' | 'scams' | 'hospitals';
+type MobileMapStyle = 'light' | 'streets' | 'satellite';
+
+function zoneBadgeTone(level: Zone['level']) {
+  if (level === 'recommended') return 'bg-emerald-100 text-emerald-800';
+  if (level === 'caution') return 'bg-amber-100 text-amber-800';
+  if (level === 'avoid') return 'bg-rose-100 text-rose-800';
+  return 'bg-slate-100 text-slate-700';
+}
 
 export default function CityDetailPage() {
   const params = useParams();
-  const searchParams = useSearchParams();
   const slug = params.slug as string;
-  const tripType = searchParams.get('tripType') || '';
+
   const [cityData, setCityData] = useState<CityDetail | null>(null);
   const [loading, setLoading] = useState(true);
   const [selectedZone, setSelectedZone] = useState<Zone | null>(null);
   const [selectedPin, setSelectedPin] = useState<Pin | null>(null);
-  const [showLoginModal, setShowLoginModal] = useState(false);
-  const [isSaved, setIsSaved] = useState(false);
-  
-  // Map ref for controlling zoom
+  const [showZones, setShowZones] = useState(true);
+  const [showScams, setShowScams] = useState(true);
+  const [showHospitals, setShowHospitals] = useState(true);
+  const [showWeather, setShowWeather] = useState(true);
+  const [showRadiusBrush, setShowRadiusBrush] = useState(false);
+  const [isFullscreenMap, setIsFullscreenMap] = useState(false);
+  const [mobileFilter, setMobileFilter] = useState<MobileFilter>('all');
+  const [mobileMapStyle, setMobileMapStyle] = useState<MobileMapStyle>('light');
+  const [searchQuery, setSearchQuery] = useState('');
+  const [checklistState, setChecklistState] = useState<Record<number, boolean>>({});
+  const [activeMobileTab, setActiveMobileTab] = useState<'map' | 'alerts' | 'safety' | 'profile'>('map');
   const mapRef = useRef<MapViewRef>(null);
-  
-  // Collapsible sections state
-  const [safeZonesOpen, setSafeZonesOpen] = useState(false);
-  const [avoidZonesOpen, setAvoidZonesOpen] = useState(false);
-  const [scamsOpen, setScamsOpen] = useState(false);
-  
-  // Show more/less state
-  const [showAllSafeZones, setShowAllSafeZones] = useState(false);
-  const [showAllAvoidZones, setShowAllAvoidZones] = useState(false);
-  const [showAllScams, setShowAllScams] = useState(false);
-  
-  // Map viewport state
-  const [mapBounds, setMapBounds] = useState<MapboxLngLatBounds | null>(null);
-  
-  // Map filters state
-  const [mapFilters, setMapFilters] = useState<MapFiltersType>({
-    zoneLevels: ['avoid', 'caution', 'neutral', 'recommended'],
-    pinTypes: ['scam', 'harassment', 'overcharge', 'other'],
-    tipCategories: ['stay', 'scam', 'do_dont'],
-    showZones: true,
-    showPins: true,
-    showTips: true,
-    showReports: true,
-    showIncidents: true,
-    dateRange: 'all',
-  });
-  
-  // Mobile drawer state
-  const [mobileDrawerOpen, setMobileDrawerOpen] = useState(false);
-  
-  // Location state
-  const [locationLoading, setLocationLoading] = useState(false);
-  
-  const { toast } = useToast();
-  const supabase = createClient();
-  
-  const INITIAL_SHOW_COUNT = 3;
 
   useEffect(() => {
     async function fetchCity() {
       try {
         const res = await fetch(`/api/city/${slug}`);
         const data = await res.json();
-        
-        if (data.city) {
-          setCityData(data.city);
-          trackEvent(Events.CITY_VIEW, { city: data.city.name });
-          checkIfSaved(data.city.id);
-        }
+        setCityData(data.city ?? null);
       } catch (error) {
         console.error('Failed to fetch city:', error);
+        setCityData(null);
       } finally {
         setLoading(false);
       }
     }
-
     fetchCity();
   }, [slug]);
 
-  async function checkIfSaved(cityId: number) {
-    const { data: { user } } = await supabase.auth.getUser();
-    if (!user) return;
+  useEffect(() => {
+    const stateByFilter: Record<MobileFilter, { zones: boolean; scams: boolean; hospitals: boolean }> = {
+      all: { zones: true, scams: true, hospitals: true },
+      police: { zones: true, scams: false, hospitals: false },
+      scams: { zones: false, scams: true, hospitals: false },
+      hospitals: { zones: false, scams: false, hospitals: true },
+    };
+    const nextState = stateByFilter[mobileFilter];
+    setShowZones(nextState.zones);
+    setShowScams(nextState.scams);
+    setShowHospitals(nextState.hospitals);
+  }, [mobileFilter]);
 
-    const { data } = await supabase
-      .from('saved_cities')
-      .select('*')
-      .eq('user_id', user.id)
-      .eq('city_id', cityId)
-      .single();
-
-    setIsSaved(!!data);
-  }
-
-  async function handleSaveCity() {
-    const { data: { user } } = await supabase.auth.getUser();
-    
-    if (!user) {
-      setShowLoginModal(true);
-      return;
-    }
-
+  useEffect(() => {
     if (!cityData) return;
-
+    const key = `city-checklist:${slug}`;
     try {
-      if (isSaved) {
-        const res = await fetch('/api/save', {
-          method: 'DELETE',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ city_id: cityData.id }),
-        });
-
-        if (res.ok) {
-          setIsSaved(false);
-          toast({ title: 'City removed from saved list' });
-        }
-      } else {
-        const res = await fetch('/api/save', {
-          method: 'POST',
-          headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ city_id: cityData.id }),
-        });
-
-        if (res.ok) {
-          setIsSaved(true);
-          toast({ title: 'City saved!' });
-          trackEvent(Events.SAVE_CITY, { city: cityData.name });
-        }
+      const raw = localStorage.getItem(key);
+      if (raw) {
+        const parsed = JSON.parse(raw) as Record<number, boolean>;
+        setChecklistState(parsed);
+        return;
       }
-    } catch (error) {
-      toast({ title: 'Error', description: 'Failed to save city', variant: 'destructive' });
+    } catch {
+      // Ignore invalid localStorage payloads.
     }
-  }
-
-  const handleZoneClick = useCallback((zone: Zone, shouldZoom: boolean = false) => {
-    setSelectedZone(zone);
-    trackEvent(Events.ZONE_POPOVER_OPEN, { zone: zone.label, level: zone.level });
-    
-    // Zoom to zone if requested
-    if (shouldZoom && mapRef.current) {
-      mapRef.current.zoomToZone(zone);
-    }
-  }, []);
-
-  const handlePinClick = useCallback((pin: Pin, shouldZoom: boolean = false) => {
-    setSelectedPin(pin);
-    trackEvent(Events.PIN_DETAILS_OPEN, { pin: pin.title, type: pin.type });
-    
-    // Zoom to pin if requested
-    if (shouldZoom && mapRef.current) {
-      mapRef.current.zoomToPin(pin);
-    }
-  }, []);
-
-  // Viewport change handler - disabled since we're not using viewport filtering
-  // This prevents unnecessary re-renders when map tiles load or layers update
-  const handleViewportChange = useCallback((bounds: mapboxgl.LngLatBounds) => {
-    // Do nothing - we're not using viewport filtering anymore
-    // Mapbox handles viewport culling automatically
-  }, []);
-
-  const handleUseCurrentLocation = useCallback(() => {
-    if (!navigator.geolocation) {
-      toast({
-        title: 'Location not supported',
-        description: 'Your browser does not support geolocation.',
-        variant: 'destructive',
-      });
-      return;
-    }
-
-    setLocationLoading(true);
-    navigator.geolocation.getCurrentPosition(
-      (position) => {
-        const { longitude, latitude } = position.coords;
-        if (mapRef.current) {
-          mapRef.current.zoomToLocation(longitude, latitude);
-          toast({
-            title: 'Location found',
-            description: 'Map centered on your current location.',
-          });
-        }
-        setLocationLoading(false);
-      },
-      (error) => {
-        setLocationLoading(false);
-        toast({
-          title: 'Location error',
-          description: error.message || 'Unable to get your location. Please check your permissions.',
-          variant: 'destructive',
-        });
-      }
-    );
-  }, [toast]);
-
-  // Memoize and filter zones and pins based on layer toggles and filter criteria
-  const allZones = useMemo(() => {
-    if (!cityData || !mapFilters.showZones) return [];
-    return cityData.zones.filter(zone => mapFilters.zoneLevels.includes(zone.level));
-  }, [cityData, mapFilters.showZones, mapFilters.zoneLevels]);
-
-  const allPins = useMemo(() => {
-    if (!cityData || !mapFilters.showPins) return [];
-    return cityData.pins.filter(pin => mapFilters.pinTypes.includes(pin.type));
-  }, [cityData, mapFilters.showPins, mapFilters.pinTypes]);
-
-  // Get reports with locations that match pin types (reports.category maps to pin types)
-  const allReports = useMemo(() => {
-    if (!cityData || !mapFilters.showReports) return [];
-    const categoryToPinType: Record<string, string> = {
-      'scam': 'scam',
-      'harassment': 'harassment',
-      'overcharge': 'overcharge',
-      'accommodation': 'other',
-      'other': 'other',
-    };
-    return (cityData.reports || []).filter(report => {
-      const pinType = categoryToPinType[report.category] || 'other';
-      return mapFilters.pinTypes.includes(pinType as any);
+    const initial: Record<number, boolean> = {};
+    cityData.rules.slice(0, 3).forEach((rule) => {
+      initial[rule.id] = true;
     });
-  }, [cityData, mapFilters.showReports, mapFilters.pinTypes]);
+    setChecklistState(initial);
+  }, [cityData, slug]);
 
-  // Get tips with locations that match tip categories
-  const allTips = useMemo(() => {
-    if (!cityData || !mapFilters.showTips) return [];
-    return (cityData.tips || []).filter(tip => 
-      mapFilters.tipCategories.includes(tip.category as any)
-    );
-  }, [cityData, mapFilters.showTips, mapFilters.tipCategories]);
-
-  // Get incidents
-  const allIncidents = useMemo(() => {
-    if (!cityData || !mapFilters.showIncidents) return [];
-    return cityData.incidents || [];
-  }, [cityData, mapFilters.showIncidents]);
-
-  // Filter all items based on map viewport - always active
-  // Note: We show all items on the map, viewport filtering is handled by Mapbox
-  const { filteredZones, filteredPins, filteredReports, filteredTips, filteredIncidents } = useMemo(() => {
-    // Return all items - Mapbox will handle viewport culling automatically
-    // This ensures consistent display regardless of viewport changes
-    return {
-      filteredZones: allZones,
-      filteredPins: allPins,
-      filteredReports: allReports,
-      filteredTips: allTips,
-      filteredIncidents: allIncidents,
-    };
-    
-    /* Original viewport filtering - disabled for consistency
-    if (!mapBounds) {
-      return {
-        filteredZones: allZones,
-        filteredPins: allPins,
-        filteredReports: allReports,
-        filteredTips: allTips,
-        filteredIncidents: allIncidents,
-      };
-    }
-
-    const boundsPolygon = turf.bboxPolygon([
-      mapBounds.getWest(),
-      mapBounds.getSouth(),
-      mapBounds.getEast(),
-      mapBounds.getNorth()
-    ]);
-
-    // Filter zones that intersect with the viewport
-    const zonesInView = allZones.filter(zone => {
-      try {
-        const zoneFeature = turf.feature(zone.geom);
-        return turf.booleanIntersects(boundsPolygon, zoneFeature);
-      } catch (error) {
-        return false;
-      }
+  const safeZones = useMemo(
+    () => (cityData?.zones ?? []).filter((z) => z.level === 'recommended'),
+    [cityData]
+  );
+  const watchZones = useMemo(
+    () => (cityData?.zones ?? []).filter((z) => z.level === 'neutral' || z.level === 'caution'),
+    [cityData]
+  );
+  const avoidZones = useMemo(
+    () => (cityData?.zones ?? []).filter((z) => z.level === 'avoid'),
+    [cityData]
+  );
+  const scamPins = useMemo(
+    () => (cityData?.pins ?? []).filter((p) => p.type === 'scam'),
+    [cityData]
+  );
+  const zoneCards = useMemo(() => (cityData?.zones ?? []).slice(0, 4), [cityData]);
+  const prepRules = useMemo(() => (cityData?.rules ?? []).slice(0, 3), [cityData]);
+  const normalizedSearch = searchQuery.trim().toLowerCase();
+  const filteredZones = useMemo(() => {
+    if (!cityData) return [];
+    if (!normalizedSearch) return cityData.zones;
+    return cityData.zones.filter((zone) => {
+      const haystack = `${zone.label} ${zone.reason_short} ${zone.reason_long ?? ''}`.toLowerCase();
+      return haystack.includes(normalizedSearch);
     });
+  }, [cityData, normalizedSearch]);
+  const filteredZoneCards = useMemo(() => filteredZones.slice(0, 4), [filteredZones]);
+  const filteredPrepRules = useMemo(() => prepRules, [prepRules]);
 
-    // Helper to check if point is in viewport
-    const isPointInView = (lng: number, lat: number) => {
-      try {
-        const point = turf.point([lng, lat]);
-        return turf.booleanPointInPolygon(point, boundsPolygon);
-      } catch {
-        return false;
-      }
-    };
+  const safetyIndex = useMemo(() => {
+    if (!cityData || cityData.zones.length === 0) return 75;
+    const value =
+      (safeZones.length * 1 + watchZones.length * 0.7 + (cityData.zones.length - avoidZones.length) * 0.3) /
+      cityData.zones.length;
+    return Math.max(10, Math.min(99, Math.round(value * 100)));
+  }, [avoidZones.length, cityData, safeZones.length, watchZones.length]);
 
-    // Filter pins
-    const pinsInView = allPins.filter(pin => {
-      try {
-        if (!pin.location || !pin.location.coordinates) return false;
-        const [lng, lat] = pin.location.coordinates;
-        if (typeof lng !== 'number' || typeof lat !== 'number' || 
-            isNaN(lng) || isNaN(lat)) return false;
-        return isPointInView(lng, lat);
-      } catch {
-        return false;
-      }
-    });
+  const statusLabel = safetyIndex >= 80 ? 'Highly Secure' : safetyIndex >= 60 ? 'Use Caution in Spots' : 'Heightened Alert';
 
-    // Filter reports (convert geom to coordinates)
-    const reportsInView = allReports.filter(report => {
-      try {
-        // Parse PostGIS geometry or use geom coordinates
-        if (report.geom?.coordinates) {
-          const [lng, lat] = report.geom.coordinates;
-          return isPointInView(lng, lat);
-        }
-        // If it's a string, try to parse it
-        if (typeof report.geom === 'string' && report.geom.includes('POINT')) {
-          const match = report.geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
-          if (match) {
-            return isPointInView(parseFloat(match[1]), parseFloat(match[2]));
-          }
-        }
-        return false;
-      } catch {
-        return false;
+  const mapPins = useMemo(() => {
+    if (!cityData) return [];
+    return cityData.pins.filter((pin) => {
+      if (!showScams && pin.type === 'scam') return false;
+      if (!showHospitals && pin.type === 'other') return false;
+      if (normalizedSearch) {
+        const haystack = `${pin.title} ${pin.summary} ${pin.details ?? ''}`.toLowerCase();
+        if (!haystack.includes(normalizedSearch)) return false;
       }
+      return true;
     });
+  }, [cityData, normalizedSearch, showHospitals, showScams]);
 
-    // Filter tips
-    const tipsInView = allTips.filter(tip => {
-      try {
-        const location = tip.location_v2 || tip.location;
-        if (!location) return false;
-        if (location.coordinates) {
-          const [lng, lat] = location.coordinates;
-          return isPointInView(lng, lat);
-        }
-        // Parse if string
-        if (typeof location === 'string' && location.includes('POINT')) {
-          const match = location.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
-          if (match) {
-            return isPointInView(parseFloat(match[1]), parseFloat(match[2]));
-          }
-        }
-        return false;
-      } catch {
-        return false;
-      }
-    });
-
-    // Filter incidents
-    const incidentsInView = allIncidents.filter(incident => {
-      try {
-        if (incident.geom?.coordinates) {
-          const [lng, lat] = incident.geom.coordinates;
-          return isPointInView(lng, lat);
-        }
-        if (typeof incident.geom === 'string' && incident.geom.includes('POINT')) {
-          const match = incident.geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
-          if (match) {
-            return isPointInView(parseFloat(match[1]), parseFloat(match[2]));
-          }
-        }
-        return false;
-      } catch {
-        return false;
-      }
-    });
-
-    return {
-      filteredZones: zonesInView,
-      filteredPins: pinsInView,
-      filteredReports: reportsInView,
-      filteredTips: tipsInView,
-      filteredIncidents: incidentsInView,
-    };
-    */
-  }, [allZones, allPins, allReports, allTips, allIncidents]);
-
-  // Memoize combined pins for map (pins + reports + tips + incidents)
-  const allMapPins = useMemo((): Pin[] => {
-    const pins: Pin[] = [];
-    
-    // Add filtered pins (validate first)
-    filteredPins.forEach(pin => {
-      if (pin.location && pin.location.coordinates && 
-          Array.isArray(pin.location.coordinates) && 
-          pin.location.coordinates.length === 2) {
-        const [lng, lat] = pin.location.coordinates;
-        if (typeof lng === 'number' && typeof lat === 'number' && 
-            !isNaN(lng) && !isNaN(lat) &&
-            lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
-          pins.push(pin);
-        }
-      }
-    });
-    
-    // Convert reports to pin format
-    filteredReports.forEach((r: any) => {
-      let location: GeoJSON.Point | null = null;
-      if (r.geom?.coordinates && Array.isArray(r.geom.coordinates) && r.geom.coordinates.length === 2) {
-        const [lng, lat] = r.geom.coordinates;
-        if (typeof lng === 'number' && typeof lat === 'number' && 
-            !isNaN(lng) && !isNaN(lat) &&
-            lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
-          location = r.geom;
-        }
-      } else if (typeof r.geom === 'string' && r.geom.includes('POINT')) {
-        const match = r.geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
-        if (match) {
-          const lng = parseFloat(match[1]);
-          const lat = parseFloat(match[2]);
-          if (!isNaN(lng) && !isNaN(lat) && 
-              lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
-            location = { type: 'Point' as const, coordinates: [lng, lat] };
-          }
-        }
-      }
-      if (location) {
-        pins.push({
-          id: r.id + 10000,
-          city_id: r.city_id,
-          type: (r.category === 'scam' ? 'scam' : r.category === 'harassment' ? 'harassment' : r.category === 'overcharge' ? 'overcharge' : 'other') as PinType,
-          title: r.title,
-          summary: r.summary,
-          details: r.details,
-          location,
-          status: 'approved' as const,
-          source: 'user' as const,
-          created_at: r.created_at,
-        });
-      }
-    });
-    
-    // Convert tips to pin format
-    filteredTips.forEach((t: any) => {
-      const location = t.location_v2 || t.location;
-      if (!location) return;
-      let coords: [number, number] | null = null;
-      if (location.coordinates && Array.isArray(location.coordinates) && location.coordinates.length === 2) {
-        const [lng, lat] = location.coordinates;
-        if (typeof lng === 'number' && typeof lat === 'number' && 
-            !isNaN(lng) && !isNaN(lat) &&
-            lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
-          coords = location.coordinates as [number, number];
-        }
-      } else if (typeof location === 'string' && location.includes('POINT')) {
-        const match = location.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
-        if (match) {
-          const lng = parseFloat(match[1]);
-          const lat = parseFloat(match[2]);
-          if (!isNaN(lng) && !isNaN(lat) && 
-              lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
-            coords = [lng, lat];
-          }
-        }
-      }
-      if (coords) {
-        pins.push({
-          id: t.id + 20000,
-          city_id: t.city_id,
-          type: (t.category === 'scam' ? 'scam' : 'other') as PinType,
-          title: t.title,
-          summary: t.summary,
-          details: t.details,
-          location: { type: 'Point' as const, coordinates: coords },
-          status: 'approved' as const,
-          source: 'user' as const,
-          created_at: t.created_at,
-        });
-      }
-    });
-    
-    // Convert incidents to pin format
-    filteredIncidents.forEach((i: any) => {
-      let coords: [number, number] | null = null;
-      if (i.geom?.coordinates && Array.isArray(i.geom.coordinates) && i.geom.coordinates.length === 2) {
-        const [lng, lat] = i.geom.coordinates;
-        if (typeof lng === 'number' && typeof lat === 'number' && 
-            !isNaN(lng) && !isNaN(lat) &&
-            lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
-          coords = i.geom.coordinates as [number, number];
-        }
-      } else if (typeof i.geom === 'string' && i.geom.includes('POINT')) {
-        const match = i.geom.match(/POINT\(([-\d.]+)\s+([-\d.]+)\)/);
-        if (match) {
-          const lng = parseFloat(match[1]);
-          const lat = parseFloat(match[2]);
-          if (!isNaN(lng) && !isNaN(lat) && 
-              lng >= -180 && lng <= 180 && lat >= -90 && lat <= 90) {
-            coords = [lng, lat];
-          }
-        }
-      }
-      if (coords) {
-        pins.push({
-          id: i.id + 30000,
-          city_id: i.city_id,
-          type: 'scam' as PinType,
-          title: i.title,
-          summary: i.canonical_summary || '',
-          details: null,
-          location: { type: 'Point' as const, coordinates: coords },
-          status: 'approved' as const,
-          source: 'curated' as const,
-          created_at: i.first_report_at || i.updated_at,
-        });
-      }
-    });
-    
-    return pins;
-  }, [filteredPins, filteredReports, filteredTips, filteredIncidents]);
-
-  // Calculate city bounds from zones and pins
   const cityBounds = useMemo(() => {
-    if (!cityData || (!cityData.zones.length && !cityData.pins.length)) return null;
-    
-    try {
-      const bounds = new mapboxgl.LngLatBounds();
-      let hasBounds = false;
+    if (!cityData) return null;
 
-      // Add all zone bounds
-      cityData.zones.forEach((zone) => {
-        const coords = zone.geom.coordinates[0];
-        coords.forEach((coord) => {
-          bounds.extend([coord[0], coord[1]]);
-          hasBounds = true;
-        });
+    let minLng = Number.POSITIVE_INFINITY;
+    let maxLng = Number.NEGATIVE_INFINITY;
+    let minLat = Number.POSITIVE_INFINITY;
+    let maxLat = Number.NEGATIVE_INFINITY;
+
+    cityData.zones.forEach((zone) => {
+      zone.geom.coordinates[0].forEach(([lng, lat]) => {
+        minLng = Math.min(minLng, lng);
+        maxLng = Math.max(maxLng, lng);
+        minLat = Math.min(minLat, lat);
+        maxLat = Math.max(maxLat, lat);
       });
+    });
+    cityData.pins.forEach((pin) => {
+      const [lng, lat] = pin.location.coordinates;
+      minLng = Math.min(minLng, lng);
+      maxLng = Math.max(maxLng, lng);
+      minLat = Math.min(minLat, lat);
+      maxLat = Math.max(maxLat, lat);
+    });
 
-      // Add all pin locations
-      cityData.pins.forEach((pin) => {
-        const [lng, lat] = pin.location.coordinates;
-        bounds.extend([lng, lat]);
-        hasBounds = true;
-      });
-
-      if (!hasBounds) return null;
-
-      // Add padding (extend bounds by 10%)
-      const ne = bounds.getNorthEast();
-      const sw = bounds.getSouthWest();
-      const lngPadding = (ne.lng - sw.lng) * 0.4;
-      const latPadding = (ne.lat - sw.lat) * 0.4;
-
-      const paddedBounds: [[number, number], [number, number]] = [
-        [sw.lng - lngPadding, sw.lat - latPadding],
-        [ne.lng + lngPadding, ne.lat + latPadding]
-      ];
-
-      return paddedBounds;
-    } catch (error) {
-      console.error('Error calculating city bounds:', error);
-      return null;
-    }
+    if (![minLng, maxLng, minLat, maxLat].every(Number.isFinite)) return null;
+    const padLng = (maxLng - minLng) * 0.2 || 0.05;
+    const padLat = (maxLat - minLat) * 0.2 || 0.05;
+    return [
+      [minLng - padLng, minLat - padLat],
+      [maxLng + padLng, maxLat + padLat],
+    ] as [[number, number], [number, number]];
   }, [cityData]);
+
+  const checklistDoneCount = useMemo(
+    () => filteredPrepRules.filter((rule) => checklistState[rule.id]).length,
+    [checklistState, filteredPrepRules]
+  );
+
+  const toggleChecklist = (ruleId: number) => {
+    setChecklistState((prev) => {
+      const next = { ...prev, [ruleId]: !prev[ruleId] };
+      try {
+        localStorage.setItem(`city-checklist:${slug}`, JSON.stringify(next));
+      } catch {
+        // Ignore localStorage write failures.
+      }
+      return next;
+    });
+  };
+
+  const cycleMapStyle = () => {
+    setMobileMapStyle((prev) => (prev === 'light' ? 'streets' : prev === 'streets' ? 'satellite' : 'light'));
+  };
+
+  const mapSectionRef = useRef<HTMLElement | null>(null);
+  const alertsSectionRef = useRef<HTMLElement | null>(null);
+  const safetySectionRef = useRef<HTMLElement | null>(null);
+
+  const scrollToSection = (section: 'map' | 'alerts' | 'safety') => {
+    const target =
+      section === 'map' ? mapSectionRef.current : section === 'alerts' ? alertsSectionRef.current : safetySectionRef.current;
+    target?.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setActiveMobileTab(section);
+  };
+
+  useEffect(() => {
+    const observer = new IntersectionObserver(
+      (entries) => {
+        const visible = entries
+          .filter((entry) => entry.isIntersecting)
+          .sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (!visible?.target?.id) return;
+        if (visible.target.id === 'live-map-mobile') setActiveMobileTab('map');
+        if (visible.target.id === 'alerts-mobile') setActiveMobileTab('alerts');
+        if (visible.target.id === 'tips-mobile') setActiveMobileTab('safety');
+      },
+      { rootMargin: '-25% 0px -45% 0px', threshold: [0.1, 0.35, 0.6] }
+    );
+
+    if (mapSectionRef.current) observer.observe(mapSectionRef.current);
+    if (alertsSectionRef.current) observer.observe(alertsSectionRef.current);
+    if (safetySectionRef.current) observer.observe(safetySectionRef.current);
+
+    return () => observer.disconnect();
+  }, []);
 
   if (loading) {
     return (
-      <div className="flex items-center justify-center min-h-screen">
-        <div className="text-center">
-          <div className="animate-spin rounded-full h-12 w-12 border-b-2 border-primary mx-auto mb-4"></div>
-          <p className="text-muted-foreground">Loading city data...</p>
+      <div className={`${body.className} min-h-screen bg-[#fdf8fd] px-4 pb-10 pt-24`}>
+        <div className="mx-auto w-full max-w-2xl space-y-6">
+          <div className="rounded-[2rem] bg-gradient-to-br from-[#265fa1] to-[#004786] p-6 text-white shadow-xl">
+            <div className="mb-3 inline-flex items-center gap-2 rounded-full bg-white/15 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
+              <span className="h-2 w-2 animate-pulse rounded-full bg-emerald-300" />
+              Loading Live Safety Feed
+            </div>
+            <h1 className={`${headline.className} text-2xl font-extrabold tracking-tight sm:text-3xl`}>
+              Preparing {slug.replace('-', ' ')} intelligence
+            </h1>
+            <p className="mt-2 text-sm text-white/80">Fetching latest zones, reports, and checkpoints...</p>
+          </div>
+
+          <div className="space-y-4 rounded-[2rem] bg-[#ededf4] p-5">
+            <div className="h-4 w-40 animate-pulse rounded bg-slate-300/70" />
+            <div className="h-[220px] animate-pulse rounded-[1.5rem] bg-slate-300/60" />
+            <div className="grid grid-cols-2 gap-3">
+              <div className="h-11 animate-pulse rounded-xl bg-slate-300/60" />
+              <div className="h-11 animate-pulse rounded-xl bg-slate-300/60" />
+            </div>
+          </div>
         </div>
       </div>
     );
@@ -599,570 +284,616 @@ export default function CityDetailPage() {
 
   if (!cityData) {
     return (
-      <div className="container px-4 py-16 text-center">
-        <h1 className="text-2xl font-bold mb-4">City Not Found</h1>
-        <p className="text-muted-foreground mb-6">The city you're looking for doesn't exist or isn't supported yet.</p>
-        <Button asChild>
-          <a href="/cities">Browse Cities</a>
-        </Button>
+      <div className={`${body.className} flex min-h-screen items-center justify-center bg-[#fdf8fd] px-6`}>
+        <div className="max-w-md rounded-3xl bg-white p-8 text-center shadow-sm">
+          <h1 className={`${headline.className} mb-3 text-3xl font-black text-[#00327d]`}>City Not Found</h1>
+          <p className="mb-6 text-sm text-slate-500">This city does not exist yet or is not currently available.</p>
+          <Link href="/" className="inline-block rounded-xl bg-[#00327d] px-5 py-3 text-sm font-bold text-white">
+            Back Home
+          </Link>
+        </div>
       </div>
     );
   }
 
-  const safeZones = filteredZones.filter((z) => z.level === 'recommended');
-  const avoidZones = filteredZones.filter((z) => z.level === 'avoid');
-  const scamPins = filteredPins.filter((p) => p.type === 'scam');
-  const dos = cityData.rules.filter((r) => r.kind === 'do');
-  const donts = cityData.rules.filter((r) => r.kind === 'dont');
-
-  // Track total counts (unfiltered)
-  const totalSafeZones = cityData.zones.filter((z) => z.level === 'recommended').length;
-  const totalAvoidZones = cityData.zones.filter((z) => z.level === 'avoid').length;
-  const totalScamPins = cityData.pins.filter((p) => p.type === 'scam').length;
-
   return (
-    <div className="flex flex-col h-[calc(100vh-4rem)] lg:h-[calc(100vh-4rem)] overflow-hidden">
-      <div className="flex flex-col lg:flex-row h-full overflow-hidden w-full">
-        {/* Map Section - Full width */}
-        <div className="w-full h-full relative overflow-hidden">
-          {/* Filter Modal Button */}
-          <MapFilterSidebar
-            filters={mapFilters}
-            onFiltersChange={setMapFilters}
-            counts={{
-              zones: cityData.zones.length,
-              pins: cityData.pins.length,
-              tips: (cityData.tips || []).length,
-              reports: (cityData.reports || []).length,
-              incidents: (cityData.incidents || []).length,
-            }}
-          />
-          <MapView
-            ref={mapRef}
-            zones={filteredZones}
-            pins={allMapPins}
-            onZoneClick={(zone) => handleZoneClick(zone, false)}
-            onPinClick={(pin) => handlePinClick(pin, false)}
-            onViewportChange={handleViewportChange}
-            maxBounds={cityBounds}
-          />
-          
-
-          {/* Current Location Button */}
-          <div className="absolute top-4 right-4 z-10">
-            <Button
-              onClick={handleUseCurrentLocation}
-              disabled={locationLoading}
-              variant="outline"
-              size="sm"
-              className="bg-white dark:bg-slate-900 shadow-lg hover:shadow-xl"
-            >
-              <Navigation className={`h-4 w-4 mr-2 ${locationLoading ? 'animate-spin' : ''}`} />
-              {locationLoading ? 'Locating...' : 'My Location'}
-            </Button>
-          </div>
-
-          {/* Mobile: Floating info button */}
-          <div className="lg:hidden absolute bottom-4 left-4 right-4 z-10">
-            <Sheet open={mobileDrawerOpen} onOpenChange={setMobileDrawerOpen}>
-              <SheetTrigger asChild>
-                <Button 
-                  size="lg" 
-                  className="w-full shadow-xl bg-primary hover:bg-primary/90"
-                  onClick={() => setMobileDrawerOpen(true)}
-                >
-                  <MapPin className="h-5 w-5 mr-2" />
-                  View Area Info
-                </Button>
-              </SheetTrigger>
-              <SheetContent side="bottom" className="max-h-[90vh]">
-                <div className="pb-8">
-                  <div className="mb-6 pb-4 border-b">
-                    <div className="flex items-start justify-between gap-3 mb-3">
-                      <div>
-                        <h2 className="text-2xl font-bold mb-1">{cityData.name}</h2>
-                        <p className="text-sm text-muted-foreground">{cityData.country}</p>
-                      </div>
-                      <Button 
-                        onClick={handleSaveCity} 
-                        variant={isSaved ? 'default' : 'outline'}
-                        size="sm"
-                      >
-                        <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
-                      </Button>
-                    </div>
-                    
-                    {tripType && TRIP_TYPE_INFO[tripType] && (
-                      <div className={`p-3 rounded-xl ${TRIP_TYPE_INFO[tripType].color} text-white`}>
-                        <div className="flex items-center gap-2">
-                          {(() => {
-                            const Icon = TRIP_TYPE_INFO[tripType].icon;
-                            return <Icon className="h-5 w-5" />;
-                          })()}
-                          <div>
-                            <div className="font-bold text-base">{TRIP_TYPE_INFO[tripType].label} Safety Mode</div>
-                          </div>
-                        </div>
-                      </div>
-                    )}
-                  </div>
-
-                  {/* Mobile: Show all content sections */}
-                  {/* Safe Areas */}
-                  {(safeZones.length > 0 || totalSafeZones > 0) && (
-                    <Collapsible open={safeZonesOpen} onOpenChange={setSafeZonesOpen} className="mb-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-green-500/10 rounded-lg">
-                            <CheckCircle className="h-4 w-4 text-green-600 dark:text-green-400" />
-                          </div>
-                          <h3 className="text-lg font-bold">Safe Areas</h3>
-                          <Badge variant="secondary" className="text-xs">{safeZones.length}</Badge>
-                        </div>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            {safeZonesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-                      <CollapsibleContent className="space-y-2">
-                        {safeZones.slice(0, showAllSafeZones ? safeZones.length : INITIAL_SHOW_COUNT).map((zone) => (
-                          <div 
-                            key={zone.id}
-                            className="p-3 bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-900 rounded-xl"
-                            onClick={() => {
-                              handleZoneClick(zone, true);
-                              setMobileDrawerOpen(false);
-                            }}
-                          >
-                            <h4 className="font-bold text-sm text-green-900 dark:text-green-100">{zone.label}</h4>
-                            <p className="text-xs text-green-700 dark:text-green-300">{zone.reason_short}</p>
-                          </div>
-                        ))}
-                        {safeZones.length > INITIAL_SHOW_COUNT && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="w-full text-xs"
-                            onClick={() => setShowAllSafeZones(!showAllSafeZones)}
-                          >
-                            {showAllSafeZones ? 'Show Less' : `Show ${safeZones.length - INITIAL_SHOW_COUNT} More`}
-                          </Button>
-                        )}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-
-                  {/* Avoid Areas */}
-                  {(avoidZones.length > 0 || totalAvoidZones > 0) && (
-                    <Collapsible open={avoidZonesOpen} onOpenChange={setAvoidZonesOpen} className="mb-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-red-500/10 rounded-lg">
-                            <AlertTriangle className="h-4 w-4 text-red-600 dark:text-red-400" />
-                          </div>
-                          <h3 className="text-lg font-bold">Areas to Avoid</h3>
-                          <Badge variant="secondary" className="text-xs">{avoidZones.length}</Badge>
-                        </div>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            {avoidZonesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-                      <CollapsibleContent className="space-y-2">
-                        {avoidZones.slice(0, showAllAvoidZones ? avoidZones.length : INITIAL_SHOW_COUNT).map((zone) => (
-                          <div 
-                            key={zone.id}
-                            className="p-3 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl"
-                            onClick={() => {
-                              handleZoneClick(zone, true);
-                              setMobileDrawerOpen(false);
-                            }}
-                          >
-                            <h4 className="font-bold text-sm text-red-900 dark:text-red-100">{zone.label}</h4>
-                            <p className="text-xs text-red-700 dark:text-red-300">{zone.reason_short}</p>
-                          </div>
-                        ))}
-                        {avoidZones.length > INITIAL_SHOW_COUNT && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="w-full text-xs"
-                            onClick={() => setShowAllAvoidZones(!showAllAvoidZones)}
-                          >
-                            {showAllAvoidZones ? 'Show Less' : `Show ${avoidZones.length - INITIAL_SHOW_COUNT} More`}
-                          </Button>
-                        )}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-
-                  {/* Scam Patterns */}
-                  {(scamPins.length > 0 || totalScamPins > 0) && (
-                    <Collapsible open={scamsOpen} onOpenChange={setScamsOpen} className="mb-6">
-                      <div className="flex items-center justify-between mb-3">
-                        <div className="flex items-center gap-2">
-                          <div className="p-1.5 bg-orange-500/10 rounded-lg">
-                            <Info className="h-4 w-4 text-orange-600 dark:text-orange-400" />
-                          </div>
-                          <h3 className="text-lg font-bold">Common Scams</h3>
-                          <Badge variant="secondary" className="text-xs">{scamPins.length}</Badge>
-                        </div>
-                        <CollapsibleTrigger asChild>
-                          <Button variant="ghost" size="sm">
-                            {scamsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                          </Button>
-                        </CollapsibleTrigger>
-                      </div>
-                      <CollapsibleContent className="space-y-2">
-                        {scamPins.slice(0, showAllScams ? scamPins.length : INITIAL_SHOW_COUNT).map((pin) => (
-                          <div 
-                            key={pin.id}
-                            className="p-3 bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-200 dark:border-orange-900 rounded-xl"
-                            onClick={() => {
-                              handlePinClick(pin, true);
-                              setMobileDrawerOpen(false);
-                            }}
-                          >
-                            <h4 className="font-bold text-sm text-orange-900 dark:text-orange-100">{pin.title}</h4>
-                            <p className="text-xs text-orange-700 dark:text-orange-300">{pin.summary}</p>
-                          </div>
-                        ))}
-                        {scamPins.length > INITIAL_SHOW_COUNT && (
-                          <Button 
-                            variant="ghost" 
-                            size="sm" 
-                            className="w-full text-xs"
-                            onClick={() => setShowAllScams(!showAllScams)}
-                          >
-                            {showAllScams ? 'Show Less' : `Show ${scamPins.length - INITIAL_SHOW_COUNT} More`}
-                          </Button>
-                        )}
-                      </CollapsibleContent>
-                    </Collapsible>
-                  )}
-                </div>
-              </SheetContent>
-            </Sheet>
-          </div>
+    <div className={`${body.className} bg-[#fdf8fd] text-[#1c1b1f]`}>
+      <header className="fixed top-0 z-50 flex h-16 w-full items-center justify-between bg-[#fdf8fd]/90 px-4 shadow-[0_16px_32px_rgba(28,27,31,0.04)] backdrop-blur-xl md:hidden">
+        <div className="flex items-center gap-2">
+          <MapPin className="h-5 w-5 text-[#00327d]" />
+          <span className={`${headline.className} text-lg font-extrabold tracking-tight text-[#00327d]`}>SafeSus</span>
         </div>
+        <Link
+          href="/account"
+          className="flex h-10 w-10 items-center justify-center overflow-hidden rounded-full border border-[#76a8ef]/30 bg-[#e1e2e8]"
+        >
+          <User className="h-5 w-5 text-[#00327d]" />
+        </Link>
+      </header>
 
-        {/* Desktop: Content Sections - 40% on right */}
-        <div className="hidden lg:flex lg:flex-[0_0_40%] max-w-full bg-background overflow-y-auto overflow-x-hidden w-full h-full">
-          <div className="w-full p-4 sm:p-6 lg:p-8">
-          {/* Header */}
-          <div className="mb-6 sm:mb-8 pb-4 sm:pb-6 border-b">
-            <div className="flex items-start justify-between gap-3 sm:gap-4 mb-3 sm:mb-4">
-              <div className="min-w-0 flex-1">
-                <h1 className="text-2xl sm:text-3xl lg:text-4xl font-black mb-2">{cityData.name}</h1>
-                <p className="text-sm sm:text-base text-muted-foreground">
-                  {cityData.country}
-                </p>
-              </div>
-              <Button 
-                onClick={handleSaveCity} 
-                variant={isSaved ? 'default' : 'outline'}
-                size="sm"
-                className="flex-shrink-0"
-              >
-                <Bookmark className={`h-4 w-4 ${isSaved ? 'fill-current' : ''}`} />
-              </Button>
-            </div>
-            
-            {/* Trip Type Banner */}
-            {tripType && TRIP_TYPE_INFO[tripType] && (
-              <div className={`mb-3 sm:mb-4 p-3 sm:p-4 rounded-2xl ${TRIP_TYPE_INFO[tripType].color} text-white shadow-lg`}>
-                <div className="flex items-center gap-2 sm:gap-3 mb-2">
-                  {(() => {
-                    const Icon = TRIP_TYPE_INFO[tripType].icon;
-                    return <Icon className="h-5 w-5 sm:h-6 sm:w-6 flex-shrink-0" />;
-                  })()}
-                  <div className="min-w-0 flex-1">
-                    <div className="font-bold text-base sm:text-lg">{TRIP_TYPE_INFO[tripType].label} Safety Mode</div>
-                  </div>
-                  <Sparkles className="h-4 w-4 sm:h-5 sm:w-5 ml-auto flex-shrink-0" />
-                </div>
-                <p className="text-xs sm:text-sm text-white/90">
-                  {TRIP_TYPE_INFO[tripType].tips}
-                </p>
-              </div>
-            )}
-            
-            <div className="flex flex-wrap gap-1.5 sm:gap-2">
-              <Badge variant="secondary" className="text-xs">
-                <CheckCircle className="h-3 w-3 mr-1" />
-                {safeZones.length}/{totalSafeZones} Safe Zones
-              </Badge>
-              <Badge variant="destructive" className="text-xs">
-                <AlertTriangle className="h-3 w-3 mr-1" />
-                {avoidZones.length}/{totalAvoidZones} Avoid Zones
-              </Badge>
-              <Badge variant="outline" className="text-xs">
-                <Info className="h-3 w-3 mr-1" />
-                {scamPins.length}/{totalScamPins} Scam Alerts
-              </Badge>
-            </div>
-            <p className="text-xs text-muted-foreground mt-2 sm:mt-3">
-              <MapPin className="h-3 w-3 inline mr-1" />
-              Showing areas in current map view
+      <main className="w-full space-y-8 pb-28 pt-20 md:hidden">
+        <section className="mx-auto w-full max-w-md space-y-4 px-4">
+          <div className="relative">
+            <Search className="pointer-events-none absolute left-4 top-1/2 h-4 w-4 -translate-y-1/2 text-slate-400" />
+            <input
+              value={searchQuery}
+              onChange={(e) => setSearchQuery(e.target.value)}
+              className="w-full rounded-xl bg-[#e7e8ee] py-4 pl-11 pr-4 text-sm text-slate-900 outline-none ring-0 placeholder:text-slate-400 focus:ring-2 focus:ring-[#265fa1]/30"
+              placeholder="Search districts or venues..."
+            />
+          </div>
+          <div className="flex items-center gap-2 px-1">
+            <span className="h-2 w-2 rounded-full bg-[#4e5f7b]" />
+            <span className="text-[11px] font-bold uppercase tracking-widest text-[#424750]">
+              Live Status: {cityData.name} Metropolitan Area
+            </span>
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-md overflow-hidden rounded-[2rem] bg-gradient-to-br from-[#265fa1] to-[#004786] p-8 text-white shadow-2xl">
+          <div className="relative z-10 space-y-2">
+            <span className="inline-block rounded-full bg-white/20 px-3 py-1 text-[10px] font-bold uppercase tracking-wider">
+              Security Level: {safetyIndex >= 80 ? 'High' : safetyIndex >= 60 ? 'Medium' : 'Elevated'}
+            </span>
+            <h1 className={`${headline.className} text-3xl font-extrabold leading-tight tracking-tight`}>
+              {cityData.name} is {statusLabel} Today
+            </h1>
+            <p className="max-w-[85%] text-sm text-white/80">
+              {safeZones[0]?.reason_short || `${cityData.name} patrol visibility and core transport safety remain stable.`}
             </p>
           </div>
+          <div className="pointer-events-none absolute inset-y-0 right-0 w-32 bg-gradient-to-l from-white/20 to-transparent" />
+        </section>
 
-          {/* Safe Areas */}
-          {(safeZones.length > 0 || totalSafeZones > 0) && (
-            <Collapsible open={safeZonesOpen} onOpenChange={setSafeZonesOpen} className="mb-6 sm:mb-8">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-1.5 sm:p-2 bg-green-500/10 rounded-lg flex-shrink-0">
-                    <CheckCircle className="h-4 w-4 sm:h-5 sm:w-5 text-green-600 dark:text-green-400" />
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-bold">Safe Areas</h2>
-                  <Badge variant="secondary" className="text-xs flex-shrink-0">{safeZones.length}</Badge>
-                </div>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex-shrink-0">
-                    {safeZonesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-              <CollapsibleContent className="space-y-2 sm:space-y-3">
-                {safeZones.length === 0 ? (
-                  <div className="text-center py-6 sm:py-8 text-muted-foreground">
-                    <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No safe areas in current map view</p>
-                    <p className="text-xs mt-1">Pan the map to explore other areas</p>
-                  </div>
-                ) : (
-                  <>
-                    {safeZones.slice(0, showAllSafeZones ? safeZones.length : INITIAL_SHOW_COUNT).map((zone) => (
-                      <div 
-                        key={zone.id}
-                        className="group p-3 sm:p-4 bg-green-50 dark:bg-green-950/20 border-2 border-green-200 dark:border-green-900 rounded-xl hover:border-green-400 dark:hover:border-green-700 transition-all cursor-pointer"
-                        onClick={() => handleZoneClick(zone, true)}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-sm sm:text-base mb-1 text-green-900 dark:text-green-100 line-clamp-2">{zone.label}</h3>
-                            <p className="text-xs sm:text-sm text-green-700 dark:text-green-300 line-clamp-2">{zone.reason_short}</p>
-                          </div>
-                          <MapPin className="h-4 w-4 text-green-600 dark:text-green-400 flex-shrink-0 mt-1" />
-                        </div>
-                      </div>
-                    ))}
-                    {safeZones.length > INITIAL_SHOW_COUNT && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full text-xs sm:text-sm"
-                        onClick={() => setShowAllSafeZones(!showAllSafeZones)}
-                      >
-                        {showAllSafeZones ? 'Show Less' : `Show ${safeZones.length - INITIAL_SHOW_COUNT} More`}
-                      </Button>
-                    )}
-                  </>
-                )}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
+        <section id="live-map-mobile" ref={mapSectionRef} className="w-full space-y-4">
+          <div className="relative left-1/2 h-[300px] w-screen -translate-x-1/2 overflow-hidden rounded-[2rem] bg-[#e7e8ee] shadow-inner sm:h-[340px]">
+            <MapView
+              key={`mobile-map-${mobileMapStyle}`}
+              ref={mapRef}
+              zones={showZones ? filteredZones : []}
+              pins={mapPins}
+              brushPins={mapPins}
+              showSafetyBrush={showRadiusBrush}
+              fitBounds={cityBounds}
+              initialZoom={9}
+              minZoomLevel={1.8}
+              maxZoomLevel={16}
+              fitToBoundsOnLoad
+              mapStyle={mobileMapStyle}
+              onZoneClick={setSelectedZone}
+              onPinClick={setSelectedPin}
+            />
 
-          {/* Avoid Areas */}
-          {(avoidZones.length > 0 || totalAvoidZones > 0) && (
-            <Collapsible open={avoidZonesOpen} onOpenChange={setAvoidZonesOpen} className="mb-6 sm:mb-8">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-1.5 sm:p-2 bg-red-500/10 rounded-lg flex-shrink-0">
-                    <AlertTriangle className="h-4 w-4 sm:h-5 sm:w-5 text-red-600 dark:text-red-400" />
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-bold">Areas to Avoid</h2>
-                  <Badge variant="secondary" className="text-xs flex-shrink-0">{avoidZones.length}</Badge>
-                </div>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex-shrink-0">
-                    {avoidZonesOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-              <CollapsibleContent className="space-y-2 sm:space-y-3">
-                {avoidZones.length === 0 ? (
-                  <div className="text-center py-6 sm:py-8 text-muted-foreground">
-                    <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No avoid areas in current map view</p>
-                    <p className="text-xs mt-1">Pan the map to explore other areas</p>
-                  </div>
-                ) : (
-                  <>
-                    {avoidZones.slice(0, showAllAvoidZones ? avoidZones.length : INITIAL_SHOW_COUNT).map((zone) => (
-                      <div 
-                        key={zone.id}
-                        className="group p-3 sm:p-4 bg-red-50 dark:bg-red-950/20 border-2 border-red-200 dark:border-red-900 rounded-xl hover:border-red-400 dark:hover:border-red-700 transition-all cursor-pointer"
-                        onClick={() => handleZoneClick(zone, true)}
-                      >
-                        <div className="flex items-start justify-between gap-2">
-                          <div className="flex-1 min-w-0">
-                            <h3 className="font-bold text-sm sm:text-base mb-1 text-red-900 dark:text-red-100 line-clamp-2">{zone.label}</h3>
-                            <p className="text-xs sm:text-sm text-red-700 dark:text-red-300 line-clamp-2">{zone.reason_short}</p>
-                          </div>
-                          <MapPin className="h-4 w-4 text-red-600 dark:text-red-400 flex-shrink-0 mt-1" />
-                        </div>
-                      </div>
-                    ))}
-                    {avoidZones.length > INITIAL_SHOW_COUNT && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full text-xs sm:text-sm"
-                        onClick={() => setShowAllAvoidZones(!showAllAvoidZones)}
-                      >
-                        {showAllAvoidZones ? 'Show Less' : `Show ${avoidZones.length - INITIAL_SHOW_COUNT} More`}
-                      </Button>
-                    )}
-                  </>
-                )}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
-
-          {/* Scam Patterns */}
-          {(scamPins.length > 0 || totalScamPins > 0) && (
-            <Collapsible open={scamsOpen} onOpenChange={setScamsOpen} className="mb-6 sm:mb-8">
-              <div className="flex items-center justify-between mb-3 sm:mb-4">
-                <div className="flex items-center gap-2 sm:gap-3">
-                  <div className="p-1.5 sm:p-2 bg-orange-500/10 rounded-lg flex-shrink-0">
-                    <Info className="h-4 w-4 sm:h-5 sm:w-5 text-orange-600 dark:text-orange-400" />
-                  </div>
-                  <h2 className="text-lg sm:text-xl font-bold">Common Scams</h2>
-                  <Badge variant="secondary" className="text-xs flex-shrink-0">{scamPins.length}</Badge>
-                </div>
-                <CollapsibleTrigger asChild>
-                  <Button variant="ghost" size="sm" className="flex-shrink-0">
-                    {scamsOpen ? <ChevronUp className="h-4 w-4" /> : <ChevronDown className="h-4 w-4" />}
-                  </Button>
-                </CollapsibleTrigger>
-              </div>
-              <CollapsibleContent className="space-y-2 sm:space-y-3">
-                {scamPins.length === 0 ? (
-                  <div className="text-center py-6 sm:py-8 text-muted-foreground">
-                    <MapPin className="h-8 w-8 mx-auto mb-2 opacity-50" />
-                    <p className="text-sm">No scam alerts in current map view</p>
-                    <p className="text-xs mt-1">Pan the map to explore other areas</p>
-                  </div>
-                ) : (
-                  <>
-                    {scamPins.slice(0, showAllScams ? scamPins.length : INITIAL_SHOW_COUNT).map((pin) => (
-                      <div 
-                        key={pin.id}
-                        className="group p-3 sm:p-4 bg-orange-50 dark:bg-orange-950/20 border-2 border-orange-200 dark:border-orange-900 rounded-xl hover:border-orange-400 dark:hover:border-orange-700 transition-all cursor-pointer"
-                        onClick={() => handlePinClick(pin, true)}
-                      >
-                        <div className="flex items-start justify-between gap-2 sm:gap-3 mb-2">
-                          <div className="flex items-center gap-2 flex-1 min-w-0">
-                            <h3 className="font-bold text-sm sm:text-base text-orange-900 dark:text-orange-100 line-clamp-2">{pin.title}</h3>
-                            <MapPin className="h-4 w-4 text-orange-600 dark:text-orange-400 flex-shrink-0" />
-                          </div>
-                          <Badge variant="outline" className={`text-xs flex-shrink-0 border ${getPinBadgeClasses(pin.type)}`}>
-                            {pin.type}
-                          </Badge>
-                        </div>
-                        <p className="text-xs sm:text-sm text-orange-700 dark:text-orange-300 line-clamp-3">{pin.summary}</p>
-                      </div>
-                    ))}
-                    {scamPins.length > INITIAL_SHOW_COUNT && (
-                      <Button 
-                        variant="ghost" 
-                        size="sm" 
-                        className="w-full text-xs sm:text-sm"
-                        onClick={() => setShowAllScams(!showAllScams)}
-                      >
-                        {showAllScams ? 'Show Less' : `Show ${scamPins.length - INITIAL_SHOW_COUNT} More`}
-                      </Button>
-                    )}
-                  </>
-                )}
-              </CollapsibleContent>
-            </Collapsible>
-          )}
-
-          {/* Actions */}
-          <div className="flex flex-col gap-3 pt-4 sm:pt-6 border-t mt-6 sm:mt-8 mb-6">
-            <Button variant="outline" asChild className="w-full text-xs sm:text-sm mb-4">
-              <a href="/submit">
-                <Plus className="h-4 w-4 mr-2" />
-                Submit a Tip for {cityData.name}
+            <div className="absolute bottom-6 right-4 z-20 flex flex-col gap-3">
+              <a
+                href="tel:1155"
+                className="flex h-14 w-14 items-center justify-center rounded-2xl bg-rose-700 text-white shadow-lg active:scale-95"
+                aria-label="Emergency call"
+              >
+                <AlertTriangle className="h-6 w-6" />
               </a>
-            </Button>
+              <div className="overflow-hidden rounded-2xl bg-white/90 shadow-lg backdrop-blur-md">
+                <button
+                  onClick={() => mapRef.current?.zoomIn()}
+                  className="flex w-12 items-center justify-center border-b border-slate-200/70 p-3 text-slate-700"
+                  aria-label="Zoom in"
+                >
+                  <Plus className="h-4 w-4" />
+                </button>
+                <button
+                  onClick={() => mapRef.current?.zoomOut()}
+                  className="flex w-12 items-center justify-center p-3 text-slate-700"
+                  aria-label="Zoom out"
+                >
+                  <Minus className="h-4 w-4" />
+                </button>
+              </div>
+            </div>
+
+            <button
+              onClick={cycleMapStyle}
+              className="absolute left-4 top-4 z-20 flex items-center gap-2 rounded-full bg-white/90 px-4 py-2 text-xs font-semibold shadow-md backdrop-blur-md"
+            >
+              <Layers3 className="h-3.5 w-3.5 text-[#265fa1]" />
+              {mobileMapStyle === 'light' ? 'Street View' : mobileMapStyle === 'streets' ? 'Satellite View' : 'Light View'}
+            </button>
           </div>
+
+          <div id="alerts-mobile" ref={alertsSectionRef} className="hide-scrollbar flex gap-2 overflow-x-auto px-4 pb-2">
+            <button
+              onClick={() => setMobileFilter('all')}
+              className={`flex-none rounded-full px-5 py-2.5 text-sm font-semibold shadow-sm ${
+                mobileFilter === 'all' ? 'bg-[#265fa1] text-white' : 'bg-[#ededf4] text-[#424750]'
+              }`}
+            >
+              All Safety
+            </button>
+            <button
+              onClick={() => setMobileFilter('police')}
+              className={`flex-none rounded-full px-5 py-2.5 text-sm font-semibold ${
+                mobileFilter === 'police' ? 'bg-[#ccdefe] text-[#003c72]' : 'bg-[#ededf4] text-[#424750]'
+              }`}
+            >
+              Police
+            </button>
+            <button
+              onClick={() => setMobileFilter('scams')}
+              className={`flex-none rounded-full px-5 py-2.5 text-sm font-semibold ${
+                mobileFilter === 'scams' ? 'bg-[#ffdea7] text-[#5e4200]' : 'bg-[#ededf4] text-[#424750]'
+              }`}
+            >
+              Scams
+            </button>
+            <button
+              onClick={() => setMobileFilter('hospitals')}
+              className={`flex-none rounded-full px-5 py-2.5 text-sm font-semibold ${
+                mobileFilter === 'hospitals' ? 'bg-[#d4e3ff] text-[#004786]' : 'bg-[#ededf4] text-[#424750]'
+              }`}
+            >
+              Hospitals
+            </button>
+          </div>
+        </section>
+
+        <section className="mx-auto w-full max-w-md space-y-4 px-4">
+          <h2 className={`${headline.className} px-1 text-xl font-bold`}>Zone Intelligence</h2>
+          <div className="space-y-3">
+            {(filteredZoneCards.length ? filteredZoneCards : zoneCards).map((zone) => (
+              <button
+                key={zone.id}
+                onClick={() => {
+                  setSelectedZone(zone);
+                  mapRef.current?.zoomToZone(zone);
+                  scrollToSection('map');
+                }}
+                className="flex w-full items-center justify-between rounded-[1.5rem] border border-slate-200/70 bg-white p-5 text-left shadow-sm"
+              >
+                <div className="flex items-center gap-4">
+                  <div className="flex h-12 w-12 items-center justify-center rounded-2xl bg-[#ccdefe] text-[#003c72]">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h3 className="font-bold text-[#191c20]">{zone.label}</h3>
+                    <p className="text-xs text-[#424750]">{zone.reason_short}</p>
+                  </div>
+                </div>
+                <span className={`rounded-full px-3 py-1 text-[10px] font-bold uppercase tracking-tight ${zoneBadgeTone(zone.level)}`}>
+                  {zone.level}
+                </span>
+              </button>
+            ))}
+          </div>
+        </section>
+
+        <section
+          id="tips-mobile"
+          ref={safetySectionRef}
+          className="mx-4 space-y-5 rounded-[2rem] bg-[#ededf4] p-5 sm:p-6"
+        >
+          <div className="flex items-center justify-between">
+            <h2 className={`${headline.className} text-lg font-bold`}>Safe Passage Checklist</h2>
+            <span className="text-xs font-bold text-[#265fa1]">
+              {checklistDoneCount}/{filteredPrepRules.length || 3} Tasks
+            </span>
+          </div>
+          <div className="space-y-4">
+            {(filteredPrepRules.length
+              ? filteredPrepRules
+              : [{ id: 0, city_id: cityData.id, kind: 'do', title: 'Use licensed transport', reason: 'Prefer app-based rides.' }]).map(
+              (rule) => (
+                <label key={rule.id} className="flex cursor-pointer items-center justify-between">
+                  <div className="flex items-center gap-3">
+                    <ShieldAlert className="h-4 w-4 text-[#424750]" />
+                    <span className="text-sm font-medium">{rule.title}</span>
+                  </div>
+                  <button
+                    type="button"
+                    onClick={() => toggleChecklist(rule.id)}
+                    className={`flex h-6 w-6 items-center justify-center rounded-lg border ${
+                      checklistState[rule.id]
+                        ? 'border-[#265fa1] bg-[#265fa1] text-white'
+                        : 'border-slate-300 bg-white text-transparent'
+                    }`}
+                    aria-label={`Toggle ${rule.title}`}
+                  >
+                    <Check className="h-3.5 w-3.5" />
+                  </button>
+                </label>
+              )
+            )}
+          </div>
+        </section>
+      </main>
+
+      <header className="fixed top-0 z-50 hidden w-full bg-[#fdf8fd]/80 shadow-[0_16px_32px_-12px_rgba(0,0,0,0.04)] backdrop-blur-xl md:block">
+        <div className="mx-auto flex h-20 w-full max-w-7xl items-center justify-between px-6">
+          <div className="flex items-center gap-8">
+            <Link href="/" className={`${headline.className} text-2xl font-black tracking-tight text-[#00327d] italic`}>Safesus</Link>
+            <nav className="hidden items-center gap-6 md:flex">
+              <a href="#live-map" className={`${headline.className} text-lg font-bold text-[#00327d]`}>Map</a>
+              <a href="#alerts" className={`${headline.className} rounded-lg px-2 py-1 text-lg font-medium text-slate-500 hover:bg-slate-200/50`}>Alerts</a>
+              <a href="#tips" className={`${headline.className} rounded-lg px-2 py-1 text-lg font-medium text-slate-500 hover:bg-slate-200/50`}>Safety Tips</a>
+            </nav>
+          </div>
+          <div className="hidden items-center gap-3 sm:flex">
+            <button
+              onClick={() => document.getElementById('live-map')?.scrollIntoView({ behavior: 'smooth' })}
+              className="rounded-full p-2 text-[#00327d] hover:bg-slate-200/50"
+            >
+              <LocateFixed className="h-5 w-5" />
+            </button>
+            <Link href="/account" className="rounded-full p-2 text-[#00327d] hover:bg-slate-200/50">
+              <UserCircle2 className="h-5 w-5" />
+            </Link>
           </div>
         </div>
-      </div>
+      </header>
 
-      {/* Zone Details Sheet */}
+      <aside className="fixed left-0 top-0 z-40 hidden h-screen w-72 flex-col border-none bg-[#fdf8fd] pt-24 md:flex">
+        <div className="mb-8 px-6">
+          <div className="flex items-center gap-3 rounded-2xl bg-[#f7f2f8] p-3">
+            <div className="flex h-10 w-10 items-center justify-center rounded-full bg-blue-100 font-bold text-blue-800">JD</div>
+            <div>
+              <h4 className={`${headline.className} text-sm font-bold text-[#00327d]`}>Guardian Elite</h4>
+              <p className="text-[10px] font-semibold uppercase tracking-widest text-slate-500">Verified Traveler</p>
+            </div>
+          </div>
+        </div>
+        <nav className="flex flex-col gap-1">
+          <a href="#live-map" className="mx-2 flex items-center gap-3 rounded-xl bg-[#00327d] px-4 py-3 text-white shadow-lg shadow-blue-900/20">
+            <Users2 className="h-4 w-4" />
+            <span className={`${headline.className} text-sm font-semibold tracking-wide`}>SafeGroup Status</span>
+          </a>
+          <a href="#alerts" className="mx-2 flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-100">
+            <BellRing className="h-4 w-4" />
+            <span className={`${headline.className} text-sm font-semibold tracking-wide`}>Community</span>
+          </a>
+          <a href="#tips" className="mx-2 flex items-center gap-3 rounded-xl px-4 py-3 text-slate-600 hover:bg-slate-100">
+            <ShieldAlert className="h-4 w-4" />
+            <span className={`${headline.className} text-sm font-semibold tracking-wide`}>Risk Zones</span>
+          </a>
+        </nav>
+      </aside>
+
+      <main className="hidden px-4 pb-24 pt-20 md:ml-72 md:block md:px-8">
+        <section className="mb-10 mt-6">
+          <div className="relative flex min-h-[380px] flex-col overflow-hidden rounded-[2rem] bg-[#f7f2f8] shadow-sm md:flex-row">
+            <div className="z-10 flex flex-1 flex-col justify-center p-8 md:p-12">
+              <div className="mb-4 flex items-center gap-2">
+                <span className="rounded-full bg-[#a0f399] px-3 py-1 text-[10px] font-bold uppercase tracking-widest text-[#217128]">Live Status</span>
+                <span className="text-sm font-medium text-slate-500">Updated moments ago</span>
+              </div>
+              <h1 className={`${headline.className} mb-4 text-4xl font-black leading-tight tracking-tight text-[#00327d] md:text-6xl`}>
+                {cityData.name} is <br />
+                <span className="text-emerald-600">{statusLabel}</span> Today
+              </h1>
+              <p className="mb-8 max-w-md text-lg leading-relaxed text-[#434653]">
+                {safeZones[0]?.reason_short || `${cityData.name} has active patrol visibility and community-updated safety data.`}
+              </p>
+              <div className="flex flex-wrap gap-4">
+                <a href="#live-map" className="flex items-center gap-2 rounded-xl bg-gradient-to-br from-[#00327d] to-[#0047ab] px-8 py-4 font-bold text-white shadow-xl shadow-blue-900/20">
+                  <MapPin className="h-4 w-4" />
+                  Explore Live Map
+                </a>
+                <a
+                  href={`/api/city/${slug}`}
+                  target="_blank"
+                  rel="noreferrer"
+                  className="flex items-center gap-2 rounded-xl bg-[#ebe7ec] px-8 py-4 font-bold text-[#00327d]"
+                >
+                  <Download className="h-4 w-4" />
+                  Local Safety Guide
+                </a>
+              </div>
+            </div>
+            <div className="relative hidden min-h-[300px] flex-1 md:block">
+              <Image src="/images/safemap-real.png" alt={`${cityData.name} map preview`} fill className="object-cover" />
+              <div className="absolute inset-0 bg-gradient-to-r from-[#f7f2f8] via-transparent to-transparent" />
+              <div className="absolute right-8 top-10 flex flex-col gap-3">
+                <div className="flex items-center gap-2 rounded-2xl bg-white/50 p-3 shadow-lg backdrop-blur-md">
+                  <div className="h-3 w-3 rounded-full bg-emerald-500" />
+                  <span className={`${headline.className} text-xs font-bold`}>{safeZones[0]?.label || 'Central Zone'}: Safe</span>
+                </div>
+                <div className="flex items-center gap-2 rounded-2xl bg-white/50 p-3 shadow-lg backdrop-blur-md">
+                  <div className="h-3 w-3 rounded-full bg-amber-500" />
+                  <span className={`${headline.className} text-xs font-bold`}>{watchZones[0]?.label || 'Old Town'}: Watch</span>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <section id="live-map" className="mb-10">
+          <div className="overflow-hidden rounded-[2rem] bg-[#f7f2f8] shadow-sm">
+            <div className="flex flex-col items-start justify-between gap-6 p-6 md:flex-row md:items-center md:p-8">
+              <div>
+                <h2 className={`${headline.className} text-2xl font-black text-[#00327d]`}>Live Safety Intelligence</h2>
+                <p className="text-sm font-medium text-slate-500">Interactive regional threat monitoring and response</p>
+              </div>
+              <div className="flex flex-wrap gap-2">
+                <button onClick={() => setShowZones((v) => !v)} className={`rounded-full border-2 px-4 py-2 text-xs font-bold ${showZones ? 'border-transparent bg-emerald-100 text-emerald-800' : 'border-transparent bg-[#ebe7ec] text-[#00327d]'}`}>
+                  Police
+                </button>
+                <button onClick={() => setShowScams((v) => !v)} className={`rounded-full border-2 px-4 py-2 text-xs font-bold ${showScams ? 'border-transparent bg-amber-100 text-amber-800' : 'border-transparent bg-[#ebe7ec] text-[#00327d]'}`}>
+                  Scams
+                </button>
+                <button onClick={() => setShowHospitals((v) => !v)} className={`rounded-full border-2 px-4 py-2 text-xs font-bold ${showHospitals ? 'border-transparent bg-blue-100 text-blue-800' : 'border-transparent bg-[#ebe7ec] text-[#00327d]'}`}>
+                  Hospitals
+                </button>
+                <button onClick={() => setShowWeather((v) => !v)} className={`rounded-full border-2 px-4 py-2 text-xs font-bold ${showWeather ? 'border-transparent bg-sky-100 text-sky-800' : 'border-transparent bg-[#ebe7ec] text-[#00327d]'}`}>
+                  Weather
+                </button>
+                <button onClick={() => setShowRadiusBrush((v) => !v)} className={`rounded-full border-2 px-4 py-2 text-xs font-bold ${showRadiusBrush ? 'border-transparent bg-rose-100 text-rose-800' : 'border-transparent bg-[#ebe7ec] text-[#00327d]'}`}>
+                  Radius Brush
+                </button>
+                <button
+                  onClick={() => setIsFullscreenMap(true)}
+                  className="flex items-center gap-1 rounded-full border-2 border-transparent bg-[#ebe7ec] px-4 py-2 text-xs font-bold text-[#00327d]"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  Full Screen
+                </button>
+              </div>
+            </div>
+            <div className="relative h-[500px] w-full overflow-hidden bg-slate-200">
+              <MapView
+                zones={showZones ? cityData.zones : []}
+                pins={mapPins}
+                brushPins={mapPins}
+                showSafetyBrush={showRadiusBrush}
+                fitBounds={cityBounds}
+                initialZoom={8.9}
+                minZoomLevel={1.8}
+                maxZoomLevel={16}
+                fitToBoundsOnLoad
+                onZoneClick={setSelectedZone}
+                onPinClick={setSelectedPin}
+              />
+              <div className="absolute right-5 top-5 z-10 flex gap-2">
+                <button
+                  onClick={() => setShowRadiusBrush((v) => !v)}
+                  className={`rounded-full px-3 py-2 text-xs font-bold shadow ${showRadiusBrush ? 'bg-rose-100 text-rose-800' : 'bg-white text-[#00327d]'}`}
+                >
+                  Radius Brush
+                </button>
+                <button
+                  onClick={() => setIsFullscreenMap(true)}
+                  className="flex items-center gap-1 rounded-full bg-white px-3 py-2 text-xs font-bold text-[#00327d] shadow"
+                >
+                  <Maximize2 className="h-3.5 w-3.5" />
+                  Full Screen
+                </button>
+              </div>
+              <div className="pointer-events-none absolute bottom-6 left-6 max-w-xs rounded-2xl border border-white/50 bg-white/90 p-4 shadow-xl backdrop-blur-md">
+                <h4 className="mb-3 text-xs font-black uppercase tracking-widest text-[#00327d]">Map Legend</h4>
+                <div className="space-y-2">
+                  <div className="flex items-center gap-3 text-[10px] font-bold text-slate-700"><span className="h-3 w-3 rounded bg-green-500/20 ring-1 ring-green-500" />Safe</div>
+                  <div className="flex items-center gap-3 text-[10px] font-bold text-slate-700"><span className="h-3 w-3 rounded bg-yellow-500/20 ring-1 ring-yellow-500" />Watch</div>
+                  <div className="flex items-center gap-3 text-[10px] font-bold text-slate-700"><span className="h-3 w-3 rounded bg-red-500/20 ring-1 ring-red-500" />Avoid</div>
+                </div>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        {isFullscreenMap && (
+          <div className="fixed inset-0 z-[90] bg-black/70 p-2 sm:p-4">
+            <div className="relative h-full w-full overflow-hidden rounded-2xl bg-[#f7f2f8]">
+              <div className="absolute left-4 top-4 z-20 flex gap-2">
+                <button
+                  onClick={() => setShowRadiusBrush((v) => !v)}
+                  className={`rounded-full px-4 py-2 text-xs font-bold shadow ${showRadiusBrush ? 'bg-rose-100 text-rose-800' : 'bg-white text-[#00327d]'}`}
+                >
+                  Radius Brush
+                </button>
+              </div>
+              <div className="absolute right-4 top-4 z-20 flex gap-2">
+                <button
+                  onClick={() => setIsFullscreenMap(false)}
+                  className="flex items-center gap-2 rounded-full bg-white px-4 py-2 text-xs font-bold text-[#00327d] shadow"
+                >
+                  <Minimize2 className="h-4 w-4" />
+                  Exit Full Screen
+                </button>
+                <button
+                  onClick={() => setIsFullscreenMap(false)}
+                  className="rounded-full bg-white p-2 text-[#00327d] shadow"
+                  aria-label="Close fullscreen map"
+                >
+                  <X className="h-4 w-4" />
+                </button>
+              </div>
+              <div className="h-full w-full">
+                <MapView
+                  zones={showZones ? cityData.zones : []}
+                  pins={mapPins}
+                  brushPins={mapPins}
+                  showSafetyBrush={showRadiusBrush}
+                  fitBounds={cityBounds}
+                  initialZoom={8.7}
+                  minZoomLevel={1.8}
+                  maxZoomLevel={16}
+                  fitToBoundsOnLoad
+                  onZoneClick={setSelectedZone}
+                  onPinClick={setSelectedPin}
+                />
+              </div>
+            </div>
+          </div>
+        )}
+
+        <div id="alerts" className="mb-10 flex gap-4 overflow-x-auto py-2">
+          <div className="flex-none rounded-full bg-[#ebe7ec] px-6 py-3 text-sm font-bold text-[#00327d]">All Clear</div>
+          <div className="flex-none rounded-full bg-emerald-100 px-6 py-3 text-sm font-bold text-emerald-800">Police Presence</div>
+          <div className="flex-none rounded-full bg-rose-100 px-6 py-3 text-sm font-bold text-rose-800">Scams Reported</div>
+          <div className="flex-none rounded-full bg-blue-100 px-6 py-3 text-sm font-bold text-blue-800">Hospitals</div>
+          <div className="flex-none rounded-full bg-sky-100 px-6 py-3 text-sm font-bold text-sky-800">Weather Alerts</div>
+        </div>
+
+        <div id="tips" className="grid grid-cols-1 gap-6 md:grid-cols-3">
+          <div className="rounded-[2rem] bg-[#f7f2f8] p-8 md:col-span-2">
+            <div className="mb-8 flex items-center justify-between">
+              <h3 className={`${headline.className} text-2xl font-black text-[#00327d]`}>Zone Intelligence</h3>
+              <Link href="/cities" className="text-sm font-bold text-[#00327d] underline">View full list</Link>
+            </div>
+            <div className="grid grid-cols-1 gap-4 sm:grid-cols-2">
+              {zoneCards.map((zone) => (
+                <button
+                  key={zone.id}
+                  onClick={() => setSelectedZone(zone)}
+                  className="rounded-3xl bg-white p-5 text-left shadow-sm transition hover:shadow-md"
+                >
+                  <div className="mb-3 flex items-center justify-between">
+                    <h4 className="font-bold text-[#00327d]">{zone.label}</h4>
+                    <span className={`rounded-md px-2 py-1 text-[10px] font-bold uppercase tracking-widest ${zoneBadgeTone(zone.level)}`}>
+                      {zone.level}
+                    </span>
+                  </div>
+                  <p className="text-xs text-slate-500">{zone.reason_short}</p>
+                </button>
+              ))}
+            </div>
+          </div>
+
+          <div className="flex flex-col rounded-[2rem] bg-[#ebe7ec] p-8">
+            <h3 className={`${headline.className} mb-6 text-2xl font-black text-[#00327d]`}>Prep Checklist</h3>
+            <div className="flex-1 space-y-6">
+              {(prepRules.length ? prepRules : [{ id: 0, title: 'Use licensed transport', reason: 'Prefer app-based rides for fare transparency.' }]).map((rule) => (
+                <div key={rule.id} className="flex gap-4">
+                  <div className="text-[#00327d]">
+                    <ShieldCheck className="h-5 w-5" />
+                  </div>
+                  <div>
+                    <h5 className="mb-1 text-sm font-bold text-[#00327d]">{rule.title}</h5>
+                    <p className="text-xs leading-relaxed text-[#434653]">{rule.reason}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+            <div className="mt-8 border-t border-slate-300/40 pt-6">
+              <div className="rounded-2xl bg-blue-900/5 p-4">
+                <p className="mb-2 text-[10px] font-bold uppercase text-[#00327d]">Emergency Contact</p>
+                <div className="flex items-center justify-between">
+                  <span className="text-xl font-black text-[#00327d]">1155</span>
+                  <span className="text-xs font-bold text-slate-500">Tourist Police</span>
+                </div>
+              </div>
+            </div>
+          </div>
+
+          <div className="relative overflow-hidden rounded-[2rem] bg-[#00327d] p-10 text-white md:col-span-3">
+            <div className="relative z-10 flex flex-col justify-between gap-8 md:flex-row md:items-center">
+              <div className="max-w-xl">
+                <h3 className={`${headline.className} mb-4 text-3xl font-black`}>Recent Incident Patterns</h3>
+                <p className="mb-6 leading-relaxed text-blue-100">
+                  We observe stronger patrol density in major transit and shopping corridors, while isolated scam clusters persist around high-footfall tourist landmarks.
+                </p>
+                <div className="flex gap-4">
+                  <div className="rounded-xl bg-white/10 px-4 py-2 backdrop-blur-md">
+                    <span className="block text-2xl font-black">{safetyIndex}%</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-blue-200">Safety Index</span>
+                  </div>
+                  <div className="rounded-xl bg-white/10 px-4 py-2 backdrop-blur-md">
+                    <span className="block text-2xl font-black">{avoidZones.length > safeZones.length ? 'Moderate' : 'Low'}</span>
+                    <span className="text-[10px] font-bold uppercase tracking-widest text-blue-200">Threat Level</span>
+                  </div>
+                </div>
+              </div>
+              <div className="hidden md:block">
+                <Image
+                  src="/images/hero-safegroup.png"
+                  alt="Community safety data"
+                  width={280}
+                  height={280}
+                  className="h-64 w-64 rounded-full border-8 border-white/5 object-cover shadow-2xl"
+                />
+              </div>
+            </div>
+            <div className="absolute -bottom-24 -right-24 h-96 w-96 rounded-full bg-[#0047ab] opacity-40 blur-3xl" />
+          </div>
+        </div>
+      </main>
+
+      <nav className="fixed bottom-0 left-0 z-50 flex h-20 w-full items-center justify-around rounded-t-[1.5rem] border-t border-slate-200/30 bg-[#fdf8fd]/90 px-4 pb-4 pt-2 shadow-[0_-4px_24px_rgba(0,0,0,0.05)] backdrop-blur-lg md:hidden">
+        <button
+          onClick={() => scrollToSection('map')}
+          className={`flex flex-col items-center justify-center rounded-2xl px-4 py-2 transition ${
+            activeMobileTab === 'map'
+              ? 'bg-gradient-to-br from-[#00327d] to-[#0052cc] text-white'
+              : 'text-slate-500 hover:text-[#00327d]'
+          }`}
+        >
+          <Map className="h-4 w-4" />
+          <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider">Map</span>
+        </button>
+        <button
+          onClick={() => scrollToSection('alerts')}
+          className={`flex flex-col items-center justify-center px-4 py-2 transition ${
+            activeMobileTab === 'alerts' ? 'text-[#00327d]' : 'text-slate-500'
+          }`}
+        >
+          <Bell className="h-4 w-4" />
+          <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider">Alerts</span>
+        </button>
+        <button
+          onClick={() => scrollToSection('safety')}
+          className={`flex flex-col items-center justify-center px-4 py-2 transition ${
+            activeMobileTab === 'safety' ? 'text-[#00327d]' : 'text-slate-500'
+          }`}
+        >
+          <ShieldCheck className="h-4 w-4" />
+          <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider">Safety</span>
+        </button>
+        <Link
+          href="/account"
+          onClick={() => setActiveMobileTab('profile')}
+          className={`flex flex-col items-center justify-center px-4 py-2 transition ${
+            activeMobileTab === 'profile' ? 'text-[#00327d]' : 'text-slate-500'
+          }`}
+        >
+          <User className="h-4 w-4" />
+          <span className="mt-1 text-[10px] font-semibold uppercase tracking-wider">Profile</span>
+        </Link>
+      </nav>
+
+      <a href="tel:1155" className="fixed bottom-24 right-6 z-40 hidden h-16 w-16 items-center justify-center rounded-full bg-rose-700 text-white shadow-2xl shadow-rose-700/30 md:flex md:right-10">
+        SOS
+      </a>
+
       <Sheet open={!!selectedZone} onOpenChange={() => setSelectedZone(null)}>
         <SheetContent side="bottom">
           {selectedZone && (
             <>
               <SheetHeader>
                 <SheetTitle>{selectedZone.label}</SheetTitle>
-                <SheetDescription>
-                  <Badge variant="outline" className={`border ${getZoneBadgeClasses(selectedZone.level)}`}>
-                    {selectedZone.level}
-                  </Badge>
-                </SheetDescription>
+                <SheetDescription>{selectedZone.level.toUpperCase()} zone</SheetDescription>
               </SheetHeader>
-              <div className="mt-6 space-y-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Overview</h4>
-                  <p className="text-sm text-muted-foreground">{selectedZone.reason_short}</p>
-                </div>
-                {selectedZone.reason_long && (
-                  <div>
-                    <h4 className="font-semibold mb-2">Details</h4>
-                    <p className="text-sm text-muted-foreground">{selectedZone.reason_long}</p>
-                  </div>
-                )}
-                <div className="pt-4 border-t">
-                  <ReportButton targetType="zone" targetId={selectedZone.id} compact />
-                </div>
+              <div className="mt-4 space-y-3">
+                <Badge className={zoneBadgeTone(selectedZone.level)}>{selectedZone.level}</Badge>
+                <p className="text-sm text-slate-600">{selectedZone.reason_short}</p>
+                {selectedZone.reason_long && <p className="text-sm text-slate-500">{selectedZone.reason_long}</p>}
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
 
-      {/* Pin Details Sheet */}
       <Sheet open={!!selectedPin} onOpenChange={() => setSelectedPin(null)}>
         <SheetContent side="bottom">
           {selectedPin && (
             <>
               <SheetHeader>
                 <SheetTitle>{selectedPin.title}</SheetTitle>
-                <SheetDescription>
-                  <Badge variant="outline" className={`border ${getPinBadgeClasses(selectedPin.type)}`}>
-                    {selectedPin.type}
-                  </Badge>
-                </SheetDescription>
+                <SheetDescription>{selectedPin.type.toUpperCase()} report</SheetDescription>
               </SheetHeader>
-              <div className="mt-6 space-y-4">
-                <div>
-                  <h4 className="font-semibold mb-2">Summary</h4>
-                  <p className="text-sm text-muted-foreground">{selectedPin.summary}</p>
-                </div>
-                {selectedPin.details && (
-                  <div>
-                    <h4 className="font-semibold mb-2">What to Do</h4>
-                    <p className="text-sm text-muted-foreground">{selectedPin.details}</p>
-                  </div>
-                )}
-                <div className="pt-4 border-t">
-                  <ReportButton targetType="pin" targetId={selectedPin.id} compact />
-                </div>
+              <div className="mt-4 space-y-3">
+                <p className="text-sm text-slate-600">{selectedPin.summary}</p>
+                {selectedPin.details && <p className="text-sm text-slate-500">{selectedPin.details}</p>}
               </div>
             </>
           )}
         </SheetContent>
       </Sheet>
-
-      <LoginModal open={showLoginModal} onOpenChange={setShowLoginModal} />
     </div>
   );
 }

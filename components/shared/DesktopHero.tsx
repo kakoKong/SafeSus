@@ -1,47 +1,34 @@
 'use client';
 
-import { Sparkles } from 'lucide-react';
 import WaitlistCount from '@/components/shared/WaitlistCount';
 import WaitlistButton from '@/components/shared/WaitlistButton';
-import HeroImage from '@/components/shared/HeroImage';
 
 export default function DesktopHero() {
   return (
-    <div className="grid grid-cols-2 gap-8 lg:gap-12 items-center">
-      {/* Left Column - Content */}
-      <div className="space-y-6 text-left">
-        {/* Badge */}
-        <div className="inline-flex items-center gap-2 rounded-full bg-primary/10 px-4 py-1.5 text-xs font-semibold text-primary animate-fade-in-up" style={{ animationDelay: '0.1s', animationFillMode: 'both' }}>
-          <Sparkles className="h-3.5 w-3.5 animate-spin-slow" />
-          Coming soon
-        </div>
-
+    <div className="mx-auto max-w-3xl">
+      <div className="space-y-6 p-2 text-center">
         {/* Title */}
-        <h1 className="text-5xl xl:text-6xl font-bold leading-tight tracking-tight animate-fade-in-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
+        <h1 className="mx-auto inline-block rounded-2xl bg-black/28 px-5 py-3 text-4xl xl:text-5xl font-bold leading-tight tracking-tight text-white drop-shadow-[0_2px_12px_rgba(0,0,0,0.65)] animate-fade-in-up" style={{ animationDelay: '0.3s', animationFillMode: 'both' }}>
           Travel smarter.<br />
-          <span className="text-primary animate-pulse-slow">Stay safer.</span>
+          <span className="text-emerald-300 animate-pulse-slow">Stay safer.</span>
         </h1>
 
         {/* Subtitle */}
-        <p className="text-lg lg:text-xl text-muted-foreground max-w-xl animate-fade-in-up" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
+        <p className="mx-auto max-w-xl rounded-xl bg-black/22 px-4 py-2 text-base leading-relaxed text-white/95 drop-shadow-[0_1px_8px_rgba(0,0,0,0.65)] lg:text-lg animate-fade-in-up" style={{ animationDelay: '0.5s', animationFillMode: 'both' }}>
           Safety maps, real-time alerts, and location sharing. Built by travelers, for travelers.
         </p>
 
         {/* Button */}
-        <div className="flex flex-col gap-3 sm:gap-4 sm:flex-row sm:items-center justify-start animate-fade-in-up" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
+        <div className="mx-auto flex w-full max-w-max flex-col items-center justify-center gap-2.5 rounded-xl bg-black/22 px-3 py-2 sm:flex-row sm:gap-3 animate-fade-in-up" style={{ animationDelay: '0.7s', animationFillMode: 'both' }}>
           <WaitlistButton
             href="https://airtable.com/appA2ZLE9CJxyUC1r/pagW15oKYUDWMsmNA/form"
-            className="w-full sm:w-auto text-sm sm:text-base px-6 sm:px-8 py-4 sm:py-6 rounded-full font-semibold animate-scale-in hover:scale-105 transition-all duration-300 shadow-lg hover:shadow-xl bg-primary hover:bg-primary/90"
+            size="default"
+            className="w-full sm:w-auto rounded-full bg-primary px-5 py-2.5 text-sm font-semibold shadow-xl shadow-black/35 transition-all duration-300 hover:bg-primary/90"
           >
             Join waitlist - Bangkok
           </WaitlistButton>
-          <WaitlistCount />
+          <WaitlistCount light className="text-sm" />
         </div>
-      </div>
-
-      {/* Right Column - Image */}
-      <div className="relative flex items-center justify-center animate-fade-in-up" style={{ animationDelay: '0.9s', animationFillMode: 'both' }}>
-        <HeroImage />
       </div>
     </div>
   );

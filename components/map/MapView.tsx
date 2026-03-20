@@ -8,17 +8,51 @@ import { getZoneColor, getPinColor } from '@/lib/utils';
 
 mapboxgl.accessToken = process.env.NEXT_PUBLIC_MAPBOX_TOKEN || '';
 
+const FALLBACK_STYLE: mapboxgl.Style = {
+  version: 8,
+  sources: {
+    osm: {
+      type: 'raster',
+      tiles: [
+        'https://a.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://b.tile.openstreetmap.org/{z}/{x}/{y}.png',
+        'https://c.tile.openstreetmap.org/{z}/{x}/{y}.png',
+      ],
+      tileSize: 256,
+      attribution: '© OpenStreetMap contributors',
+    },
+  },
+  layers: [
+    {
+      id: 'osm',
+      type: 'raster',
+      source: 'osm',
+      minzoom: 0,
+      maxzoom: 19,
+    },
+  ],
+};
+
 export interface MapViewRef {
   zoomToZone: (zone: Zone) => void;
   zoomToPin: (pin: Pin) => void;
   zoomToLocation: (lng: number, lat: number) => void;
+  zoomIn: () => void;
+  zoomOut: () => void;
+  fitToBounds: (bounds: [[number, number], [number, number]]) => void;
   resize: () => void;
 }
 
 interface MapViewProps {
   zones: Zone[];
   pins: Pin[];
+  brushPins?: Pin[];
   center?: [number, number];
+  initialZoom?: number;
+  minZoomLevel?: number;
+  maxZoomLevel?: number;
+  fitToBoundsOnLoad?: boolean;
+  fitBounds?: [[number, number], [number, number]] | null;
   userLocation?: UserLocation | null;
   onZoneClick?: (zone: Zone) => void;
   onPinClick?: (pin: Pin) => void;
@@ -26,12 +60,20 @@ interface MapViewProps {
   maxBounds?: [[number, number], [number, number]] | null;
   className?: string;
   disableZoom?: boolean;
+  showSafetyBrush?: boolean;
+  mapStyle?: 'light' | 'streets' | 'satellite';
 }
 
 const MapView = forwardRef<MapViewRef, MapViewProps>(({
   zones,
   pins,
+  brushPins,
   center = [100.5320, 13.7463], // Siam, Bangkok default
+  initialZoom = 10.5,
+  minZoomLevel = 2,
+  maxZoomLevel = 17,
+  fitToBoundsOnLoad = true,
+  fitBounds = null,
   userLocation,
   onZoneClick,
   onPinClick,
@@ -39,6 +81,8 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   maxBounds,
   className = '',
   disableZoom = false,
+  showSafetyBrush = false,
+  mapStyle = 'light',
 }, ref) => {
   const mapContainer = useRef<HTMLDivElement>(null);
   const map = useRef<mapboxgl.Map | null>(null);
@@ -105,6 +149,22 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
         console.error('Error zooming to location:', error);
       }
     },
+    zoomIn: () => {
+      if (!map.current || !mapLoaded) return;
+      map.current.zoomIn({ duration: 250 });
+    },
+    zoomOut: () => {
+      if (!map.current || !mapLoaded) return;
+      map.current.zoomOut({ duration: 250 });
+    },
+    fitToBounds: (bounds: [[number, number], [number, number]]) => {
+      if (!map.current || !mapLoaded) return;
+      map.current.fitBounds(bounds, {
+        padding: 80,
+        maxZoom: 14.5,
+        duration: 500,
+      });
+    },
     resize: () => {
       if (!map.current || !mapLoaded) return;
       try {
@@ -119,14 +179,46 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
   useEffect(() => {
     if (!mapContainer.current || map.current) return;
 
+    const styleMap: Record<'light' | 'streets' | 'satellite', string> = {
+      light: 'mapbox://styles/mapbox/light-v11',
+      streets: 'mapbox://styles/mapbox/streets-v12',
+      satellite: 'mapbox://styles/mapbox/satellite-streets-v12',
+    };
+    const preferredStyle: string | mapboxgl.Style =
+      mapboxgl.accessToken && mapboxgl.accessToken.trim().length > 0
+        ? styleMap[mapStyle]
+        : FALLBACK_STYLE;
+
     map.current = new mapboxgl.Map({
       container: mapContainer.current,
-      style: 'mapbox://styles/mapbox/light-v11',
+      style: preferredStyle,
       center: center,
-      zoom: 12,
+      zoom: initialZoom,
+      minZoom: minZoomLevel,
+      maxZoom: maxZoomLevel,
       ...(maxBounds && { maxBounds }),
       // Always initialize as interactive, but we'll disable handlers if needed
       dragRotate: false, // Always disable rotation
+    });
+
+    // If Mapbox style fails because of auth/token restrictions, switch to OSM fallback.
+    // Keep this strict to avoid false positives during normal layer/style lifecycle events.
+    let switchedToFallback = preferredStyle === FALLBACK_STYLE;
+    map.current.on('error', (event) => {
+      if (switchedToFallback || !map.current) return;
+      const message = String((event as any)?.error?.message || '').toLowerCase();
+      if (
+        message.includes('unauthorized') ||
+        message.includes('forbidden') ||
+        message.includes('access token') ||
+        message.includes('invalid token') ||
+        message.includes('not authorized') ||
+        message.includes('401') ||
+        message.includes('403')
+      ) {
+        switchedToFallback = true;
+        map.current.setStyle(FALLBACK_STYLE);
+      }
     });
 
     // Disable interactions after map creation if disableZoom is true
@@ -144,6 +236,14 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
     }
 
     map.current.on('load', () => {
+      const boundsToFit = fitBounds ?? maxBounds ?? null;
+      if (map.current && fitToBoundsOnLoad && boundsToFit) {
+        map.current.fitBounds(boundsToFit, {
+          padding: 80,
+          maxZoom: 11.5,
+          duration: 0,
+        });
+      }
       setMapLoaded(true);
       // Emit initial bounds
       if (onViewportChangeRef.current && map.current) {
@@ -1006,6 +1106,135 @@ const MapView = forwardRef<MapViewRef, MapViewProps>(({
       }
     };
   }, [mapLoaded, pins]);
+
+  // Add safety brush layer (radial falloff from each pin)
+  useEffect(() => {
+    if (!map.current || !mapLoaded) return;
+
+    const mapInstance = map.current;
+
+    const removeBrushLayer = () => {
+      if (!mapInstance || !mapInstance.getStyle()) return;
+      try {
+        if (mapInstance.getLayer('safety-brush')) {
+          mapInstance.removeLayer('safety-brush');
+        }
+        if (mapInstance.getSource('safety-brush')) {
+          mapInstance.removeSource('safety-brush');
+        }
+      } catch {
+        // Ignore cleanup errors from style/map lifecycle
+      }
+    };
+
+    if (!showSafetyBrush) {
+      removeBrushLayer();
+      return;
+    }
+
+    const now = Date.now();
+    const brushPinsToUse = brushPins ?? pins;
+    const brushFeatures = brushPinsToUse
+      .filter((pin) => {
+        if (!pin.location || !Array.isArray(pin.location.coordinates)) return false;
+        const [lng, lat] = pin.location.coordinates;
+        return Number.isFinite(lng) && Number.isFinite(lat);
+      })
+      .map((pin) => {
+        const typeWeight: Record<string, number> = {
+          harassment: 1,
+          scam: 0.8,
+          overcharge: 0.65,
+          other: 0.5,
+        };
+        const baseTypeWeight = typeWeight[pin.type] ?? 0.5;
+        const statusMultiplier = pin.status === 'approved' ? 1 : pin.status === 'pending' ? 0.65 : 0.35;
+        const pinAgeDays = Math.max(
+          0,
+          (now - new Date(pin.created_at).getTime()) / (1000 * 60 * 60 * 24)
+        );
+        // Decay influence over ~45 days, but keep a minimum floor.
+        const recencyMultiplier = Math.max(0.25, 1 - pinAgeDays / 45);
+        const weight = Math.min(1, Math.max(0.1, baseTypeWeight * statusMultiplier * recencyMultiplier));
+
+        return {
+          type: 'Feature' as const,
+          properties: {
+            weight,
+          },
+          geometry: {
+            type: 'Point' as const,
+            coordinates: pin.location.coordinates as [number, number],
+          },
+        };
+      });
+
+    const brushGeoJSON: GeoJSON.FeatureCollection<GeoJSON.Point> = {
+      type: 'FeatureCollection',
+      features: brushFeatures,
+    };
+
+    const existingSource = mapInstance.getSource('safety-brush') as mapboxgl.GeoJSONSource | undefined;
+    if (existingSource) {
+      try {
+        existingSource.setData(brushGeoJSON);
+      } catch {
+        removeBrushLayer();
+      }
+    }
+
+    if (!mapInstance.getSource('safety-brush')) {
+      mapInstance.addSource('safety-brush', {
+        type: 'geojson',
+        data: brushGeoJSON,
+      });
+    }
+
+    if (!mapInstance.getLayer('safety-brush')) {
+      mapInstance.addLayer(
+        {
+          id: 'safety-brush',
+          type: 'heatmap',
+          source: 'safety-brush',
+          maxzoom: 19,
+          paint: {
+            // Higher weight = stronger center point.
+            'heatmap-weight': ['coalesce', ['get', 'weight'], 0.2],
+            // Increase intensity slightly as user zooms in.
+            'heatmap-intensity': ['interpolate', ['linear'], ['zoom'], 7, 0.95, 12, 1.25, 16, 1.55],
+            // Radius controls softness/brush spread around each point.
+            'heatmap-radius': ['interpolate', ['linear'], ['zoom'], 7, 30, 12, 50, 16, 75],
+            // Transparent outer ring -> amber -> orange -> red hotspot.
+            'heatmap-color': [
+              'interpolate',
+              ['linear'],
+              ['heatmap-density'],
+              0,
+              'rgba(245, 158, 11, 0)',
+              0.2,
+              'rgba(245, 158, 11, 0.22)',
+              0.45,
+              'rgba(249, 115, 22, 0.35)',
+              0.7,
+              'rgba(239, 68, 68, 0.5)',
+              1,
+              'rgba(220, 38, 38, 0.72)',
+            ],
+            'heatmap-opacity': ['interpolate', ['linear'], ['zoom'], 7, 0.55, 14, 0.72, 18, 0.86],
+          },
+        },
+        mapInstance.getLayer('pins-clusters') ? 'pins-clusters' : undefined
+      );
+    }
+
+    return () => {
+      // Keep layer between renders; source data updates handle refresh.
+      // Cleanup on unmount or when disabled.
+      if (!showSafetyBrush) {
+        removeBrushLayer();
+      }
+    };
+  }, [mapLoaded, pins, brushPins, showSafetyBrush]);
 
   // Add user location marker
   useEffect(() => {
